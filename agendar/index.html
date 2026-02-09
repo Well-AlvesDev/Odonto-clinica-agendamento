@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento</title>
+</head>
+<style>
+    body {
+        background: #f9f9f9;
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 350px;
+        margin: 60px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+        padding: 32px 28px 24px 28px;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+        margin-bottom: 24px;
+        color: #454545;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .form-agendamento {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    label {
+        font-size: 0.98rem;
+        color: #444;
+        margin-bottom: 2px;
+    }
+
+    input {
+        padding: 8px 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 1rem;
+        background: #fafafa;
+        transition: border 0.2s;
+    }
+
+    .servicos-scroll {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        scrollbar-width: thin;
+        scrollbar-color: #e0e0e0 #fafafa;
+    }
+
+    .badge-servico {
+        flex: 0 0 auto;
+        border: 1.5px solid #e0e0e0;
+        background: #f5f8fa;
+        color: #333;
+        border-radius: 20px;
+        padding: 7px 18px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.18s, border 0.18s, color 0.18s;
+        outline: none;
+        user-select: none;
+    }
+
+    .badge-servico.selected,
+    .badge-servico:active {
+        background: #3a86ff;
+        color: #fff;
+        border-color: #3a86ff;
+    }
+
+    .badge-servico:focus {
+        border-color: #6bb7ff;
+    }
+
+    /* Serviços indisponíveis para a data selecionada */
+    .badge-servico.indisponivel {
+        text-decoration: line-through;
+        opacity: 0.5;
+        border-color: #ececec;
+        background: #fbfbfb;
+        color: #303030;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .badge-servico.indisponivel:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .datas-scroll {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        scrollbar-width: thin;
+        scrollbar-color: #e0e0e0 #fafafa;
+    }
+
+    .badge-data {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 65px;
+        height: 75px;
+        border: 1.5px solid #e0e0e0;
+        background: #f5f8fa;
+        color: #333;
+        border-radius: 10px;
+        padding: 0;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.18s, border 0.18s, color 0.18s;
+        outline: none;
+        user-select: none;
+    }
+
+    .badge-data .dia-semana {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #888;
+        margin-bottom: 3px;
+    }
+
+    .badge-data .dia-numero {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .badge-data .mes-abrev {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .badge-data.selected,
+    .badge-data:active {
+        background: #3a86ff;
+        color: #fff;
+        border-color: #3a86ff;
+    }
+
+    .badge-data.selected .dia-semana,
+    .badge-data.selected .dia-numero,
+    .badge-data.selected .mes-abrev {
+        color: #fff;
+    }
+
+    .badge-data:focus {
+        border-color: #6bb7ff;
+    }
+
+    /* Datas passadas: traço + clareamento + inacessível */
+    .badge-data.passado {
+        text-decoration: line-through;
+        opacity: 0.38;
+        border-color: #ececec;
+        background: #fbfbfb;
+        color: #9aa3ad;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .badge-data.passado:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .horarios-scroll {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        scrollbar-width: thin;
+        scrollbar-color: #e0e0e0 #fafafa;
+    }
+
+    .badge-horario {
+        flex: 0 0 auto;
+        border: 1.5px solid #e0e0e0;
+        background: #f5f8fa;
+        color: #333;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.18s, border 0.18s, color 0.18s;
+        outline: none;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+    .badge-horario.selected,
+    .badge-horario:active {
+        background: #3a86ff;
+        color: #fff;
+        border-color: #3a86ff;
+    }
+
+    .badge-horario:focus {
+        border-color: #6bb7ff;
+    }
+
+    /* Horários já reservados: risco + clareamento visual + inacessível */
+    .badge-horario.reservado {
+        text-decoration: line-through;
+        opacity: 0.38;
+        border-color: #ececec;
+        background: #fbfbfb;
+        color: #9aa3ad;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .badge-horario.reservado:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    /* Mensagem de todos os horários ocupados */
+    .todos-horarios-ocupados {
+        display: none;
+        background: #fff3cd;
+        border: 1.5px solid #ffc107;
+        border-radius: 8px;
+        padding: 16px 14px;
+        text-align: center;
+        color: #856404;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .todos-horarios-ocupados.ativo {
+        display: block;
+    }
+
+    input:focus,
+    select:focus {
+        border-color: #6bb7ff;
+        outline: none;
+    }
+
+    /* Container do telefone com responsividade */
+    .phone-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .phone-container input {
+        flex: 1;
+        min-width: 0;
+        /* Permite que o input encolha em telas pequenas */
+    }
+
+    /* Seção de horários oculta até data ser selecionada */
+    .horarios-section {
+        display: block;
+        transition: opacity 0.3s ease;
+    }
+
+    .horarios-section.hidden {
+        display: none;
+    }
+
+    .erro-mensagem {
+        display: none;
+        color: #d32f2f;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        margin-bottom: 8px;
+    }
+
+    .erro-mensagem.ativo {
+        display: block;
+    }
+
+    /* (Removido) estilos da ação/realce — a mensagem agora é informativa e sem CTA */
+
+    button {
+        margin-top: 10px;
+        padding: 10px 0;
+        background: #3a86ff;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.08rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    /* Responsividade para telas pequenas */
+    @media (max-width: 480px) {
+        body {
+            padding: 0 35px;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 24px 16px 18px 16px;
+        }
+
+        img {
+            max-width: 280px !important;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 0.9rem !important;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-size: 0.9rem;
+        }
+
+        input {
+            font-size: 0.95rem;
+            padding: 7px 8px;
+        }
+
+        .phone-container {
+            gap: 8px;
+        }
+
+        .phone-container span {
+            font-size: 0.9rem;
+        }
+
+        .badge-servico {
+            font-size: 0.9rem;
+            padding: 6px 14px;
+        }
+
+        button {
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 350px) {
+        body {
+            padding: 0 20px;
+        }
+
+        .container {
+            padding: 20px 12px 16px 12px;
+        }
+
+        img {
+            max-width: 240px !important;
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 0.85rem !important;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 0.85rem;
+        }
+
+        input {
+            font-size: 0.9rem;
+            padding: 6px 7px;
+        }
+
+        .phone-container span {
+            font-size: 0.85rem;
+        }
+
+        .badge-servico {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+        }
+
+        button {
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Modal de Confirmação */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-overlay.ativo {
+        display: flex;
+    }
+
+    .modal-confirmacao {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 32px 28px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-confirmacao h2 {
+        font-size: 1.3rem;
+        color: #353535;
+        margin-bottom: 24px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .info-item {
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        color: #888;
+        font-weight: 500;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-valor {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* --- View interna de confirmação (elegante, minimalista) --- */
+    .confirmacao-view {
+        display: none;
+        background: linear-gradient(180deg, #ffffff, #fbfdff);
+        border-radius: 12px;
+        padding: 28px 22px;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(16, 24, 40, 0.06);
+    }
+
+    .confirmacao-view.ativo {
+        display: block;
+    }
+
+    .confirmacao-icone {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 14px auto;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(11, 200, 18, 0.08);
+        color: #38ff0b;
+        font-size: 28px;
+        line-height: 1;
+        box-shadow: inset 0 -2px 0 rgba(11, 95, 255, 0.03);
+    }
+
+    .confirmacao-titulo {
+        font-size: 1.18rem;
+        margin-bottom: 6px;
+        color: #162034;
+        font-weight: 600;
+    }
+
+    .confirmacao-texto {
+        color: #566270;
+        margin-bottom: 16px;
+        font-size: 0.96rem;
+    }
+
+    .confirmacao-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0 0 18px 0;
+    }
+
+    .confirmacao-item .label {
+        font-size: 0.72rem;
+        color: #9aa3ad;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .confirmacao-item .value {
+        font-size: 1rem;
+        color: #243044;
+        font-weight: 600;
+    }
+
+    .confirmacao-acao {
+        display: inline-block;
+        color: #0b5fff;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: transparent;
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .confirmacao-acao:hover {
+        background: rgba(11, 95, 255, 0.06);
+    }
+
+    .confirmacao-acao:focus {
+        outline: 3px solid rgba(11, 95, 255, 0.12);
+        outline-offset: 3px;
+    }
+
+    @media (max-width: 480px) {
+        .confirmacao-view {
+            padding: 20px 14px;
+        }
+
+        .confirmacao-icone {
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+        }
+    }
+
+    .modal-botoes {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+    }
+
+    .modal-botoes button {
+        flex: 1;
+        padding: 10px 0;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 0;
+    }
+
+    .btn-editar {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .btn-editar:hover {
+        background: #d0d0d0;
+    }
+
+    .btn-confirmar {
+        background: #3a86ff;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-confirmar:hover {
+        background: #2966cc;
+    }
+
+    /* Spinner dentro do botão */
+    .btn-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spinLoader 0.8s linear infinite;
+    }
+
+    @keyframes spinLoader {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .btn-confirmar:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    /* Estilos da Navegação */
+    nav {
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        /* full-bleed: garantir que a nav sempre toque as bordas da viewport */
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        padding: 12px 0;
+        /* apenas espaçamento vertical */
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        /* Garantir que a nav fique acima do overlay */
+        box-sizing: border-box;
+    }
+
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        justify-content: space-between;
+        position: relative;
+        padding: 0 16px;
+        /* espaçamento interno controlado aqui */
+        /* para o menu mobile absoluto */
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-logo {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .nav-clinica-nome {
+        margin: 0;
+        white-space: nowrap;
+        font-family: 'Times New Roman', Times, serif;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 14px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        align-items: center;
+    }
+
+    .nav-links li a {
+        text-decoration: none;
+        color: #333;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: background 0.15s, color 0.15s;
+        font-weight: 500;
+    }
+
+    .nav-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        padding: 8px;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        /* ícone usa currentColor */
+    }
+
+    .nav-toggle svg {
+        display: block;
+        width: 28px;
+        height: 24px;
+    }
+
+    .nav-toggle .line {
+        stroke: currentColor;
+        transition: transform 0.25s cubic-bezier(.2, .9, .2, 1), opacity 0.2s;
+        transform-origin: 14px 12px;
+    }
+
+    .nav-toggle.open .line-top {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .nav-toggle.open .line-mid {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    .nav-toggle.open .line-bot {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .nav-toggle:focus-visible {
+        outline: 3px solid rgba(58, 134, 255, 0.25);
+        border-radius: 8px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nav-toggle .line {
+            transition: none !important;
+        }
+
+        .nav-links {
+            transition: none !important;
+        }
+    }
+
+    /* Overlay para foco e escurecer o fundo */
+    .nav-overlay {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 90;
+        /* Deve ficar abaixo da nav */
+    }
+
+    .nav-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Responsivo: menu hamburger para telas pequenas com animação */
+    @media (max-width: 768px) {
+        .nav-links {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 64px;
+            background: #ffffff;
+            flex-direction: column;
+            gap: 0;
+            align-items: stretch;
+            padding: 8px 0;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+            border-radius: 0 0 10px 10px;
+            transform: translateY(-6px) scale(0.995);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.28s cubic-bezier(.2, .9, .2, 1), opacity 0.2s ease;
+            max-height: calc(100vh - 64px);
+            overflow: auto;
+            z-index: 995;
+            /* Acima do overlay, abaixo da nav */
+        }
+
+        .nav-links.open {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nav-links li a {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            display: block;
+        }
+
+        .nav-toggle {
+            display: inline-flex;
+        }
+    }
+
+    /* Bloquear rolagem quando o menu estiver aberto */
+    .no-scroll {
+        overflow: hidden !important;
+    }
+
+    /* Responsivo para telas pequenas */
+    @media (max-width: 600px) {
+
+        /* Manter a nav full-bleed em mobile; ajustar apenas espaçamento vertical */
+        nav {
+            padding: 12px 0;
+        }
+    }
+
+    @media (max-width: 400px) {
+        /* sem alterações de tamanho para nome da clínica — mantemos o mesmo tamanho */
+    }
+
+    /* Forçar tamanho consistente do logo e do nome na nav (não crescer em telas pequenas) */
+    .nav-logo {
+        width: 56px;
+        height: 56px;
+        max-width: none;
+        flex-shrink: 0;
+    }
+
+    .nav-clinica-nome {
+        font-size: 1.15rem;
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    /* Alerta de duplicata */
+    .alerta-duplicata {
+        display: none;
+        background: #fff3cd;
+        border: 1.5px solid #ffc107;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        color: #856404;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .alerta-duplicata.ativo {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .alerta-duplicata strong {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .alerta-duplicata-fechar {
+        float: right;
+        background: none;
+        border: none;
+        color: #856404;
+        font-size: 1.4rem;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: -2px 0 0 0;
+    }
+
+    .alerta-duplicata-fechar:hover {
+        color: #333;
+    }
+
+    /* Alerta Genérico de Erro */
+    .alerta-erro {
+        display: none;
+        background: #ffebee;
+        border: 1.5px solid #ef5350;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        color: #c62828;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .alerta-erro.ativo {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .alerta-erro strong {
+        font-weight: 600;
+        color: #b71c1c;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .alerta-erro-fechar {
+        float: right;
+        background: none;
+        border: none;
+        color: #c62828;
+        font-size: 1.4rem;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: -2px 0 0 0;
+    }
+
+    .alerta-erro-fechar:hover {
+        color: #b71c1c;
+    }
+
+    .alerta-erro-detalhes {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(198, 40, 40, 0.2);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Honeypot contra bots básicos */
+    .honeypot-field {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* Tela de Loading */
+    .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        backdrop-filter: blur(2px);
+    }
+
+    .loading-screen.hidden {
+        display: none;
+    }
+
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e0e0e0;
+        border-top-color: #3a86ff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 20px;
+    }
+
+    .loading-texto {
+        color: #666;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Spinner de carregamento para horários */
+    .horarios-carregando {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 60px;
+        gap: 8px;
+    }
+
+    .horarios-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #e0e0e0;
+        border-top-color: #3a86ff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .horarios-spinner-texto {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 500;
+    }
+</style>
+</head>
+
+<body>
+    <!-- Tela de Loading -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-texto">Carregando disponibilidade...</div>
+    </div>
+
+    <nav role="navigation" aria-label="Menu principal">
+        <div class="nav-container">
+            <div class="nav-left">
+                <img src="../recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
+                <h2 class="nav-clinica-nome" style="font-weight: 400; color: #df7595d7; font-size: 25px;">Odonto Clínica
+                </h2>
+            </div>
+
+            <button class="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menu">
+                <svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true" focusable="false">
+                    <path class="line line-top" d="M3 5h22" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round"></path>
+                    <path class="line line-mid" d="M3 12h22" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round"></path>
+                    <path class="line line-bot" d="M3 19h22" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round"></path>
+                </svg>
+            </button>
+
+            <ul class="nav-links" id="main-nav">
+                <li><a href="../">Início</a></li>
+                <li><a href="../#servicos">Serviços</a></li>
+                <li><a href="#">Agendamento</a></li>
+                <li><a href="../#contato">Contato</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Overlay para fechar o menu e escurecer o fundo em mobile (fora da nav para não sobrepor) -->
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true" tabindex="-1"></div>
+
+    <div class="container">
+        <img src="../recursos/imgs/img0.webp" alt="logo"
+            style="display: block; margin: 0 auto 20px auto; width: 320px;">
+        <h1>Faça seu agendamento</h1>
+        <p style="text-align: center; font-size: 15px;">Preencha os dados abaixo e marque seu agendamento</p>
+
+        <!-- Alerta de Duplicata -->
+        <div class="alerta-duplicata" id="alerta-duplicata">
+            <button type="button" class="alerta-duplicata-fechar" id="fechar-alerta"
+                aria-label="Fechar alerta">&times;</button>
+            <strong>⚠️ Agendamento já existe!</strong>
+            <p style="margin: 6px 0 0 0;">Já existe um agendamento com o nome e telefone informados. Verifique os dados
+                ou consulte nossa equipe.</p>
+        </div>
+
+        <!-- Alerta Genérico de Erro -->
+        <div class="alerta-erro" id="alerta-erro">
+            <button type="button" class="alerta-erro-fechar" id="fechar-alerta-erro"
+                aria-label="Fechar alerta">&times;</button>
+            <strong id="alerta-erro-titulo">Erro ao processar agendamento</strong>
+            <div id="alerta-erro-detalhes" class="alerta-erro-detalhes"></div>
+        </div>
+
+        <form class="form-agendamento">
+            <!-- Honeypot contra bots -->
+            <input type="text" id="website" name="website" class="honeypot-field" tabindex="-1" autocomplete="off">
+
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" placeholder="Ex. João Marcos" required>
+            <div class="erro-mensagem" id="erro-nome">Por favor, preencha seu nome</div>
+
+            <label for="telefone">Telefone (Whatsapp):</label>
+            <div class="phone-container">
+                <span style="font-weight: 400; color: #4e4e4e; white-space: nowrap;">(81) 9</span>
+                <div style="height: 32px; border-right: 1px solid #e0e0e0;"></div>
+                <input type="tel" id="telefone" name="telefone" required pattern="\d{4,5}-\d{4}"
+                    placeholder="9999-9999">
+            </div>
+            <div class="erro-mensagem" id="erro-telefone">Por favor, preencha seu telefone</div>
+
+            <label for="servico">Serviços disponíveis:</label>
+            <div class="servicos-scroll" id="servicos-badges"></div>
+            <input type="hidden" id="servico" name="servico" required>
+            <div class="erro-mensagem" id="erro-servico" role="status" aria-live="polite" tabindex="-1">Por favor,
+                selecione um serviço</div>
+
+            <label for="data">Selecione o dia:</label>
+            <div class="datas-scroll" id="datas-badges"></div>
+            <input type="hidden" id="data" name="data" required>
+            <div class="erro-mensagem" id="erro-data">Por favor, selecione uma data</div>
+
+            <div class="horarios-section hidden">
+                <label for="horario">Horário</label>
+                <div class="todos-horarios-ocupados" id="todos-horarios-ocupados" role="alert">
+                    Todos os horários já foram ocupados para este dia. Verifique outros dias ou aguarde mais horários
+                    nos próximos dias.
+                </div>
+                <div class="horarios-scroll" id="horarios-badges"></div>
+                <input type="hidden" id="horario" name="horario" required>
+                <div class="erro-mensagem" id="erro-horario">Por favor, selecione um horário</div>
+            </div>
+
+            <button type="submit">Agendar</button>
+        </form>
+
+        <!-- Mensagem de confirmação (interna, minimalista) -->
+        <div class="confirmacao-view" role="status" aria-live="polite" aria-hidden="true" tabindex="-1">
+            <div class="confirmacao-icone" aria-hidden="true">✓</div>
+            <div class="confirmacao-titulo">Agendamento confirmado</div>
+            <div class="confirmacao-texto">Seu agendamento foi recebido — abaixo os detalhes.</div>
+
+            <div class="confirmacao-list" aria-hidden="false">
+                <div class="confirmacao-item">
+                    <div class="label">Nome</div>
+                    <div class="value" id="confview-nome"></div>
+                </div>
+                <div class="confirmacao-item">
+                    <div class="label">Telefone</div>
+                    <div class="value" id="confview-telefone"></div>
+                </div>
+                <div class="confirmacao-item">
+                    <div class="label">Serviço</div>
+                    <div class="value" id="confview-servico"></div>
+                </div>
+                <div class="confirmacao-item">
+                    <div class="label">Data</div>
+                    <div class="value" id="confview-data"></div>
+                </div>
+                <div class="confirmacao-item">
+                    <div class="label">Horário</div>
+                    <div class="value" id="confview-horario"></div>
+                </div>
+            </div>
+
+            <a href="#" id="fazer-novo" class="confirmacao-acao" role="button">Fazer novo agendamento</a>
+        </div>
+
+        <!-- Modal de Confirmação -->
+        <div class="modal-overlay" id="modal-overlay">
+            <div class="modal-confirmacao">
+                <h2>Confirme seus dados</h2>
+
+                <div class="info-item">
+                    <span class="info-label">Nome</span>
+                    <span class="info-valor" id="conf-nome"></span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Telefone</span>
+                    <span class="info-valor" id="conf-telefone"></span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Serviço</span>
+                    <span class="info-valor" id="conf-servico"></span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Data</span>
+                    <span class="info-valor" id="conf-data"></span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Horário</span>
+                    <span class="info-valor" id="conf-horario"></span>
+                </div>
+
+                <div class="modal-botoes">
+                    <button type="button" class="btn-editar" id="btn-editar">Editar informações</button>
+                    <button type="button" class="btn-confirmar" id="btn-confirmar">Sim, confirmado</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            let contxClinica = null;
+            let servicosMestre = []; // Lista mestre de TODOS os serviços da clínica
+            // Cache para armazenar horários reservados por data com expiração
+            let dadosReservadosCompletos = {};
+            // Rastreamento de promises de carregamento por data (para renderização assíncrona)
+            let promisesPorData = {}; // { data: Promise }
+            const loadingScreen = document.getElementById('loading-screen');
+            const CACHE_EXPIRACAO_MS = 2 * 60 * 1000; // 2 minutos em milissegundos
+            const CACHE_KEY = 'agendamento_horarios_reservados';
+
+            // Helper: normalizar horários para formato HH:mm (com zero à esquerda)
+            function normalizarHorario(horario) {
+                if (!horario) return '';
+                const [h, m] = horario.trim().split(':');
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+
+            // Helper: garantir que o nome do serviço inicie com letra maiúscula (preserva o restante)
+            function capitalizeFirstLetter(str) {
+                if (!str && str !== '') return '';
+                const s = String(str).trim();
+                return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+            }
+
+            // Mostrar mensagem contextual quando um serviço selecionado não estiver disponível na data escolhida.
+            function showServicoIndisponivel(servico) {
+                const el = document.getElementById('erro-servico');
+                if (!el) return;
+                const safeName = servico ? '"' + servico + '"' : '';
+                el.textContent = `O serviço ${safeName} não está disponível para esse dia. Verifique outras datas.`;
+                el.classList.add('ativo');
+                el.setAttribute('tabindex', '-1');
+                el.focus();
+            }
+
+            // Restaura texto padrão e remove ação (quando usuário corrige seleção)
+            function resetErroServicoMensagem() {
+                const el = document.getElementById('erro-servico');
+                if (!el) return;
+                el.textContent = 'Por favor, selecione um serviço';
+                el.classList.remove('ativo');
+            }
+
+            // Helper: Gerenciar cache com expiração em localStorage
+            function obterCacheLocal() {
+                try {
+                    const cacheStr = localStorage.getItem(CACHE_KEY);
+                    if (!cacheStr) return null;
+
+                    const cache = JSON.parse(cacheStr);
+                    const agora = Date.now();
+
+                    // Verificar se cache expirou
+                    if (agora - cache.timestamp > CACHE_EXPIRACAO_MS) {
+                        // Cache expirado, remover
+                        localStorage.removeItem(CACHE_KEY);
+                        return null;
+                    }
+
+                    // Cache ainda válido
+                    return cache.dados;
+                } catch (e) {
+                    // Em caso de erro ao ler cache, ignorar
+                    console.warn('Erro ao ler cache local:', e);
+                    return null;
+                }
+            }
+
+            function salvarCacheLocal(dados) {
+                try {
+                    const cache = {
+                        timestamp: Date.now(),
+                        dados: dados
+                    };
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+                } catch (e) {
+                    // Em caso de erro (quota exceeded, etc), apenas logar
+                    console.warn('Erro ao salvar cache local:', e);
+                }
+            }
+
+            function limparCacheLocal() {
+                try {
+                    localStorage.removeItem(CACHE_KEY);
+                } catch (e) {
+                    console.warn('Erro ao limpar cache local:', e);
+                }
+            }
+
+            /**
+             * Encontra o índice do primeiro dia na lista que não é uma data passada
+             * @returns {number} Índice do primeiro dia disponível, ou -1 se nenhum encontrado
+             */
+            function encontrarPrimeiroIndiceDisponivel() {
+                if (!contxClinica || !Array.isArray(contxClinica.datas)) return -1;
+
+                // Obter data de hoje para comparação
+                const agora = new Date();
+                const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+                // Procurar o primeiro índice cuja data não seja passada
+                for (let i = 0; i < contxClinica.datas.length; i++) {
+                    const dataStr = contxClinica.datas[i];
+                    if (!dataStr) continue;
+
+                    const [ano, mes, dia] = dataStr.split('-').map(Number);
+                    const data = new Date(ano, mes - 1, dia);
+
+                    if (data >= hoje) {
+                        return i;
+                    }
+                }
+
+                return -1; // Nenhum dia disponível encontrado
+            }
+
+            // URL de deploy do Google Apps Script - SUBSTITUIR COM SEU DEPLOYMENT ID
+            const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbygNucryPDCrHNFena1A2lNCy-Tcwh2nOlCd8OCq0rgjp-puFBGJY1bn6BADnLJobwl/exec';
+
+            // Carrega contx do arquivo JSON
+            async function carregarContx() {
+                try {
+                    const response = await fetch('../recursos/db/contx.json');
+                    const allData = await response.json();
+                    const raw = allData[0] || {};
+                    const configLinks = allData[1] || {};
+
+                    let datas = [];
+                    let servicosPorData = [];
+                    let horariosPorData = [];
+
+                    // Caso 1: novo formato compacto — cada item de datas_disp contém "DATA / servs / horarios"
+                    if (Array.isArray(raw.datas_disp) && raw.datas_disp.length && typeof raw.datas_disp[0] === 'string' && raw.datas_disp[0].includes('/')) {
+                        raw.datas_disp.forEach(item => {
+                            const parts = item.split('/').map(p => p.trim());
+                            const datePart = parts[0] || '';
+                            const servsPart = parts[1] || '';
+                            const horasPart = parts[2] || '';
+
+                            const servs = servsPart ? servsPart.split(',').map(s => capitalizeFirstLetter(s.trim())).filter(Boolean) : [];
+                            const horas = horasPart ? horasPart.split(',').map(h => normalizarHorario(h)).filter(Boolean) : [];
+
+                            datas.push(datePart);
+                            servicosPorData.push(servs);
+                            horariosPorData.push(horas);
+                        });
+                    } else {
+                        // Caso 2: formato legado (arrays paralelas separados)
+                        datas = Array.isArray(raw.datas_disp) ? raw.datas_disp.slice() : [];
+                        servicosPorData = Array.isArray(raw.servicos_disp)
+                            ? raw.servicos_disp.map(s => (s || '').split(',').map(x => capitalizeFirstLetter(x.trim())).filter(Boolean))
+                            : [];
+                        horariosPorData = Array.isArray(raw.horarios_disp)
+                            ? raw.horarios_disp.map(h => (h || '').split(',').map(x => normalizarHorario(x)).filter(Boolean))
+                            : [];
+                    }
+
+                    // Padroniza tamanhos (garante que cada índice tenha arrays válidos)
+                    const maxLen = Math.max(datas.length, servicosPorData.length, horariosPorData.length);
+                    for (let i = 0; i < maxLen; i++) {
+                        if (!datas[i]) datas[i] = '';
+                        if (!Array.isArray(servicosPorData[i])) servicosPorData[i] = [];
+                        if (!Array.isArray(horariosPorData[i])) horariosPorData[i] = [];
+                    }
+
+                    contxClinica = {
+                        datas,
+                        servicosPorData,
+                        horariosPorData,
+                        // garantir deduplicação após capitalizar os nomes
+                        servicos: Array.from(new Set(servicosPorData.flat())),
+                        link1: configLinks.link1 || '#'
+                    };
+
+                    // Extrair lista mestre de serviços (nova estrutura no índice 2)
+                    if (allData[2] && Array.isArray(allData[2].servicos)) {
+                        servicosMestre = allData[2].servicos.map(s => {
+                            // Extrair apenas o nome (antes da barra /)
+                            const partes = s.split('/');
+                            return partes[0].trim();
+                        });
+                        console.log('📋 Serviços mestre carregados:', servicosMestre);
+                    }
+
+                    // Se houver um valor já presente em `input#servico`, tentar normalizá-lo para a forma capitalizada
+                    (function normalizeExistingServicoInput() {
+                        const servicoInput = document.getElementById('servico');
+                        if (!servicoInput || !servicoInput.value) return;
+                        const match = contxClinica.servicos.find(s => s.toLowerCase() === servicoInput.value.toLowerCase());
+                        if (match) {
+                            servicoInput.value = match; // mantém seleção coerente com o catálogo
+                        } else {
+                            // se não corresponder a nenhum serviço conhecido, limpar — evita enviar valor inválido
+                            servicoInput.value = '';
+                        }
+                    })();
+
+                    // Buscar horários reservados para TODAS as datas (em background, sem bloquear)
+                    carregarHorariosReservados(datas);
+
+                    // UI: gera datas (mantendo o alinhamento índice↔data ao ordenar)
+                    gerarBadgesDatas();
+
+                    // Carrega lista mestre de serviços (mostra todos os serviços, sem filtro de data)
+                    // Os serviços serão filtrados por data apenas quando uma data for selecionada
+                    gerarBadgesServicos();
+
+                    // Esconder loading após tudo carregado
+                    if (loadingScreen) {
+                        loadingScreen.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar contx:', error);
+                    // Mesmo em caso de erro, esconder loading para não travar a UI
+                    if (loadingScreen) {
+                        loadingScreen.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Função para carregar horários reservados para TODAS as datas de uma vez
+            // Executa em background sem bloquear o carregamento da página
+            function carregarHorariosReservados(datas) {
+                // Verificar se há cache válido
+                const cacheValido = obterCacheLocal();
+                if (cacheValido) {
+                    console.log('✓ Usando cache de horários reservados');
+                    console.log('Cache data:', cacheValido);
+                    // Normalizar horários do cache
+                    const cacheNormalizado = {};
+                    Object.keys(cacheValido).forEach(data => {
+                        cacheNormalizado[data] = cacheValido[data].map(h => normalizarHorario(h));
+                    });
+                    dadosReservadosCompletos = cacheNormalizado;
+                    console.log('dadosReservadosCompletos após cache:', dadosReservadosCompletos);
+                    return;
+                }
+
+                console.log('📡 Buscando horários reservados do servidor (em background)...');
+
+                // Para cada data, fazer um fetch do endpoint fetch-reservados e rastrear a promise
+                datas.forEach(data => {
+                    const promise = fetch(`${GOOGLE_SHEETS_URL}?action=fetch-reservados&date=${encodeURIComponent(data)}`)
+                        .then(resp => resp.json())
+                        .then(json => {
+                            const horariosReservados = (json && json.success && Array.isArray(json.data)) ? json.data.map(h => normalizarHorario(h)) : [];
+                            dadosReservadosCompletos[data] = horariosReservados;
+                            console.log(`✓ Horários carregados para ${data}:`, horariosReservados);
+
+                            // Atualizar renderização se o container de horários já está visível para essa data
+                            atualizarHorariosSeVisivel(data);
+                            return horariosReservados;
+                        })
+                        .catch(err => {
+                            console.warn(`Erro ao buscar horários para ${data}:`, err);
+                            dadosReservadosCompletos[data] = [];
+                            atualizarHorariosSeVisivel(data);
+                            return [];
+                        });
+
+                    // Armazenar a promise para rastrear status
+                    promisesPorData[data] = promise;
+                });
+
+                // Aguardar todos os fetches em background e depois salvar no cache
+                Promise.all(Object.values(promisesPorData))
+                    .then(() => {
+                        // Salvar no localStorage com timestamp (para cache persistente com expiração)
+                        salvarCacheLocal(dadosReservadosCompletos);
+                        console.log('✓ Todos os horários reservados carregados e cacheados');
+                    })
+                    .catch(error => {
+                        console.error('Erro ao salvar cache de horários:', error);
+                    });
+            }
+
+            // Atualizar renderização de horários se o container está visível para a data
+            function atualizarHorariosSeVisivel(data) {
+                // Verificar se a data atualmente é a selecionada
+                const container = document.getElementById('horarios-badges');
+                const dataInputAtual = document.getElementById('data').value;
+
+                if (dataInputAtual === data && container && !container.querySelector('.horarios-carregando')) {
+                    // Se o container não está em estado de carregamento, re-renderizar
+                    const idx = contxClinica.datas.indexOf(data);
+                    if (idx >= 0) {
+                        gerarBadgesHorario(idx);
+                    }
+                }
+            }
+
+            // Geração de badges de serviço a partir do contx
+            // Aceita: nenhum argumento (lista global), índice (number) ou data ISO (string)
+            // Sempre exibe TODOS os serviços (mestre), bloqueando os indisponíveis para a data
+            function gerarBadgesServicos(day = null) {
+                if (!contxClinica) return;
+                const container = document.getElementById('servicos-badges');
+                container.innerHTML = '';
+                container.scrollLeft = 0;
+
+                // Determina serviços DISPONÍVEIS para a data selecionada
+                let listaDisponivel = [];
+                if (typeof day === 'number') {
+                    listaDisponivel = contxClinica.servicosPorData[day] || [];
+                } else if (typeof day === 'string') {
+                    const idx = contxClinica.datas.indexOf(day);
+                    listaDisponivel = idx >= 0 ? (contxClinica.servicosPorData[idx] || []) : [];
+                } else {
+                    // Se nenhuma data foi selecionada, usar todos os serviços como disponíveis
+                    listaDisponivel = contxClinica.servicos || [];
+                }
+
+                // LISTA MESTRE: sempre usar servicosMestre para exibir TODOS os serviços
+                // Se servicosMestre está vazio, usar lista de disponíveis como fallback
+                const listaCompleta = servicosMestre.length > 0 ? servicosMestre : (listaDisponivel.length > 0 ? listaDisponivel : contxClinica.servicos || []);
+
+                // Se o serviço atualmente selecionado não estiver DISPONÍVEL para a data,
+                // limpar o campo e informar o usuário apenas se uma data foi selecionada
+                const servicoInput = document.getElementById('servico');
+                const selecionadoAtual = servicoInput && servicoInput.value;
+                if (selecionadoAtual && day !== null && !listaDisponivel.includes(selecionadoAtual)) {
+                    servicoInput.value = '';
+                    // mostrar mensagem específica
+                    showServicoIndisponivel(selecionadoAtual);
+                    // remover qualquer classe `selected` que possa persistir
+                    document.querySelectorAll('.badge-servico.selected').forEach(b => b.classList.remove('selected'));
+                }
+
+                // Separar serviços disponíveis e indisponíveis
+                const servicosDisponiveis = [];
+                const servicosIndisponiveis = [];
+
+                listaCompleta.forEach(servico => {
+                    const ehIndisponivel = day !== null && !listaDisponivel.includes(servico);
+                    if (ehIndisponivel) {
+                        servicosIndisponiveis.push(servico);
+                    } else {
+                        servicosDisponiveis.push(servico);
+                    }
+                });
+
+                // Renderizar primeiro os disponíveis, depois os indisponíveis
+                const listaOrdenada = [...servicosDisponiveis, ...servicosIndisponiveis];
+
+                listaOrdenada.forEach(servico => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'badge-servico';
+                    button.setAttribute('data-value', servico);
+                    button.textContent = servico;
+
+                    // Verificar se o serviço está disponível para a data selecionada
+                    const ehIndisponivel = day !== null && !listaDisponivel.includes(servico);
+                    if (ehIndisponivel) {
+                        button.classList.add('indisponivel');
+                    }
+
+                    // Se o input já contém este serviço (ex.: usuário já havia selecionado), manter visualmente selecionado
+                    if (servicoInput && servicoInput.value === servico) {
+                        button.classList.add('selected');
+                        document.getElementById('erro-servico').classList.remove('ativo');
+                    }
+
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        // Impedir seleção de serviços indisponíveis
+                        if (ehIndisponivel) {
+                            return;
+                        }
+                        document.querySelectorAll('.badge-servico').forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        document.getElementById('servico').value = this.getAttribute('data-value');
+                        // restaurar mensagem padrão se havia aviso de indisponibilidade
+                        resetErroServicoMensagem();
+                    });
+
+                    container.appendChild(button);
+                });
+
+                // acessibilidade: se não houver itens, mostrar placeholder discreto
+                if (!listaCompleta.length) {
+                    const p = document.createElement('div');
+                    p.style.color = '#888';
+                    p.style.fontSize = '0.95rem';
+                    p.style.padding = '6px 2px';
+                    p.textContent = 'Nenhum serviço disponível.';
+                    container.appendChild(p);
+                }
+            }
+
+            // Geração de badges de data (as arrays em contxClinica são paralelas — índice corresponde ao dia)
+            function gerarBadgesDatas() {
+                if (!contxClinica) return;
+                const container = document.getElementById('datas-badges');
+                container.innerHTML = '';
+                const diasSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+                const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+                // Obter data de hoje para comparação
+                const agora = new Date();
+                const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+                // Ordena visualmente por data sem perder o índice original — preserva mapeamento entre arrays
+                const dateIndexPairs = contxClinica.datas
+                    .map((d, i) => ({ date: d, idx: i }))
+                    .filter(x => x.date)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                dateIndexPairs.forEach(({ date: dataStr, idx }) => {
+                    // Parse correto da data YYYY-MM-DD para evitar problemas de timezone
+                    const [ano, mes, dia] = dataStr.split('-').map(Number);
+                    const data = new Date(ano, mes - 1, dia);
+                    const ehPassada = data < hoje;
+
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'badge-data';
+                    button.setAttribute('data-date', dataStr);
+                    button.setAttribute('data-index', String(idx));
+
+                    const diaSemana = diasSemana[data.getDay()];
+                    const diaNume = data.getDate();
+                    const mesAbrev = meses[data.getMonth()];
+
+                    button.innerHTML = `<span class="dia-semana">${diaSemana}</span><span class="dia-numero">${diaNume}</span><span class="mes-abrev">${mesAbrev}</span>`;
+
+                    // Bloquear datas passadas
+                    if (ehPassada) {
+                        button.classList.add('passado');
+                    }
+
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        // Limpar aviso de serviço ao trocar o dia (se havia sido mostrado)
+                        resetErroServicoMensagem();
+                        document.querySelectorAll('.badge-data').forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+
+                        const index = parseInt(this.getAttribute('data-index'), 10);
+                        const dateStr = this.getAttribute('data-date');
+
+                        document.getElementById('data').value = dateStr;
+                        document.getElementById('horario').value = ''; // Reset horário ao mudar data
+                        // Não limpar `servico` sem verificação — `gerarBadgesServicos` fará a limpeza apenas
+                        // se o serviço selecionado NÃO existir para o novo dia.
+
+                        // Atualiza serviços e horários para o índice selecionado
+                        gerarBadgesServicos(index);
+                        gerarBadgesHorario(index);
+
+                        // Se, após regenerar os badges, já existir um serviço previamente selecionado que seja válido,
+                        // reaplicar seleção visual e manter o valor; caso contrário, `gerarBadgesServicos` já terá limpado o input.
+                        const servicoInput = document.getElementById('servico');
+                        if (servicoInput && servicoInput.value) {
+                            let found = false;
+                            document.querySelectorAll('.badge-servico').forEach(b => {
+                                if (b.getAttribute('data-value') === servicoInput.value) {
+                                    b.classList.add('selected');
+                                    found = true;
+                                }
+                            });
+                            if (found) resetErroServicoMensagem();
+                        }
+
+                        document.getElementById('erro-data').classList.remove('ativo');
+
+                        // Mostrar seção de horários apenas se houver horários
+                        const hasHorarios = Array.isArray(contxClinica.horariosPorData[index]) && contxClinica.horariosPorData[index].length > 0;
+                        if (hasHorarios) {
+                            document.querySelector('.horarios-section').classList.remove('hidden');
+                        } else {
+                            document.querySelector('.horarios-section').classList.add('hidden');
+                        }
+
+                        // Atualiza serviços e horários para o índice selecionado
+                        gerarBadgesServicos(index);
+                        gerarBadgesHorario(index);
+                    });
+
+                    container.appendChild(button);
+                });
+            }
+
+            // Geração de badges de horário baseado na data selecionada (aceita índice ou data ISO)
+            function gerarBadgesHorario(day = null) {
+                if (!contxClinica) return;
+                const container = document.getElementById('horarios-badges');
+                const mensagemOcupados = document.getElementById('todos-horarios-ocupados');
+                container.innerHTML = '';
+                container.scrollLeft = 0;
+                if (mensagemOcupados) mensagemOcupados.classList.remove('ativo');
+
+                let horarios = [];
+                let dateIso = null;
+                if (typeof day === 'number') {
+                    horarios = contxClinica.horariosPorData[day] || [];
+                    dateIso = contxClinica.datas[day] || null;
+                } else if (typeof day === 'string') {
+                    const idx = contxClinica.datas.indexOf(day);
+                    horarios = idx >= 0 ? (contxClinica.horariosPorData[idx] || []) : [];
+                    dateIso = day;
+                }
+
+                console.log('🔍 gerarBadgesHorario - dateIso:', dateIso);
+
+                // Verificar se o carregamento da data ainda está em progresso
+                const promisseCarregamento = promisesPorData[dateIso];
+                const contemhOrarios = dateIso && dadosReservadosCompletos.hasOwnProperty(dateIso);
+
+                if (!contemhOrarios && promisseCarregamento) {
+                    // Dados ainda não carregaram - mostrar spinner
+                    console.log('⏳ Aguardando carregamento de horários para', dateIso);
+                    const spinnerDiv = document.createElement('div');
+                    spinnerDiv.className = 'horarios-carregando';
+                    spinnerDiv.innerHTML = `
+                        <div class="horarios-spinner"></div>
+                        <div class="horarios-spinner-texto">Carregando horários...</div>
+                    `;
+                    container.appendChild(spinnerDiv);
+
+                    // Aguardar a promise completar e depois renderizar
+                    promisseCarregamento.then(() => {
+                        // Verificar se a data é ainda aquela selecionada antes de re-renderizar
+                        if (document.getElementById('data').value === dateIso) {
+                            console.log('✓ Horários carregados, renderizando...');
+                            gerarBadgesHorario(day);
+                        }
+                    }).catch(err => {
+                        console.error('Erro ao carregar horários:', err);
+                        // Mesmo com erro, tentar renderizar com dados vazios
+                        if (document.getElementById('data').value === dateIso) {
+                            gerarBadgesHorario(day);
+                        }
+                    });
+
+                    return; // Parar aqui, não renderizar badges ainda
+                }
+
+                // Renderiza badges de horário
+                horarios.forEach(horario => {
+                    const horarioNormalizado = normalizarHorario(horario);
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'badge-horario';
+                    button.setAttribute('data-time', horarioNormalizado);
+                    button.textContent = horarioNormalizado;
+
+                    button.addEventListener('click', function (e) {
+                        // proteção redundante caso a badge tenha sido marcada como reservado
+                        if (this.classList.contains('reservado')) return;
+                        e.preventDefault();
+                        document.querySelectorAll('.badge-horario').forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        document.getElementById('horario').value = horarioNormalizado;
+                        document.getElementById('erro-horario').classList.remove('ativo');
+                    });
+
+                    container.appendChild(button);
+                });
+
+                if (!horarios.length) {
+                    const p = document.createElement('div');
+                    p.style.color = '#888';
+                    p.style.fontSize = '0.95rem';
+                    p.style.padding = '6px 2px';
+                    p.textContent = 'Nenhum horário disponível para esta data.';
+                    container.appendChild(p);
+                    return;
+                }
+
+                // Usar dados já carregados do cache global
+                const reservados = dadosReservadosCompletos[dateIso] || [];
+                console.log('✓ Horários reservados para', dateIso, ':', reservados);
+                const setReservados = new Set(reservados);
+                let todosReservados = true;
+
+                container.querySelectorAll('.badge-horario').forEach(b => {
+                    const t = normalizarHorario(b.getAttribute('data-time'));
+                    if (setReservados.has(t)) {
+                        b.classList.add('reservado');
+                        b.setAttribute('aria-disabled', 'true');
+                        b.setAttribute('tabindex', '-1');
+                        console.log('🔴 Bloqueado:', t);
+
+                        // Se por acaso o usuário já havia selecionado este horário, limpar e avisar
+                        if (b.classList.contains('selected')) {
+                            b.classList.remove('selected');
+                            document.getElementById('horario').value = '';
+                            exibirAlertaErro('Horário indisponível', 'O horário selecionado foi reservado por outra pessoa. Escolha outro.');
+                        }
+                    } else {
+                        todosReservados = false;
+                    }
+                });
+
+                // Se todos os horários estão reservados, mostrar mensagem
+                if (todosReservados && horarios.length > 0) {
+                    container.innerHTML = '';
+                    if (mensagemOcupados) {
+                        mensagemOcupados.classList.add('ativo');
+                    }
+                    // Desativar o input de horário
+                    document.getElementById('horario').value = '';
+                    document.getElementById('horario').setAttribute('aria-disabled', 'true');
+                } else {
+                    // Se houver pelo menos um horário disponível, garantir que a mensagem não apareça
+                    if (mensagemOcupados) {
+                        mensagemOcupados.classList.remove('ativo');
+                    }
+                }
+            }
+
+            // Formatação automática do campo de telefone
+            const telefoneInput = document.getElementById('telefone');
+            telefoneInput.addEventListener('input', function (e) {
+                let valor = e.target.value.replace(/\D/g, ''); // Remove tudo que não é número
+
+                // Limita a 8 dígitos
+                if (valor.length > 8) {
+                    valor = valor.slice(0, 8);
+                }
+
+                // Formata como 9999-9999
+                if (valor.length <= 4) {
+                    e.target.value = valor;
+                } else {
+                    e.target.value = valor.slice(0, 4) + '-' + valor.slice(4);
+                }
+            });
+
+            // Listeners para limpar mensagens de erro quando campos são preenchidos
+            document.getElementById('nome').addEventListener('input', function () {
+                if (this.value.trim()) {
+                    document.getElementById('erro-nome').classList.remove('ativo');
+                }
+            });
+
+            document.getElementById('telefone').addEventListener('input', function () {
+                if (this.value.trim()) {
+                    document.getElementById('erro-telefone').classList.remove('ativo');
+                }
+            });
+
+            // Função para formatar data para exibição
+            function formatarDataExibicao(dataStr) {
+                const [ano, mes, dia] = dataStr.split('-').map(Number);
+                const data = new Date(ano, mes - 1, dia);
+                const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+                const diaSemana = diasSemana[data.getDay()];
+                const diaNume = data.getDate();
+                const mesNome = meses[data.getMonth()];
+
+                return `${diaSemana}, ${diaNume} de ${mesNome}`;
+            }
+
+            // Função para formatar telefone para exibição
+            function formatarTelefoneExibicao(telefone) {
+                return `(81) 9${telefone}`;
+            }
+
+            // Função para abrir modal de confirmação
+            function abrirModalConfirmacao() {
+                const nome = document.getElementById('nome').value.trim();
+                const telefone = document.getElementById('telefone').value.trim();
+                const servico = document.getElementById('servico').value;
+                const data = document.getElementById('data').value;
+                const horario = document.getElementById('horario').value;
+
+                // Preencher informações no modal
+                document.getElementById('conf-nome').textContent = nome;
+                document.getElementById('conf-telefone').textContent = formatarTelefoneExibicao(telefone);
+                document.getElementById('conf-servico').textContent = servico;
+                document.getElementById('conf-data').textContent = formatarDataExibicao(data);
+                document.getElementById('conf-horario').textContent = horario;
+
+                // Mostrar modal
+                document.getElementById('modal-overlay').classList.add('ativo');
+            }
+
+            // Função para fechar modal
+            function fecharModal() {
+                document.getElementById('modal-overlay').classList.remove('ativo');
+            }
+
+            // Função para exibir alertas de erro com motivo específico
+            function exibirAlertaErro(titulo, detalhes) {
+                const alerta = document.getElementById('alerta-erro');
+                const alertaTitulo = document.getElementById('alerta-erro-titulo');
+                const alertaDetalhes = document.getElementById('alerta-erro-detalhes');
+
+                alertaTitulo.textContent = titulo;
+                alertaDetalhes.innerHTML = detalhes;
+                alerta.classList.add('ativo');
+
+                // Rolar para o topo para ver o alerta
+                setTimeout(() => {
+                    alerta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+
+            // Função para fechar alerta de erro
+            function fecharAlertaErro() {
+                document.getElementById('alerta-erro').classList.remove('ativo');
+            }
+
+            // Função para enviar dados para o Google Sheets
+            function confirmarAgendamento() {
+                const nome = document.getElementById('nome').value.trim();
+                const telefone = document.getElementById('telefone').value.trim();
+                const servico = document.getElementById('servico').value;
+                const data = document.getElementById('data').value;
+                const horario = normalizarHorario(document.getElementById('horario').value);
+
+                // Revalidação antes de confirmar
+                let temErro = false;
+
+                if (!nome) {
+                    document.getElementById('erro-nome').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!telefone) {
+                    document.getElementById('erro-telefone').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!servico) {
+                    document.getElementById('erro-servico').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!data) {
+                    document.getElementById('erro-data').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!horario || horario === ':') {
+                    document.getElementById('erro-horario').classList.add('ativo');
+                    temErro = true;
+                }
+
+                // Se houver erros, fechar o modal e mostrar os erros
+                if (temErro) {
+                    fecharModal();
+                    return;
+                }
+
+                // Enviar dados para o Google Sheets via Apps Script
+                const dadosAgendamento = {
+                    nome: nome,
+                    telefone: `(81) 9${telefone}`,
+                    servico: servico,
+                    data: data,
+                    horario: horario
+                };
+
+                // Mostrar mensagem de carregamento com spinner
+                const btnConfirmar = document.getElementById('btn-confirmar');
+                const textoOriginal = btnConfirmar.textContent;
+                btnConfirmar.disabled = true;
+                btnConfirmar.innerHTML = '<div class="btn-spinner"></div>Enviando...';
+
+                // Fazer requisição POST para o Google Sheets
+                fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(dadosAgendamento)
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            // Fechar modal
+                            fecharModal();
+
+                            // Garantir que TODAS as mensagens de erro sejam removidas ao confirmar
+                            limparErros();
+
+                            // Limpar cache para forçar novo fetch na próxima vez
+                            limparCacheLocal();
+                            console.log('✓ Cache de horários limpo - próximas visitações fetcharão dados atualizados');
+
+                            // Mostrar confirmação minimalista ocupando o container
+                            mostrarMensagemConfirmacao({
+                                nome: nome,
+                                telefone: `(81) 9${telefone}`,
+                                servico: servico,
+                                data: data,
+                                horario: horario
+                            });
+
+                            // Reset visual dos badges / inputs (os valores já estão na view)
+                            document.querySelectorAll('.badge-servico, .badge-data, .badge-horario').forEach(b => b.classList.remove('selected'));
+                            document.querySelectorAll('input[type="hidden"]').forEach(input => input.value = '');
+                            document.querySelector('.horarios-section').classList.add('hidden');
+
+                            // Fechar alerta de duplicata se estiver aberto
+                            document.getElementById('alerta-duplicata').classList.remove('ativo');
+                        } else {
+                            // Fechar modal
+                            fecharModal();
+
+                            // Identificar o tipo de erro e exibir mensagem apropriada
+                            const mensagemErro = result.error || 'Erro desconhecido ao processar agendamento';
+
+                            if (mensagemErro.includes('já existe')) {
+                                // Erro de duplicata
+                                document.getElementById('alerta-duplicata').classList.add('ativo');
+                                setTimeout(() => {
+                                    document.querySelector('.alerta-duplicata').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 100);
+                            } else if (mensagemErro.includes('faltando') || mensagemErro.includes('Colunas')) {
+                                // Erro de campos faltando
+                                let detalhes = '<p style="margin: 0;">Os seguintes campos obrigatórios não foram preenchidos ou estão incorretos:';
+
+                                // Extrair campos faltando da mensagem
+                                const match = mensagemErro.match(/faltando[^:]*: (.+)/);
+                                if (match) {
+                                    const campos = match[1].split(',').map(c => '<strong>' + c.trim() + '</strong>');
+                                    detalhes += '</p><ul style="margin: 8px 0 0 16px; padding: 0;"><li>' + campos.join('</li><li>') + '</li></ul>';
+                                } else {
+                                    detalhes += '</p>';
+                                }
+
+                                exibirAlertaErro(
+                                    '⚠️ Campos obrigatórios faltando',
+                                    detalhes
+                                );
+                            } else if (mensagemErro.includes('não encontrada')) {
+                                // Erro de configuração
+                                exibirAlertaErro(
+                                    '⚙️ Erro de configuração',
+                                    '<p style="margin: 0;">Houve um problema na configuração do sistema. Entre em contato com o suporte técnico da clínica.</p>'
+                                );
+                            } else {
+                                // Erro genérico
+                                exibirAlertaErro(
+                                    '❌ Erro ao processar agendamento',
+                                    '<p style="margin: 0;">' + mensagemErro + '</p><p style="margin: 8px 0 0 0; font-size: 0.9rem;">Se o problema persistir, <a href="' + (contxClinica?.link1 || '#') + '" target="_blank">entre em contato conosco.</a></p>'
+                                );
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição:', error);
+                        fecharModal();
+                        exibirAlertaErro(
+                            '🌐 Erro de conexão',
+                            '<p style="margin: 0;">Não foi possível se conectar ao servidor. Verifique sua conexão e tente novamente.</p><p style="margin: 8px 0 0 0; font-size: 0.9rem;">Detalhes técnicos: ' + error.message + '</p>'
+                        );
+                    })
+                    .finally(() => {
+                        // Restaurar estado do botão
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.innerHTML = textoOriginal;
+                    });
+            }
+
+            /* Helpers: mostrar view de confirmação interna e reiniciar formulário */
+            function mostrarMensagemConfirmacao(dados) {
+                const view = document.querySelector('.confirmacao-view');
+                if (!view) return;
+
+                // remover quaisquer mensagens de erro remanescentes antes de exibir confirmação
+                limparErros();
+
+                // Preencher valores (usar dados enviados ao servidor)
+                document.getElementById('confview-nome').textContent = dados.nome || '';
+                document.getElementById('confview-telefone').textContent = dados.telefone || '';
+                document.getElementById('confview-servico').textContent = dados.servico || '';
+                document.getElementById('confview-data').textContent = dados.data ? formatarDataExibicao(dados.data) : '';
+                document.getElementById('confview-horario').textContent = dados.horario || '';
+
+                // Ocultar o formulário e exibir a view de confirmação
+                const form = document.querySelector('.form-agendamento');
+                if (form) form.style.display = 'none';
+                view.classList.add('ativo');
+                view.setAttribute('aria-hidden', 'false');
+
+                // Acessibilidade: foco e leitura por leitores de tela
+                view.setAttribute('tabindex', '-1');
+                view.focus();
+                setTimeout(() => view.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+            }
+
+            function reiniciarAgendamento(e) {
+                if (e && e.preventDefault) e.preventDefault();
+
+                // ⭐ ÓTIMA PRÁTICA DE UX: Ao reiniciar agendamento, limpar cache e recarregar página
+                // Assim garantimos que o usuário veja os dados mais frescos possível
+                limparCacheLocal();
+                console.log('🔄 Cache apagado - recarregando página...');
+
+                // Recarregar a página para buscar dados atualizados
+                location.reload();
+            }
+
+            // ligar o link "Fazer novo agendamento"
+            const fazerNovo = document.getElementById('fazer-novo');
+            if (fazerNovo) fazerNovo.addEventListener('click', reiniciarAgendamento);
+
+            // Função para limpar todas as mensagens de erro (inline + alertas globais)
+            function limparErros() {
+                // limpar mensagens inline
+                document.querySelectorAll('.erro-mensagem').forEach(el => {
+                    el.classList.remove('ativo');
+                    // restaurar texto padrão para mensagens específicas (evita texto residual)
+                    if (el.id === 'erro-servico') {
+                        el.textContent = 'Por favor, selecione um serviço';
+                        el.removeAttribute('tabindex');
+                    }
+                });
+
+                // esconder alertas globais (erro / duplicata) e limpar detalhes
+                const alertaErro = document.getElementById('alerta-erro');
+                if (alertaErro) {
+                    alertaErro.classList.remove('ativo');
+                    alertaErro.setAttribute('aria-hidden', 'true');
+                    const detalhes = document.getElementById('alerta-erro-detalhes');
+                    if (detalhes) detalhes.innerHTML = '';
+                    const titulo = document.getElementById('alerta-erro-titulo');
+                    if (titulo) titulo.textContent = 'Erro ao processar agendamento';
+                }
+
+                const alertaDup = document.getElementById('alerta-duplicata');
+                if (alertaDup) {
+                    alertaDup.classList.remove('ativo');
+                    alertaDup.setAttribute('aria-hidden', 'true');
+                }
+
+                // remover foco de elementos de erro, se houver
+                if (document.activeElement && (document.activeElement.classList.contains('erro-mensagem') || document.activeElement.closest && document.activeElement.closest('.alerta-erro'))) {
+                    try { document.activeElement.blur(); } catch (e) { /* noop */ }
+                }
+            }
+
+            // Validação completa do formulário
+            document.querySelector('.form-agendamento').addEventListener('submit', function (e) {
+                e.preventDefault();
+                limparErros();
+
+                // Validação do honeypot - bloqueio de bots
+                const honeypot = document.getElementById('website').value.trim();
+                if (honeypot) {
+                    // Se o honeypot foi preenchido, é um bot. Fazer como se fosse sucesso para não alertar o bot
+                    console.warn('🚨 Bot detectado!');
+                    return;
+                }
+
+                const nome = document.getElementById('nome').value.trim();
+                const telefone = document.getElementById('telefone').value.trim();
+                const servico = document.getElementById('servico').value;
+                const data = document.getElementById('data').value;
+                const horario = document.getElementById('horario').value;
+
+                let temErro = false;
+
+                if (!nome) {
+                    document.getElementById('erro-nome').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!telefone) {
+                    document.getElementById('erro-telefone').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!servico) {
+                    document.getElementById('erro-servico').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!data) {
+                    document.getElementById('erro-data').classList.add('ativo');
+                    temErro = true;
+                }
+                if (!horario) {
+                    document.getElementById('erro-horario').classList.add('ativo');
+                    temErro = true;
+                }
+
+                if (!temErro) {
+                    abrirModalConfirmacao();
+                }
+            });
+
+            // Event listeners dos botões do modal
+            document.getElementById('btn-editar').addEventListener('click', function () {
+                fecharModal();
+            });
+
+            document.getElementById('btn-confirmar').addEventListener('click', function () {
+                confirmarAgendamento();
+            });
+
+            // Fechar modal ao clicar fora da box
+            document.getElementById('modal-overlay').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    fecharModal();
+                }
+            });
+
+            // Inicializa menu responsivo com melhorias (overlay, ESC, foco)
+            (function () {
+                const navToggle = document.querySelector('.nav-toggle');
+                const navLinks = document.querySelector('.nav-links');
+                const navOverlay = document.getElementById('nav-overlay');
+
+                if (!navToggle || !navLinks) return;
+
+                const links = Array.from(navLinks.querySelectorAll('a'));
+
+                function openMenu() {
+                    navLinks.classList.add('open');
+                    navToggle.classList.add('open');
+                    navToggle.setAttribute('aria-expanded', 'true');
+                    if (navOverlay) {
+                        navOverlay.classList.add('open');
+                        navOverlay.setAttribute('aria-hidden', 'false');
+                    }
+                    document.body.classList.add('no-scroll');
+                    // foco no primeiro link para acessibilidade
+                    if (links[0]) links[0].focus();
+                    navToggle.setAttribute('aria-label', 'Fechar menu');
+                }
+
+                function closeMenu(returnFocus = true) {
+                    navLinks.classList.remove('open');
+                    navToggle.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    if (navOverlay) {
+                        navOverlay.classList.remove('open');
+                        navOverlay.setAttribute('aria-hidden', 'true');
+                    }
+                    document.body.classList.remove('no-scroll');
+                    if (returnFocus) navToggle.focus();
+                    navToggle.setAttribute('aria-label', 'Abrir menu');
+                }
+
+                navToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const opened = this.getAttribute('aria-expanded') === 'true';
+                    if (opened) closeMenu(); else openMenu();
+                });
+
+                // fechar ao clicar em overlay
+                if (navOverlay) {
+                    navOverlay.addEventListener('click', () => closeMenu());
+                }
+
+                // fechar ao clicar em um link e remover rolagem
+                links.forEach(a => {
+                    a.addEventListener('click', () => closeMenu(false));
+                });
+
+                // fechar com ESC e gerenciar trap de foco
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeMenu();
+                    }
+                });
+
+                // foco cíclico dentro do menu quando aberto
+                navLinks.addEventListener('keydown', function (e) {
+                    if (e.key !== 'Tab') return;
+                    const first = links[0];
+                    const last = links[links.length - 1];
+                    if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                });
+
+                // fechar se redimensionar para desktop
+                window.addEventListener('resize', function () {
+                    if (window.innerWidth > 768 && navLinks.classList.contains('open')) {
+                        closeMenu();
+                    }
+                });
+            })();
+
+            // Event listeners para fechar alertas manualmente
+            document.getElementById('fechar-alerta').addEventListener('click', function () {
+                document.getElementById('alerta-duplicata').classList.remove('ativo');
+            });
+
+            document.getElementById('fechar-alerta-erro').addEventListener('click', function () {
+                fecharAlertaErro();
+            });
+
+            // Carrega contx e inicializa
+            carregarContx();
+        </script>
+    </div>
+</body>
+
+</html>

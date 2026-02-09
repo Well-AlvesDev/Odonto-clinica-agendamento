@@ -1,0 +1,21 @@
+[
+    {
+        "datas_disp": [
+            "2026-02-07 / aparelho, clareamento, limpeza, canal, implante / 09:00, 09:30, 10:00, 11:00, 11:30, 15:30",
+            "2026-02-08 / clareamento, limpeza, canal, implante/ 09:00, 10:00, 11:00, 11:30, 13:30, 15:30",
+            "2026-02-09 / limpeza, canal, implante / 09:00, 10:00, 11:00, 11:30, 15:30"
+        ]
+    },
+    {
+        "link1": "https://wa.me/55991999999"
+    },
+    {
+        "servicos": [
+            "Aparelho / tempo-minutos: 45",
+            "Clareamento / tempo-minutos: 30",
+            "Limpeza / tempo-minutos: 45",
+            "Canal / tempo-minutos: 120",
+            "Implante / tempo-minutos: 180"
+        ]
+    }
+]

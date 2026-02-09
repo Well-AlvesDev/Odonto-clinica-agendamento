@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odonto Clínica</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
+    <style>
+        body {
+            background: #f9f9f9;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Estilos da Navegação */
+        nav {
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* full-bleed: garantir que a nav sempre toque as bordas da viewport */
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            padding: 12px 0;
+            /* apenas espaçamento vertical */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            /* Garantir que a nav fique acima do overlay */
+            box-sizing: border-box;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 16px;
+            /* espaçamento interno controlado aqui */
+            /* para o menu mobile absoluto */
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .nav-clinica-nome {
+            margin: 0;
+            white-space: nowrap;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 14px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            align-items: center;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.15s, color 0.15s;
+            font-weight: 500;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            padding: 8px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            /* ícone usa currentColor */
+        }
+
+        .nav-toggle svg {
+            display: block;
+            width: 28px;
+            height: 24px;
+        }
+
+        .nav-toggle .line {
+            stroke: currentColor;
+            transition: transform 0.25s cubic-bezier(.2, .9, .2, 1), opacity 0.2s;
+            transform-origin: 14px 12px;
+        }
+
+        .nav-toggle.open .line-top {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-toggle.open .line-mid {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .nav-toggle.open .line-bot {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        .nav-toggle:focus-visible {
+            outline: 3px solid rgba(58, 134, 255, 0.25);
+            border-radius: 8px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .nav-toggle .line {
+                transition: none !important;
+            }
+
+            .nav-links {
+                transition: none !important;
+            }
+        }
+
+        /* Overlay para foco e escurecer o fundo */
+        .nav-overlay {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 90;
+            /* Deve ficar abaixo da nav */
+        }
+
+        .nav-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Responsivo: menu hamburger para telas pequenas com animação */
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                left: 0;
+                right: 0;
+                top: 64px;
+                background: #ffffff;
+                flex-direction: column;
+                gap: 0;
+                align-items: stretch;
+                padding: 8px 0;
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+                border-radius: 0 0 10px 10px;
+                transform: translateY(-6px) scale(0.995);
+                opacity: 0;
+                pointer-events: none;
+                transition: transform 0.28s cubic-bezier(.2, .9, .2, 1), opacity 0.2s ease;
+                max-height: calc(100vh - 64px);
+                overflow: auto;
+                z-index: 995;
+                /* Acima do overlay, abaixo da nav */
+            }
+
+            .nav-links.open {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .nav-links li a {
+                padding: 14px 18px;
+                border-bottom: 1px solid #f0f0f0;
+                display: block;
+            }
+
+            .nav-toggle {
+                display: inline-flex;
+            }
+        }
+
+        /* Bloquear rolagem quando o menu estiver aberto */
+        .no-scroll {
+            overflow: hidden !important;
+        }
+
+        /* Responsivo para telas pequenas */
+        @media (max-width: 600px) {
+
+            /* Manter a nav full-bleed em mobile; ajustar apenas espaçamento vertical */
+            nav {
+                padding: 12px 0;
+            }
+        }
+
+
+        /* Forçar tamanho consistente do logo e do nome na nav (não crescer em telas pequenas) */
+        .nav-logo {
+            width: 56px;
+            height: 56px;
+            max-width: none;
+            flex-shrink: 0;
+        }
+
+        .nav-clinica-nome {
+            font-size: 1.15rem;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        /* ===== SMOOTH SCROLL ===== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        main {
+            padding-top: 88px;
+        }
+
+        .img-principal {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 200px;
+            border-radius: 90px;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+
+        /* Estilos dos botões - Mobile First */
+        .botoes {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            padding: 0 16px;
+            max-width: 100%;
+        }
+
+        .botoes a {
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: 20px;
+            font-weight: 400;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            text-align: center;
+            width: 100%;
+            max-width: 280px;
+            box-sizing: border-box;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .botoes a.primario {
+            background: #df7595d7;
+            color: white;
+        }
+
+        .botoes a.primario:hover,
+        .botoes a.primario:focus {
+            background: #c25a7db0;
+            outline: none;
+        }
+
+        .botoes a.primario:active {
+            background: #b34a6d9a;
+        }
+
+        .botoes a.secundario {
+            background: white;
+            color: #df7595d7;
+            border: 2px solid #df7595d7;
+        }
+
+        .botoes a.secundario:hover,
+        .botoes a.secundario:focus {
+            background: #f5f5f5;
+            outline: none;
+        }
+
+        .botoes a.secundario:active {
+            background: #efefef;
+        }
+
+        /* Responsivo: Desktop */
+        @media (min-width: 768px) {
+            .botoes {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 16px;
+                margin-top: 40px;
+            }
+
+            .botoes a {
+                width: auto;
+                max-width: none;
+                min-width: 140px;
+                padding: 14px 32px;
+            }
+
+        }
+
+        /* ===== SEÇÃO DE SERVIÇOS ===== */
+        #servicos {
+            padding: 60px 16px;
+            background: #ffffff;
+            margin-top: 40px;
+        }
+
+        #servicos h2 {
+            text-align: center;
+            color: #404040;
+            font-size: 28px;
+            margin: 0 0 40px 0;
+            font-weight: 600;
+        }
+
+        .servicos-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .servico-card {
+            background: none;
+            border: 2px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(100, 100, 100, 0.233);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .servico-icon {
+            font-size: 48px;
+            color: #df7595d7;
+            margin-bottom: 16px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .servico-icon img {
+            width: 100%;
+            max-width: 220px;
+            height: auto;
+            border-radius: 30px;
+            object-fit: cover;
+        }
+
+        .servico-card h3 {
+            color: #404040;
+            font-size: 20px;
+            margin: 16px 0;
+            font-weight: 600;
+        }
+
+        .servico-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        @media (min-width: 600px) and (max-width: 1023px) {
+            #servicos {
+                padding: 60px 24px;
+            }
+
+            .servicos-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+                padding: 0 16px;
+            }
+
+            .servico-card {
+                padding: 28px 20px;
+            }
+
+            .servico-icon img {
+                max-width: 180px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #servicos {
+                padding: 80px 32px;
+            }
+
+            #servicos h2 {
+                font-size: 32px;
+                margin-bottom: 50px;
+            }
+
+            .servicos-container {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 32px;
+                padding: 0;
+            }
+
+            .servico-card {
+                padding: 40px 28px;
+            }
+
+            .servico-icon img {
+                max-width: 240px;
+            }
+        }
+
+        /* ===== SEÇÃO DE FOOTER ===== */
+        footer {
+            background: none;
+            color: #f7f7f7;
+            padding: 60px 16px 30px;
+            margin-top: 60px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .footer-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: #363636d7;
+        }
+
+        .footer-contato,
+        .footer-redes,
+        .footer-localizacao {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-contato a,
+        .footer-localizacao p,
+        .footer-localizacao a {
+            color: #282828;
+            text-decoration: none;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+
+        .footer-redes {
+            display: flex;
+            gap: 16px;
+            flex-direction: row;
+            margin-top: 8px;
+        }
+
+        .footer-redes a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(229, 229, 229, 0.66);
+            border-radius: 50%;
+            color: #383838d7;
+            transition: all 0.3s ease;
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        .footer-localizacao p {
+            margin: 0 0 12px 0;
+            display: block;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #707070;
+        }
+
+        @media (min-width: 600px) {
+            .footer-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 50px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            footer {
+                padding: 80px 32px 40px;
+            }
+
+            .footer-container {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 60px;
+            }
+
+            .footer-section h3 {
+                font-size: 16px;
+            }
+
+            .footer-contato a,
+            .footer-localizacao p,
+            .footer-localizacao a {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav role="navigation" aria-label="Menu principal">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <img src="../recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
+                    <h2 class="nav-clinica-nome" style="font-weight: 400; color: #de8e96d7; font-size: 25px;">Odonto
+                        Clínica
+                    </h2>
+                </div>
+
+                <button class="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menu">
+                    <svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true" focusable="false">
+                        <path class="line line-top" d="M3 5h22" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round"></path>
+                        <path class="line line-mid" d="M3 12h22" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round"></path>
+                        <path class="line line-bot" d="M3 19h22" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round"></path>
+                    </svg>
+                </button>
+
+                <ul class="nav-links" id="main-nav">
+                    <li><a href="#">Início</a></li>
+                    <li><a href="#servicos">Serviços</a></li>
+                    <li><a href="./agendar/">Agendamento</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Overlay para fechar o menu e escurecer o fundo em mobile (fora da nav para não sobrepor) -->
+        <div class="nav-overlay" id="nav-overlay" aria-hidden="true" tabindex="-1"></div>
+
+    </header>
+    <main>
+        <section class="principal">
+            <img src="./recursos/imgs/image.webp" alt="Imagem da doutora" class="img-principal">
+            <h1 style="text-align: center; color: #404040; font-size: 25px;">Dra. Mirelly Marinho <img
+                    src="./recursos/imgs/img2.svg" alt="icone de verificado"
+                    style="vertical-align: middle; width: 30px;"></h1>
+            <p style="color: #255996; text-align: center;"> CRO-PE 9131</p>
+            <p style="font-size: 15px; text-align: center; margin: 0 auto; max-width: 400px;">Cuidar do seu sorisso é
+                cuidar da sua saúde e autoestima.
+                Aqui, cada atendimento é feito com atenção, técnica e compromisso com seu bem-estar e sua saúde bucal.
+            </p>
+        </section>
+        <div class="botoes" style="margin-bottom: 50px;">
+            <a href="./agendar/" class="primario"><i class="ri-clipboard-line" style="margin-right: 10px;"></i>Agendar
+                Consulta</a>
+            <a href="#servicos" class="secundario"><i class="ri-bubble-chart-line"
+                    style="margin-right: 10px;"></i>Serviços </a>
+            <a href="#contato" class="secundario"> <i class="ri-phone-line" style="margin-right: 10px;"></i>Contato</a>
+            <a href="#local" class="secundario"><i class="ri-map-2-line" style="margin-right: 10px;"></i>Localização</a>
+        </div>
+
+        <section id="servicos">
+            <h2 style="font-weight: 400; font-size: 40px;">Nossos Serviços</h2>
+            <div class="servicos-container">
+                <div class="servico-card">
+                    <div class="servico-icon">
+                        <img src="./recursos/imgs/img3.webp" alt="">
+                    </div>
+                    <h3 style="font-size: 26px; font-weight: 400;">Clareamento Dental</h3>
+                    <p>Tratamento seguro e eficaz para clarear os dentes, restaurando o brilho natural do seu sorriso
+                        com técnicas modernas.</p>
+                </div>
+                <div class="servico-card">
+                    <div class="servico-icon">
+                        <img src="./recursos/imgs/img4.webp" alt="">
+                    </div>
+                    <h3 style="font-size: 26px; font-weight: 400;">Facetas em Resina Composta</h3>
+                    <p>Restauração estética que melhora a forma e cor dos dentes, criando um sorriso mais harmonioso e
+                        natural.</p>
+                </div>
+                <div class="servico-card">
+                    <div class="servico-icon">
+                        <img src="./recursos/imgs/img2.webp" alt="">
+                    </div>
+                    <h3 style="font-size: 26px; font-weight: 400;">Aplicação e Manutenção de Aparelho</h3>
+                    <p>Serviços completos de ortodontia, incluindo instalação e acompanhamento periódico para um sorriso
+                        alinhado.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer id="contato">
+            <div class="footer-container">
+                <div class="footer-section footer-contato">
+                    <h3>Contato</h3>
+                    <a href="tel:+5585987654321">
+                        <i class="ri-phone-fill"></i>
+                        (85) 98765-4321
+                    </a>
+                    <a href="mailto:contato@odontoclinica.com.br">
+                        <i class="ri-mail-line"></i>
+                        contato@odontoclinica.com.br
+                    </a>
+                </div>
+
+                <div class="footer-section footer-redes">
+                    <div>
+                        <h3>Redes Sociais</h3>
+                        <div class="footer-redes">
+                            <a href="https://wa.me/5585987654321" target="_blank" rel="noopener noreferrer"
+                                title="WhatsApp">
+                                <i class="ri-whatsapp-line"></i>
+                            </a>
+                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" title="Instagram">
+                                <i class="ri-instagram-line"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section footer-localizacao" id="local">
+                    <h3>Localização</h3>
+                    <p>Rua das Flores, 123<br>Fortaleza - CE, 60000-000</p>
+                    <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+                        <i class="ri-direction-line"></i>
+                        Ver no Google Maps
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 Odonto Clínica - Dra. Mirelly Marinho. <br> Todos os direitos reservados.</p>
+            </div>
+            <p
+                style="text-align: center; font-size: 14px; color: #255996; margin-top: 20px; text-decoration: underline;">
+                Área administrativa</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // Inicializa menu responsivo com melhorias (overlay, ESC, foco)
+        (function () {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            const navOverlay = document.getElementById('nav-overlay');
+
+            if (!navToggle || !navLinks) return;
+
+            const links = Array.from(navLinks.querySelectorAll('a'));
+
+            function openMenu() {
+                navLinks.classList.add('open');
+                navToggle.classList.add('open');
+                navToggle.setAttribute('aria-expanded', 'true');
+                if (navOverlay) {
+                    navOverlay.classList.add('open');
+                    navOverlay.setAttribute('aria-hidden', 'false');
+                }
+                document.body.classList.add('no-scroll');
+                // foco no primeiro link para acessibilidade
+                if (links[0]) links[0].focus();
+                navToggle.setAttribute('aria-label', 'Fechar menu');
+            }
+
+            function closeMenu(returnFocus = true) {
+                navLinks.classList.remove('open');
+                navToggle.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                if (navOverlay) {
+                    navOverlay.classList.remove('open');
+                    navOverlay.setAttribute('aria-hidden', 'true');
+                }
+                document.body.classList.remove('no-scroll');
+                if (returnFocus) navToggle.focus();
+                navToggle.setAttribute('aria-label', 'Abrir menu');
+            }
+
+            navToggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const opened = this.getAttribute('aria-expanded') === 'true';
+                if (opened) closeMenu(); else openMenu();
+            });
+
+            // fechar ao clicar em overlay
+            if (navOverlay) {
+                navOverlay.addEventListener('click', () => closeMenu());
+            }
+
+            // fechar ao clicar em um link e remover rolagem
+            links.forEach(a => {
+                a.addEventListener('click', () => closeMenu(false));
+            });
+
+            // fechar com ESC e gerenciar trap de foco
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+
+            // foco cíclico dentro do menu quando aberto
+            navLinks.addEventListener('keydown', function (e) {
+                if (e.key !== 'Tab') return;
+                const first = links[0];
+                const last = links[links.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            });
+
+            // fechar se redimensionar para desktop
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 768 && navLinks.classList.contains('open')) {
+                    closeMenu();
+                }
+            });
+        })();
+
+    </script>
+
+</body>
+
+</html>
