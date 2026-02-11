@@ -228,14 +228,9 @@
         }
 
         /* ===== SMOOTH SCROLL ===== */
-        html {
-            scroll-behavior: smooth;
-        }
+      
 
-        main {
-            padding-top: 88px;
-        }
-
+     
         .img-principal {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             width: 200px;
@@ -556,8 +551,8 @@
         <nav role="navigation" aria-label="Menu principal">
             <div class="nav-container">
                 <div class="nav-left">
-                    <img src="./recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
-                    <h2 class="nav-clinica-nome" style="font-weight: 400; color: #de8e96d7; font-size: 25px;">Odonto
+                    <img src="../recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
+                    <h2 class="nav-clinica-nome" style="font-weight: 400; color: #d3636ed7; font-size: 25px;">Odonto
                         Clínica
                     </h2>
                 </div>
@@ -587,7 +582,7 @@
 
     </header>
     <main>
-        <section class="principal">
+        <section class="principal" style="margin-top: 100px;">
             <img src="./recursos/imgs/image.webp" alt="Imagem da doutora" class="img-principal">
             <h1 style="text-align: center; color: #404040; font-size: 25px;">Dra. Mirelly Marinho <img
                     src="./recursos/imgs/img2.svg" alt="icone de verificado"
@@ -637,7 +632,7 @@
             </div>
         </section>
 
-        <footer id="contato">
+        <footer>
             <div class="footer-container">
                 <div class="footer-section footer-contato">
                     <h3>Contato</h3>
@@ -676,7 +671,7 @@
                 </div>
             </div>
 
-            <div class="footer-bottom">
+            <div class="footer-bottom" id="contato">
                 <p>&copy; 2024 Odonto Clínica - Dra. Mirelly Marinho. <br> Todos os direitos reservados.</p>
             </div>
             <p
@@ -685,6 +680,8 @@
         </footer>
 
     </main>
+
+
 
     <script>
         // Inicializa menu responsivo com melhorias (overlay, ESC, foco)
@@ -772,6 +769,5 @@
     </script>
 
 </body>
-
 
 </html>

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendamento</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
 </head>
 <style>
     body {
@@ -68,12 +69,29 @@
         background: #f5f8fa;
         color: #333;
         border-radius: 20px;
-        padding: 7px 18px;
+        padding: 8px 18px;
         font-size: 1rem;
         cursor: pointer;
         transition: background 0.18s, border 0.18s, color 0.18s;
         outline: none;
         user-select: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+    }
+
+    .servico-nome {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .servico-duracao {
+        font-size: 0.7rem;
+        color: #888;
+        font-weight: 400;
+        letter-spacing: 0.3px;
     }
 
     .badge-servico.selected,
@@ -83,19 +101,26 @@
         border-color: #3a86ff;
     }
 
+    .badge-servico.selected .servico-duracao {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
     .badge-servico:focus {
         border-color: #6bb7ff;
     }
 
     /* Serviços indisponíveis para a data selecionada */
     .badge-servico.indisponivel {
-        text-decoration: line-through;
         opacity: 0.5;
         border-color: #ececec;
         background: #fbfbfb;
         color: #303030;
         cursor: not-allowed;
         pointer-events: none;
+    }
+
+    .badge-servico.indisponivel .servico-nome {
+        text-decoration: line-through;
     }
 
     .badge-servico.indisponivel:focus {
@@ -172,7 +197,7 @@
     /* Datas passadas: traço + clareamento + inacessível */
     .badge-data.passado {
         text-decoration: line-through;
-        opacity: 0.38;
+        opacity: 0.5;
         border-color: #ececec;
         background: #fbfbfb;
         color: #9aa3ad;
@@ -238,6 +263,22 @@
         box-shadow: none;
     }
 
+    /* Horários já passados: desabilitados como reservados */
+    .badge-horario.passado {
+        text-decoration: line-through;
+        opacity: 0.38;
+        border-color: #ececec;
+        background: #fbfbfb;
+        color: #9aa3ad;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .badge-horario.passado:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
     /* Mensagem de todos os horários ocupados */
     .todos-horarios-ocupados {
         display: none;
@@ -288,7 +329,7 @@
 
     .erro-mensagem {
         display: none;
-        color: #d32f2f;
+        color: #c66329;
         font-size: 0.85rem;
         margin-top: 4px;
         margin-bottom: 8px;
@@ -296,6 +337,42 @@
 
     .erro-mensagem.ativo {
         display: block;
+    }
+
+    /* Animação discreta para chamar atenção quando o usuário insiste em enviar sem corrigir o erro */
+    .erro-mensagem.shake {
+        animation: shake 520ms cubic-bezier(.36, .07, .19, .97);
+    }
+
+    @keyframes shake {
+
+        10%,
+        90% {
+            transform: translateX(-2px);
+        }
+
+        20%,
+        80% {
+            transform: translateX(4px);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translateX(-6px);
+        }
+
+        40%,
+        60% {
+            transform: translateX(6px);
+        }
+    }
+
+    /* Respeitar preferência por reduzir movimento */
+    @media (prefers-reduced-motion: reduce) {
+        .erro-mensagem.shake {
+            animation: none;
+        }
     }
 
     /* (Removido) estilos da ação/realce — a mensagem agora é informativa e sem CTA */
@@ -311,6 +388,16 @@
         font-weight: 500;
         cursor: pointer;
         transition: background 0.2s;
+    }
+
+    button[type="reset"] {
+        background: #ececec;
+        color: #333;
+        margin-top: -5px
+    }
+
+    button[type="reset"]:hover {
+        background: #e6e6e6;
     }
 
     /* Responsividade para telas pequenas */
@@ -1022,6 +1109,118 @@
         color: #666;
         font-weight: 500;
     }
+
+    /* Meus Agendamentos (modal + cards) */
+    .meus-agendamentos-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1500;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .meus-agendamentos-overlay.ativo {
+        display: flex;
+    }
+
+    .meus-agendamentos-modal {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 18px;
+        max-width: 640px;
+        width: 92%;
+        max-height: 80vh;
+        overflow: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .meus-agendamentos-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .meus-agendamentos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 350px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+    /* Loader exibido ao abrir o modal por alguns segundos */
+    .meus-agendamentos-loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 0;
+    }
+
+    .spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 4px solid #e6e6e6;
+        border-top-color: #3a86ff;
+        animation: spin 900ms linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .agendamento-card {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: #fdfffd;
+        border-radius: 20px;
+        border: 1.5px solid #c6f6c6;
+        padding: 12px;
+    }
+
+    .agendamento-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .agendamento-nome {
+        font-weight: 600;
+        color: #292929;
+    }
+
+    .agendamento-detalhe {
+        font-size: 0.95rem;
+        color: rgb(54, 54, 54);
+    }
+
+    .agendamento-horario {
+        margin-left: auto;
+        font-weight: 400;
+        color: #242424;
+    }
+
+    .meus-agendamentos-empty {
+        text-align: center;
+        color: #666;
+        padding: 1px 0;
+        margin-bottom: 6px;
+    }
+
+    .close-meus-agendamentos {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: #666;
+    }
 </style>
 </head>
 
@@ -1036,7 +1235,7 @@
         <div class="nav-container">
             <div class="nav-left">
                 <img src="../recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
-                <h2 class="nav-clinica-nome" style="font-weight: 400; color: #df7595d7; font-size: 25px;">Odonto Clínica
+                <h2 class="nav-clinica-nome" style="font-weight: 400; color: #d3636ed7; font-size: 25px;">Odonto Clínica
                 </h2>
             </div>
 
@@ -1063,7 +1262,14 @@
     <!-- Overlay para fechar o menu e escurecer o fundo em mobile (fora da nav para não sobrepor) -->
     <div class="nav-overlay" id="nav-overlay" aria-hidden="true" tabindex="-1"></div>
 
-    <div class="container">
+    <!-- Botão Ver Meus Agendamentos -->
+    <div style=" text-align: center;">
+        <button type="button" id="ver-agendamentos"
+            style="background: #ffffffc6; color: #558fd1; border: 1.5px solid #afafafd7; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 0.95rem; font-weight: 500;"><i
+                class="ri-survey-line"></i> Ver meus agendamentos</button>
+    </div>
+
+    <div class="container" style="margin-top: 13px;">
         <img src="../recursos/imgs/img0.webp" alt="logo"
             style="display: block; margin: 0 auto 20px auto; width: 320px;">
         <h1>Faça seu agendamento</h1>
@@ -1082,7 +1288,7 @@
         <div class="alerta-erro" id="alerta-erro">
             <button type="button" class="alerta-erro-fechar" id="fechar-alerta-erro"
                 aria-label="Fechar alerta">&times;</button>
-            <strong id="alerta-erro-titulo">Erro ao processar agendamento</strong>
+            <strong id="alerta-erro-titulo">Não foi possível processar o agendamento</strong>
             <div id="alerta-erro-detalhes" class="alerta-erro-detalhes"></div>
         </div>
 
@@ -1092,7 +1298,7 @@
 
             <label for="nome">Nome:</label>
             <input type="text" id="nome" name="nome" placeholder="Ex. João Marcos" required>
-            <div class="erro-mensagem" id="erro-nome">Por favor, preencha seu nome</div>
+            <div class="erro-mensagem" id="erro-nome">Por favor, preencha seu nome. Fale conosco se tiver dúvidas.</div>
 
             <label for="telefone">Telefone (Whatsapp):</label>
             <div class="phone-container">
@@ -1101,31 +1307,35 @@
                 <input type="tel" id="telefone" name="telefone" required pattern="\d{4,5}-\d{4}"
                     placeholder="9999-9999">
             </div>
-            <div class="erro-mensagem" id="erro-telefone">Por favor, preencha seu telefone</div>
+            <div class="erro-mensagem" id="erro-telefone">Por favor, preencha seu telefone. Fale conosco se tiver
+                dúvidas.</div>
 
             <label for="servico">Serviços disponíveis:</label>
             <div class="servicos-scroll" id="servicos-badges"></div>
             <input type="hidden" id="servico" name="servico" required>
             <div class="erro-mensagem" id="erro-servico" role="status" aria-live="polite" tabindex="-1">Por favor,
-                selecione um serviço</div>
+                selecione um serviço. Fale conosco se tiver dúvidas.</div>
 
             <label for="data">Selecione o dia:</label>
             <div class="datas-scroll" id="datas-badges"></div>
             <input type="hidden" id="data" name="data" required>
-            <div class="erro-mensagem" id="erro-data">Por favor, selecione uma data</div>
+            <div class="erro-mensagem" id="erro-data">Por favor, selecione uma data. Fale conosco se tiver dúvidas.
+            </div>
 
             <div class="horarios-section hidden">
                 <label for="horario">Horário</label>
                 <div class="todos-horarios-ocupados" id="todos-horarios-ocupados" role="alert">
                     Todos os horários já foram ocupados para este dia. Verifique outros dias ou aguarde mais horários
-                    nos próximos dias.
+                    nos próximos dias. Fale conosco se tiver dúvidas ou precisar de ajuda.
                 </div>
                 <div class="horarios-scroll" id="horarios-badges"></div>
                 <input type="hidden" id="horario" name="horario" required>
-                <div class="erro-mensagem" id="erro-horario">Por favor, selecione um horário</div>
+                <div class="erro-mensagem" id="erro-horario">Por favor, selecione um horário. Fale conosco se tiver
+                    dúvidas.</div>
             </div>
 
             <button type="submit">Agendar</button>
+            <button type="reset">Limpar</button>
         </form>
 
         <!-- Mensagem de confirmação (interna, minimalista) -->
@@ -1196,22 +1406,79 @@
                 </div>
             </div>
         </div>
+
+        <!-- Meus Agendamentos Modal -->
+        <div class="meus-agendamentos-overlay" id="meus-agendamentos-overlay" aria-hidden="true">
+            <div class="meus-agendamentos-modal" role="dialog" aria-modal="true"
+                aria-labelledby="meus-agendamentos-title">
+                <div class="meus-agendamentos-header">
+                    <h3 id="meus-agendamentos-title" style="margin:0;">Meus agendamentos</h3>
+                    <button class="close-meus-agendamentos" id="fechar-meus-agendamentos"
+                        aria-label="Fechar">&times;</button>
+                </div>
+                <div style="margin-bottom:1px;">
+                    <div class="meus-agendamentos-empty">Esses são seus agendamentos confirmados. Caso queira cancelar,
+                        faça com antecedência.
+                    </div>
+                </div>
+                <div class="meus-agendamentos-list" id="meus-agendamentos-list"></div>
+            </div>
+        </div>
+
         <script>
             let contxClinica = null;
             let servicosMestre = []; // Lista mestre de TODOS os serviços da clínica
+            let duracaoServicos = {}; // Map: nome_servico -> minutos
+            let contatoLink = ''; // Link para contato (WhatsApp)
             // Cache para armazenar horários reservados por data com expiração
             let dadosReservadosCompletos = {};
             // Rastreamento de promises de carregamento por data (para renderização assíncrona)
             let promisesPorData = {}; // { data: Promise }
+            // Timeout control para loader do modal "Meus agendamentos"
+            let meusAgendamentosLoadTimeout = null;
             const loadingScreen = document.getElementById('loading-screen');
             const CACHE_EXPIRACAO_MS = 2 * 60 * 1000; // 2 minutos em milissegundos
             const CACHE_KEY = 'agendamento_horarios_reservados';
+
+            // Função para somar minutos a um horário "HH:mm"
+            function somarMinutos(horario, minutos) {
+                const [h, m] = horario.split(':').map(Number);
+                const date = new Date();
+                date.setHours(h, m, 0, 0);
+                date.setMinutes(date.getMinutes() + minutos);
+                const hFinal = String(date.getHours()).padStart(2, '0');
+                const mFinal = String(date.getMinutes()).padStart(2, '0');
+                return `${hFinal}:${mFinal}`;
+            }
 
             // Helper: normalizar horários para formato HH:mm (com zero à esquerda)
             function normalizarHorario(horario) {
                 if (!horario) return '';
                 const [h, m] = horario.trim().split(':');
                 return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+
+            // Helper: obter hora atual no formato HH:mm
+            function obterHoraAtual() {
+                const agora = new Date();
+                const h = String(agora.getHours()).padStart(2, '0');
+                const m = String(agora.getMinutes()).padStart(2, '0');
+                return `${h}:${m}`;
+            }
+
+            // Helper: conversão comparável de horário (HH:mm para número)
+            function converterHorarioParaNumero(horario) {
+                if (!horario) return -1;
+                const [h, m] = horario.split(':').map(Number);
+                return h * 100 + m; // Ex: 09:30 = 930, 14:45 = 1445
+            }
+
+            // Helper: converter minutos para formato xxHxxMin (ex: 90 -> 01H30Min)
+            function formatarDuracao(minutos) {
+                if (!minutos || minutos <= 0) return '';
+                const horas = Math.floor(minutos / 60);
+                const mins = minutos % 60;
+                return `${String(horas).padStart(2, '0')}H${String(mins).padStart(2, '0')}Min`;
             }
 
             // Helper: garantir que o nome do serviço inicie com letra maiúscula (preserva o restante)
@@ -1221,12 +1488,41 @@
                 return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
             }
 
+            // Helper: Gerar link para "Fale conosco" com href dinâmico
+            function gerarLinkContato(texto = 'Fale conosco') {
+                if (!contatoLink) return texto;
+                return `<a href="${contatoLink}" target="_blank" rel="noopener noreferrer" style="color: #0b5fff; text-decoration: underline; font-weight: 500;">${texto}</a>`;
+            }
+
+            // Helper: Atualizar todos os "Fale conosco" em elementos de erro para links
+            function atualizarLinksContato() {
+                if (!contatoLink) return;
+                const elementsComFaleConosco = document.querySelectorAll('[id^="erro-"], [id="todos-horarios-ocupados"]');
+                elementsComFaleConosco.forEach(el => {
+                    const html = el.innerHTML;
+                    if (html.includes('Fale conosco') && !html.includes('<a')) {
+                        el.innerHTML = html.replace(/Fale conosco/g, `<a href="${contatoLink}" target="_blank" rel="noopener noreferrer" style="color: #0b5fff; text-decoration: underline; font-weight: 500;">Fale conosco</a>`);
+                    }
+                });
+            }
+
+            // Validar nome: permitir apenas letras (Unicode), espaços, hífen e apóstrofo
+            function validarNome(nome) {
+                if (!nome) return false;
+                const s = String(nome).trim();
+                // 
+                // Usa Unicode property escapes para aceitar letras acentuadas de qualquer alfabeto
+                // Permite também apóstrofo e hífen
+                const re = /^[\p{L}' -]+$/u;
+                return re.test(s);
+            }
+
             // Mostrar mensagem contextual quando um serviço selecionado não estiver disponível na data escolhida.
             function showServicoIndisponivel(servico) {
                 const el = document.getElementById('erro-servico');
                 if (!el) return;
                 const safeName = servico ? '"' + servico + '"' : '';
-                el.textContent = `O serviço ${safeName} não está disponível para esse dia. Verifique outras datas.`;
+                el.innerHTML = `O serviço ${safeName} <strong> não está disponível para esse dia.</strong> Verifique outras datas ou aguarde mais horários nos próximos dias. ${gerarLinkContato('Fale conosco')} para mais informações.`;
                 el.classList.add('ativo');
                 el.setAttribute('tabindex', '-1');
                 el.focus();
@@ -1371,14 +1667,28 @@
                         link1: configLinks.link1 || '#'
                     };
 
+                    // Armazenar o link de contato globalmente
+                    contatoLink = configLinks.link1 || '';
+
                     // Extrair lista mestre de serviços (nova estrutura no índice 2)
                     if (allData[2] && Array.isArray(allData[2].servicos)) {
                         servicosMestre = allData[2].servicos.map(s => {
-                            // Extrair apenas o nome (antes da barra /)
+                            // Extrair nome e duração (formato: "Nome / tempo-minutos: XX")
                             const partes = s.split('/');
-                            return partes[0].trim();
+                            const nome = partes[0].trim();
+
+                            // Extrair duração se existir
+                            if (partes[1]) {
+                                const tempoMatch = partes[1].match(/tempo-minutos:\s*(\d+)/);
+                                if (tempoMatch && tempoMatch[1]) {
+                                    duracaoServicos[nome] = parseInt(tempoMatch[1], 10);
+                                }
+                            }
+
+                            return nome;
                         });
                         console.log('📋 Serviços mestre carregados:', servicosMestre);
+                        console.log('⏱️ Durações:', duracaoServicos);
                     }
 
                     // Se houver um valor já presente em `input#servico`, tentar normalizá-lo para a forma capitalizada
@@ -1403,6 +1713,9 @@
                     // Carrega lista mestre de serviços (mostra todos os serviços, sem filtro de data)
                     // Os serviços serão filtrados por data apenas quando uma data for selecionada
                     gerarBadgesServicos();
+
+                    // Transformar "Fale conosco" em links dinâmicos após contato estar carregado
+                    atualizarLinksContato();
 
                     // Esconder loading após tudo carregado
                     if (loadingScreen) {
@@ -1546,7 +1859,21 @@
                     button.type = 'button';
                     button.className = 'badge-servico';
                     button.setAttribute('data-value', servico);
-                    button.textContent = servico;
+
+                    // Criar estrutura interna: nome + duração
+                    const nomeDiv = document.createElement('div');
+                    nomeDiv.className = 'servico-nome';
+                    nomeDiv.textContent = servico;
+                    button.appendChild(nomeDiv);
+
+                    const duracao = duracaoServicos[servico];
+                    if (duracao) {
+                        const duracaoFormatada = formatarDuracao(duracao);
+                        const duracaoDiv = document.createElement('div');
+                        duracaoDiv.className = 'servico-duracao';
+                        duracaoDiv.textContent = duracaoFormatada;
+                        button.appendChild(duracaoDiv);
+                    }
 
                     // Verificar se o serviço está disponível para a data selecionada
                     const ehIndisponivel = day !== null && !listaDisponivel.includes(servico);
@@ -1674,6 +2001,21 @@
                         // Atualiza serviços e horários para o índice selecionado
                         gerarBadgesServicos(index);
                         gerarBadgesHorario(index);
+
+                        // Rolagem suave para manter o botão 'Agendar' visível (UX)
+                        (function ensureAgendarVisible() {
+                            const btnAgendar = document.querySelector('.form-agendamento button[type="submit"]');
+                            if (!btnAgendar) return;
+                            // Pequeno atraso para garantir que o DOM foi atualizado/renderizado
+                            setTimeout(() => {
+                                try {
+                                    btnAgendar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                } catch (e) {
+                                    // Fallback simples se scroll suave não suportado
+                                    btnAgendar.scrollIntoView();
+                                }
+                            }, 120);
+                        })();
                     });
 
                     container.appendChild(button);
@@ -1736,6 +2078,24 @@
                 }
 
                 // Renderiza badges de horário
+                // Determinar se a data selecionada é hoje
+                const agora = new Date();
+                const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+                let ehHoje = false;
+
+                if (typeof day === 'number' && dateIso) {
+                    const [ano, mes, dia] = dateIso.split('-').map(Number);
+                    const dataSelecionada = new Date(ano, mes - 1, dia);
+                    ehHoje = dataSelecionada.getTime() === hoje.getTime();
+                } else if (typeof day === 'string') {
+                    const [ano, mes, dia] = day.split('-').map(Number);
+                    const dataSelecionada = new Date(ano, mes - 1, dia);
+                    ehHoje = dataSelecionada.getTime() === hoje.getTime();
+                }
+
+                const horaAtual = obterHoraAtual();
+                const horaAtualNumero = converterHorarioParaNumero(horaAtual);
+
                 horarios.forEach(horario => {
                     const horarioNormalizado = normalizarHorario(horario);
                     const button = document.createElement('button');
@@ -1744,9 +2104,20 @@
                     button.setAttribute('data-time', horarioNormalizado);
                     button.textContent = horarioNormalizado;
 
+                    // Verificar se o horário já passou (quando a data for hoje)
+                    const horarioNumero = converterHorarioParaNumero(horarioNormalizado);
+                    const ehHorarioPassado = ehHoje && horarioNumero < horaAtualNumero;
+
+                    if (ehHorarioPassado) {
+                        button.classList.add('passado');
+                        button.setAttribute('aria-disabled', 'true');
+                        button.setAttribute('tabindex', '-1');
+                        button.disabled = true;
+                    }
+
                     button.addEventListener('click', function (e) {
-                        // proteção redundante caso a badge tenha sido marcada como reservado
-                        if (this.classList.contains('reservado')) return;
+                        // proteção redundante caso a badge tenha sido marcada como reservado ou passado
+                        if (this.classList.contains('reservado') || this.classList.contains('passado')) return;
                         e.preventDefault();
                         document.querySelectorAll('.badge-horario').forEach(b => b.classList.remove('selected'));
                         this.classList.add('selected');
@@ -1785,7 +2156,7 @@
                         if (b.classList.contains('selected')) {
                             b.classList.remove('selected');
                             document.getElementById('horario').value = '';
-                            exibirAlertaErro('Horário indisponível', 'O horário selecionado foi reservado por outra pessoa. Escolha outro.');
+                            exibirAlertaErro('Horário indisponível', `O horário selecionado foi reservado por outra pessoa. Escolha outro. ${gerarLinkContato('Fale conosco')} se tiver dúvidas.`);
                         }
                     } else {
                         todosReservados = false;
@@ -1829,8 +2200,25 @@
 
             // Listeners para limpar mensagens de erro quando campos são preenchidos
             document.getElementById('nome').addEventListener('input', function () {
-                if (this.value.trim()) {
-                    document.getElementById('erro-nome').classList.remove('ativo');
+                const original = this.value;
+                // Remover imediatamente caracteres inválidos (números e símbolos)
+                const cleaned = original.replace(/[^\p{L}' -]+/gu, '');
+                if (cleaned !== original) {
+                    this.value = cleaned;
+                    const err = document.getElementById('erro-nome');
+                    err.textContent = 'Use apenas letras, espaços, hífen e apóstrofo.';
+                    err.classList.add('ativo');
+                    // Mensagem temporária para não poluir a UI
+                    clearTimeout(this._nomeInvalidTimeout);
+                    this._nomeInvalidTimeout = setTimeout(() => {
+                        err.classList.remove('ativo');
+                        err.textContent = 'Por favor, preencha seu nome';
+                    }, 2500);
+                } else {
+                    if (this.value.trim()) {
+                        document.getElementById('erro-nome').classList.remove('ativo');
+                        document.getElementById('erro-nome').textContent = 'Por favor, preencha seu nome';
+                    }
                 }
             });
 
@@ -1857,6 +2245,45 @@
             // Função para formatar telefone para exibição
             function formatarTelefoneExibicao(telefone) {
                 return `(81) 9${telefone}`;
+            }
+
+            // Marca localmente um horário como reservado (atualiza cache e UI) ✅
+            function marcarHorarioComoReservado(dateIso, horario) {
+                const h = normalizarHorario(horario);
+                if (!dateIso || !h) return;
+
+                // Inicializa array se necessário
+                if (!dadosReservadosCompletos[dateIso]) dadosReservadosCompletos[dateIso] = [];
+
+                // Evitar duplicatas e persistir cache
+                if (!dadosReservadosCompletos[dateIso].includes(h)) {
+                    dadosReservadosCompletos[dateIso].push(h);
+                    salvarCacheLocal(dadosReservadosCompletos);
+                }
+
+                // Marcar botão se presente na UI atual
+                const btn = document.querySelector(`.badge-horario[data-time="${h}"]`);
+                if (btn) {
+                    btn.classList.add('reservado');
+                    btn.setAttribute('aria-disabled', 'true');
+                    btn.setAttribute('tabindex', '-1');
+                    try { btn.disabled = true; } catch (e) { /* noop */ }
+
+                    // Se o usuário tinha aquele horário selecionado, limpar seleção e avisar
+                    if (btn.classList.contains('selected')) {
+                        btn.classList.remove('selected');
+                        document.getElementById('horario').value = '';
+                        const err = document.getElementById('erro-horario');
+                        err.textContent = 'Este horário acabou de ser ocupado. Escolha outro horário.';
+                        err.classList.add('ativo');
+                        // Acessibilidade: anunciar a mudança
+                        err.setAttribute('role', 'alert');
+                        try { err.focus(); } catch (e) { /* noop */ }
+                    }
+                }
+
+                // Re-render para garantir estado consistente e exibir "todos horários ocupados" se aplicável
+                gerarBadgesHorario(dateIso);
             }
 
             // Função para abrir modal de confirmação
@@ -1910,54 +2337,95 @@
                 const telefone = document.getElementById('telefone').value.trim();
                 const servico = document.getElementById('servico').value;
                 const data = document.getElementById('data').value;
-                const horario = normalizarHorario(document.getElementById('horario').value);
+                const horarioInicio = normalizarHorario(document.getElementById('horario').value);
 
-                // Revalidação antes de confirmar
+                // Validação local: rejeitar horários passados
+                const agora = new Date();
+                const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+                const [ano, mes, dia] = data.split('-').map(Number);
+                const dataSelecionada = new Date(ano, mes - 1, dia);
+
+                if (dataSelecionada.getTime() === hoje.getTime()) {
+                    const horaAtual = obterHoraAtual();
+                    const horarioInicio_numero = converterHorarioParaNumero(horarioInicio);
+                    const horaAtual_numero = converterHorarioParaNumero(horaAtual);
+
+                    if (horarioInicio_numero < horaAtual_numero) {
+                        fecharModal();
+                        exibirAlertaErro('Horário inválido', `Não é possível agendar para horários que já passaram. A hora atual é ${horaAtual}. ${gerarLinkContato('Fale conosco')} se tiver dúvidas.`);
+                        return;
+                    }
+                }
+
+                // --- LÓGICA DE DURAÇÃO ---
+                // 1. Pega a duração do serviço (padrão 30 min se não definido)
+                const duracao = duracaoServicos[servico] || 30;
+
+                // 2. Calcula horário final
+                const horarioFim = somarMinutos(horarioInicio, duracao);
+
+                // 3. Calcula slots necessários (Intervalos de 30 min) para verificação
+                // Isso garante que se o serviço durar 60 min, reservamos o slot atual + o próximo
+                let slotsNecessarios = [];
+                let tempoAtual = 0;
+                while (tempoAtual < duracao) {
+                    slotsNecessarios.push(somarMinutos(horarioInicio, tempoAtual));
+                    tempoAtual += 30; // Assume slot de 30 min. Se sua clínica for diferente, ajuste aqui.
+                }
+                const slotsString = slotsNecessarios.join(',');
+
+                // --- VALIDAÇÃO LOCAL DE DISPONIBILIDADE CONSECUTIVA ---
+                // Verifica se os slots subsequentes existem no catálogo e não estão reservados
+                // Pega o índice da data atual
+                const idxData = contxClinica.datas.indexOf(data);
+                if (idxData >= 0) {
+                    const horariosDisponiveisDia = contxClinica.horariosPorData[idxData].map(h => normalizarHorario(h));
+                    const reservadosDia = dadosReservadosCompletos[data] || [];
+
+                    // Verifica cada slot necessário
+                    for (let slot of slotsNecessarios) {
+                        // Se o slot não existe no catálogo oficial daquele dia (ex: passa do horário de fechamento)
+                        if (!horariosDisponiveisDia.includes(slot)) {
+                            fecharModal();
+                            exibirAlertaErro('Tempo insuficiente', `O serviço dura ${formatarDuracao(duracao)}, mas o horário ${horarioInicio} não permite completar o atendimento antes do fechamento. ${gerarLinkContato('Fale conosco')} se tiver dúvidas.`);
+                            return;
+                        }
+                        // Se o slot já está ocupado (ex: o usuário escolheu 09:00, mas 09:30 já está preso)
+                        if (reservadosDia.includes(slot)) {
+                            fecharModal();
+                            exibirAlertaErro('Conflito de horário', `O serviço requer ${formatarDuracao(duracao)}, mas o horário ${slot} (necessário para concluir) já está ocupado. ${gerarLinkContato('Fale conosco')} se tiver dúvidas.`);
+                            return;
+                        }
+                    }
+                }
+
+                // Revalidação campos básicos
                 let temErro = false;
+                // ... (mesmas validações de nome, telefone, etc do código original) ...
+                if (!nome || !validarNome(nome)) { document.getElementById('erro-nome').classList.add('ativo'); temErro = true; }
+                if (!telefone) { document.getElementById('erro-telefone').classList.add('ativo'); temErro = true; }
+                if (!servico) { document.getElementById('erro-servico').classList.add('ativo'); temErro = true; }
+                if (!data) { document.getElementById('erro-data').classList.add('ativo'); temErro = true; }
+                if (!horarioInicio) { document.getElementById('erro-horario').classList.add('ativo'); temErro = true; }
 
-                if (!nome) {
-                    document.getElementById('erro-nome').classList.add('ativo');
-                    temErro = true;
-                }
-                if (!telefone) {
-                    document.getElementById('erro-telefone').classList.add('ativo');
-                    temErro = true;
-                }
-                if (!servico) {
-                    document.getElementById('erro-servico').classList.add('ativo');
-                    temErro = true;
-                }
-                if (!data) {
-                    document.getElementById('erro-data').classList.add('ativo');
-                    temErro = true;
-                }
-                if (!horario || horario === ':') {
-                    document.getElementById('erro-horario').classList.add('ativo');
-                    temErro = true;
-                }
+                if (temErro) { fecharModal(); return; }
 
-                // Se houver erros, fechar o modal e mostrar os erros
-                if (temErro) {
-                    fecharModal();
-                    return;
-                }
-
-                // Enviar dados para o Google Sheets via Apps Script
                 const dadosAgendamento = {
                     nome: nome,
                     telefone: `(81) 9${telefone}`,
                     servico: servico,
                     data: data,
-                    horario: horario
+                    horario: horarioInicio,
+                    // NOVOS CAMPOS ENVIADOS
+                    horario_fim: horarioFim,
+                    slots_ocupados: slotsString
                 };
 
-                // Mostrar mensagem de carregamento com spinner
                 const btnConfirmar = document.getElementById('btn-confirmar');
                 const textoOriginal = btnConfirmar.textContent;
                 btnConfirmar.disabled = true;
                 btnConfirmar.innerHTML = '<div class="btn-spinner"></div>Enviando...';
 
-                // Fazer requisição POST para o Google Sheets
                 fetch(GOOGLE_SHEETS_URL, {
                     method: 'POST',
                     body: new URLSearchParams(dadosAgendamento)
@@ -1965,87 +2433,118 @@
                     .then(response => response.json())
                     .then(result => {
                         if (result.success) {
-                            // Fechar modal
                             fecharModal();
-
-                            // Garantir que TODAS as mensagens de erro sejam removidas ao confirmar
                             limparErros();
-
-                            // Limpar cache para forçar novo fetch na próxima vez
                             limparCacheLocal();
-                            console.log('✓ Cache de horários limpo - próximas visitações fetcharão dados atualizados');
-
-                            // Mostrar confirmação minimalista ocupando o container
                             mostrarMensagemConfirmacao({
                                 nome: nome,
                                 telefone: `(81) 9${telefone}`,
                                 servico: servico,
                                 data: data,
-                                horario: horario
+                                horario: `${horarioInicio} - ${horarioFim}` // Mostra o intervalo na confirmação
                             });
-
-                            // Reset visual dos badges / inputs (os valores já estão na view)
+                            // Persistir no cache local para acesso rápido em 'Meus agendamentos'
+                            try {
+                                salvarAgendamentoNoCache({
+                                    nome: nome,
+                                    telefone: `(81) 9${telefone}`,
+                                    telefone_input: telefone,
+                                    servico: servico,
+                                    data: data,
+                                    horario_inicio: horarioInicio,
+                                    horario_fim: horarioFim,
+                                    duracao: duracao
+                                });
+                                // marcar localmente os slots como reservados para evitar duplicatas imediatas na UI
+                                slotsNecessarios.forEach(s => marcarHorarioComoReservado(data, s));
+                            } catch (e) {
+                                console.warn('Erro ao salvar agendamento localmente:', e);
+                            }
+                            // Reset visual
                             document.querySelectorAll('.badge-servico, .badge-data, .badge-horario').forEach(b => b.classList.remove('selected'));
                             document.querySelectorAll('input[type="hidden"]').forEach(input => input.value = '');
                             document.querySelector('.horarios-section').classList.add('hidden');
-
-                            // Fechar alerta de duplicata se estiver aberto
                             document.getElementById('alerta-duplicata').classList.remove('ativo');
                         } else {
-                            // Fechar modal
+                            // Fechar modal e exibir erro
                             fecharModal();
+                            const mensagemErro = result.error || 'Erro desconhecido';
+                            const linkContato = gerarLinkContato('Fale conosco');
+                            const mensagemComContato = mensagemErro.includes('Fale conosco') ? mensagemErro : mensagemErro + ` ${linkContato} para mais informações.`;
+                            exibirAlertaErro('Erro', mensagemComContato);
 
-                            // Identificar o tipo de erro e exibir mensagem apropriada
-                            const mensagemErro = result.error || 'Erro desconhecido ao processar agendamento';
+                            // Se a causa for conflito de horários, limpar cache de reservas e refazer fetch
+                            // (garante que a UI seja atualizada se outro usuário reservou no instante)
+                            const errMsg = result.error || '';
+                            if (errMsg.includes('já foram reservados') || errMsg.includes('Ops, um ou mais horários')) {
+                                // Limpar cache persistente e estado local
+                                limparCacheLocal();
+                                try {
+                                    // Remover dados antigos para a data selecionada e forçar novo fetch
+                                    if (data) {
+                                        delete dadosReservadosCompletos[data];
 
-                            if (mensagemErro.includes('já existe')) {
-                                // Erro de duplicata
-                                document.getElementById('alerta-duplicata').classList.add('ativo');
-                                setTimeout(() => {
-                                    document.querySelector('.alerta-duplicata').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }, 100);
-                            } else if (mensagemErro.includes('faltando') || mensagemErro.includes('Colunas')) {
-                                // Erro de campos faltando
-                                let detalhes = '<p style="margin: 0;">Os seguintes campos obrigatórios não foram preenchidos ou estão incorretos:';
+                                        // Mostrar spinner de carregamento dentro da área de horários
+                                        try {
+                                            const container = document.getElementById('horarios-badges');
+                                            if (container) {
+                                                container.innerHTML = '';
+                                                const loadingEl = document.createElement('div');
+                                                loadingEl.className = 'horarios-carregando';
+                                                loadingEl.setAttribute('role', 'status');
+                                                loadingEl.innerHTML = '<div class="horarios-spinner" aria-hidden="true"></div><div class="horarios-spinner-texto">Atualizando disponibilidade...</div>';
+                                                container.appendChild(loadingEl);
+                                                container.scrollLeft = 0;
+                                                const horariosSection = document.querySelector('.horarios-section');
+                                                if (horariosSection) horariosSection.classList.remove('hidden');
+                                            }
+                                        } catch (e) {
+                                            console.warn('Erro ao mostrar spinner:', e);
+                                        }
 
-                                // Extrair campos faltando da mensagem
-                                const match = mensagemErro.match(/faltando[^:]*: (.+)/);
-                                if (match) {
-                                    const campos = match[1].split(',').map(c => '<strong>' + c.trim() + '</strong>');
-                                    detalhes += '</p><ul style="margin: 8px 0 0 16px; padding: 0;"><li>' + campos.join('</li><li>') + '</li></ul>';
-                                } else {
-                                    detalhes += '</p>';
+                                        // Chama fetch para esta data
+                                        carregarHorariosReservados([data]);
+                                        // Quando a promise resolver, remover spinner e re-renderizar horários visíveis
+                                        const p = promisesPorData[data];
+                                        if (p && typeof p.then === 'function') {
+                                            p.then(() => {
+                                                try {
+                                                    const container = document.getElementById('horarios-badges');
+                                                    if (container) {
+                                                        const loader = container.querySelector('.horarios-carregando');
+                                                        if (loader) loader.remove();
+                                                    }
+                                                } catch (e) { console.warn('Erro ao remover spinner:', e); }
+
+                                                gerarBadgesHorario(data);
+                                                // Pequena nota no detalhe do alerta
+                                                const detalhes = document.getElementById('alerta-erro-detalhes');
+                                                if (detalhes) detalhes.innerHTML += '<div style="margin-top:6px; font-size:0.95rem; color:#555;">Disponibilidade atualizada.</div>';
+                                            }).catch(err => {
+                                                try {
+                                                    const container = document.getElementById('horarios-badges');
+                                                    if (container) {
+                                                        const loader = container.querySelector('.horarios-carregando');
+                                                        if (loader) loader.remove();
+                                                    }
+                                                } catch (e) { }
+                                                console.warn('Erro ao atualizar disponibilidade:', err);
+                                            });
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn('Erro ao forçar atualização de horários:', e);
                                 }
-
-                                exibirAlertaErro(
-                                    '⚠️ Campos obrigatórios faltando',
-                                    detalhes
-                                );
-                            } else if (mensagemErro.includes('não encontrada')) {
-                                // Erro de configuração
-                                exibirAlertaErro(
-                                    '⚙️ Erro de configuração',
-                                    '<p style="margin: 0;">Houve um problema na configuração do sistema. Entre em contato com o suporte técnico da clínica.</p>'
-                                );
-                            } else {
-                                // Erro genérico
-                                exibirAlertaErro(
-                                    '❌ Erro ao processar agendamento',
-                                    '<p style="margin: 0;">' + mensagemErro + '</p><p style="margin: 8px 0 0 0; font-size: 0.9rem;">Se o problema persistir, <a href="' + (contxClinica?.link1 || '#') + '" target="_blank">entre em contato conosco.</a></p>'
-                                );
                             }
                         }
                     })
                     .catch(error => {
-                        console.error('Erro na requisição:', error);
+                        // ... (tratamento de erro igual ao original) ...
                         fecharModal();
-                        exibirAlertaErro(
-                            '🌐 Erro de conexão',
-                            '<p style="margin: 0;">Não foi possível se conectar ao servidor. Verifique sua conexão e tente novamente.</p><p style="margin: 8px 0 0 0; font-size: 0.9rem;">Detalhes técnicos: ' + error.message + '</p>'
-                        );
+                        const linkContato = gerarLinkContato('Fale conosco');
+                        exibirAlertaErro('Erro de conexão', `${error.message} ${linkContato} se o problema persistir.`);
                     })
                     .finally(() => {
-                        // Restaurar estado do botão
                         btnConfirmar.disabled = false;
                         btnConfirmar.innerHTML = textoOriginal;
                     });
@@ -2077,6 +2576,188 @@
                 view.focus();
                 setTimeout(() => view.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
             }
+
+            /* --- Meus Agendamentos: cache local e UI (cards) --- */
+            const MEUS_AGENDAMENTOS_KEY = 'meus_agendamentos';
+
+            function limparAgendamentosExpirados() {
+                try {
+                    const raw = localStorage.getItem(MEUS_AGENDAMENTOS_KEY);
+                    if (!raw) return 0;
+                    const arr = JSON.parse(raw);
+                    const now = Date.now();
+                    const filtered = arr.filter(a => a.expiresAt && a.expiresAt > now);
+                    const removed = (arr.length || 0) - (filtered.length || 0);
+                    if (removed > 0) localStorage.setItem(MEUS_AGENDAMENTOS_KEY, JSON.stringify(filtered));
+                    return removed;
+                } catch (e) { console.warn('Erro limpeza agendamentos:', e); return 0; }
+            }
+
+            function salvarAgendamentoNoCache(ag) {
+                try {
+                    const raw = localStorage.getItem(MEUS_AGENDAMENTOS_KEY);
+                    const arr = raw ? JSON.parse(raw) : [];
+
+                    // calcula expiresAt com base na data e horário final (horario_fim em HH:mm)
+                    const [y, m, d] = (ag.data || '').split('-').map(Number);
+                    const [hf_h, hf_m] = (ag.horario_fim || '').split(':').map(Number);
+                    const dt = new Date(y, (m || 1) - 1, d || 1, hf_h || 0, hf_m || 0, 0, 0);
+                    const expiresAt = dt.getTime() || (Date.now() + 24 * 60 * 60 * 1000);
+
+                    const telefone_digits = (ag.telefone || '').replace(/\D/g, '');
+
+                    const item = {
+                        id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+                        nome: ag.nome,
+                        telefone: ag.telefone,
+                        telefone_input: ag.telefone_input || '',
+                        telefone_digits: telefone_digits,
+                        servico: ag.servico,
+                        data: ag.data,
+                        horario: ag.horario_inicio || ag.horario || ag.horario_inicio,
+                        horario_fim: ag.horario_fim,
+                        duracao: ag.duracao || null,
+                        expiresAt: expiresAt
+                    };
+
+                    arr.push(item);
+                    localStorage.setItem(MEUS_AGENDAMENTOS_KEY, JSON.stringify(arr));
+
+                    // Persistir o último telefone utilizado (input puro) para permitir leitura do cache após recarregar a página
+                    try {
+                        const lastInput = ag.telefone_input || '';
+                        if (lastInput) localStorage.setItem('meus_agendamentos_last_input', lastInput);
+                    } catch (e) { /* noop */ }
+                } catch (e) { console.warn('Erro salvar agendamento cache:', e); }
+            }
+
+            function obterMeusAgendamentosPorTelefone(telefoneInput) {
+                const q = (telefoneInput || '').replace(/\D/g, '');
+                if (!q) return [];
+                limparAgendamentosExpirados();
+                const raw = localStorage.getItem(MEUS_AGENDAMENTOS_KEY);
+                if (!raw) return [];
+                const arr = JSON.parse(raw);
+                return arr.filter(a => a.telefone_digits && a.telefone_digits.endsWith(q)).sort((a, b) => (a.expiresAt || 0) - (b.expiresAt || 0));
+            }
+
+            function renderMeusAgendamentosList(agendamentos) {
+                const container = document.getElementById('meus-agendamentos-list');
+                const titleEl = document.getElementById('meus-agendamentos-title');
+                const count = (agendamentos && agendamentos.length) ? agendamentos.length : 0;
+                if (titleEl) titleEl.textContent = `Meus agendamentos (${count})`;
+                if (!container) return;
+                container.innerHTML = '';
+                if (!agendamentos || !agendamentos.length) {
+                    container.innerHTML = '<div class="meus-agendamentos-empty">Nenhum agendamento encontrado.</div>';
+                    return;
+                }
+
+                agendamentos.forEach(a => {
+                    const card = document.createElement('div');
+                    card.className = 'agendamento-card';
+                    // mostrar telefone completo conforme solicitado
+                    card.innerHTML = `<div class="agendamento-info">
+                        <div class="agendamento-nome">${a.nome}</div>
+                        <div class="agendamento-detalhe">${a.telefone}</div>
+                        <div class="agendamento-detalhe">${a.servico}</div>
+                    </div>
+                    <div class="agendamento-horario">${formatarDataExibicao(a.data)}<br><span style="font-weight:600;">às ${a.horario} horas</span></div>`;
+                    container.appendChild(card);
+                });
+            }
+
+            function abrirMeusAgendamentos(telefonePrefill) {
+                const overlay = document.getElementById('meus-agendamentos-overlay');
+                const list = document.getElementById('meus-agendamentos-list');
+                list.innerHTML = '';
+
+                const titleEl = document.getElementById('meus-agendamentos-title');
+
+                // Mostrar loader por 2 segundos antes de renderizar o conteúdo
+                const loader = document.createElement('div');
+                loader.className = 'meus-agendamentos-loader';
+                loader.innerHTML = '<div class="spinner" aria-hidden="true"></div>';
+                list.appendChild(loader);
+                if (titleEl) titleEl.setAttribute('aria-busy', 'true');
+
+                overlay.classList.add('ativo');
+
+                // Remover agendamentos expirados imediatamente (sem notificar visualmente o usuário)
+                try { limparAgendamentosExpirados(); } catch (e) { console.warn('Erro ao limpar expirados antes de abrir:', e); }
+
+                // Limpa timeout anterior se existir
+                if (meusAgendamentosLoadTimeout) {
+                    clearTimeout(meusAgendamentosLoadTimeout);
+                    meusAgendamentosLoadTimeout = null;
+                }
+
+                meusAgendamentosLoadTimeout = setTimeout(() => {
+                    // Remover loader
+                    const existingLoader = list.querySelector('.meus-agendamentos-loader');
+                    if (existingLoader) existingLoader.remove();
+                    if (titleEl) titleEl.removeAttribute('aria-busy');
+
+                    // Mostrar TODOS os agendamentos locais (sem filtrar por telefone)
+                    try {
+                        const raw = localStorage.getItem(MEUS_AGENDAMENTOS_KEY);
+                        const arr = raw ? JSON.parse(raw) : [];
+                        if (arr.length) {
+                            // ordenar por timestamp embutido no id (prefixo Date.now()) — mais recentes primeiro
+                            arr.sort((a, b) => {
+                                const ta = Number((a.id || '').split('-')[0]) || 0;
+                                const tb = Number((b.id || '').split('-')[0]) || 0;
+                                return tb - ta;
+                            });
+                            renderMeusAgendamentosList(arr);
+                            const aviso = document.createElement('div');
+                            aviso.className = 'meus-agendamentos-empty';
+                            if (list.firstChild) list.insertBefore(aviso, list.firstChild);
+                        } else {
+                            if (titleEl) titleEl.textContent = 'Meus agendamentos (0)';
+                            list.innerHTML = '<div class="meus-agendamentos-empty">Nenhum agendamento salvo localmente. Preencha o formulário e agende para aparecer aqui.</div>';
+                        }
+                    } catch (e) {
+                        console.warn('Erro ao ler agendamentos locais:', e);
+                        if (titleEl) titleEl.textContent = 'Meus agendamentos (0)';
+                        list.innerHTML = '<div class="meus-agendamentos-empty">Erro ao ler agendamentos locais.</div>';
+                    } finally {
+                        meusAgendamentosLoadTimeout = null;
+                    }
+                }, 2000);
+            }
+
+            document.getElementById('ver-agendamentos').addEventListener('click', function () {
+                const telefoneCampo = document.getElementById('telefone').value.trim();
+                if (telefoneCampo) abrirMeusAgendamentos(telefoneCampo);
+                else abrirMeusAgendamentos();
+            });
+
+
+
+            document.getElementById('fechar-meus-agendamentos').addEventListener('click', function () {
+                const overlay = document.getElementById('meus-agendamentos-overlay');
+                const list = document.getElementById('meus-agendamentos-list');
+                overlay.classList.remove('ativo');
+                if (meusAgendamentosLoadTimeout) {
+                    clearTimeout(meusAgendamentosLoadTimeout);
+                    meusAgendamentosLoadTimeout = null;
+                }
+                const loader = list.querySelector('.meus-agendamentos-loader');
+                if (loader) loader.remove();
+            });
+            document.getElementById('meus-agendamentos-overlay').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.remove('ativo');
+                    const list = document.getElementById('meus-agendamentos-list');
+                    if (meusAgendamentosLoadTimeout) {
+                        clearTimeout(meusAgendamentosLoadTimeout);
+                        meusAgendamentosLoadTimeout = null;
+                    }
+                    const loader = list.querySelector('.meus-agendamentos-loader');
+                    if (loader) loader.remove();
+                }
+            });
 
             function reiniciarAgendamento(e) {
                 if (e && e.preventDefault) e.preventDefault();
@@ -2151,6 +2832,11 @@
                 let temErro = false;
 
                 if (!nome) {
+                    document.getElementById('erro-nome').textContent = 'Por favor, preencha seu nome';
+                    document.getElementById('erro-nome').classList.add('ativo');
+                    temErro = true;
+                } else if (!validarNome(nome)) {
+                    document.getElementById('erro-nome').textContent = 'Use apenas letras, espaços, hífen e apóstrofo';
                     document.getElementById('erro-nome').classList.add('ativo');
                     temErro = true;
                 }
@@ -2169,6 +2855,23 @@
                 if (!horario) {
                     document.getElementById('erro-horario').classList.add('ativo');
                     temErro = true;
+                }
+
+                // Se houver erros, destacar visualmente todas as mensagens ativas (efeito "balanço")
+                if (temErro) {
+                    const activeErrs = Array.from(document.querySelectorAll('.erro-mensagem.ativo'));
+                    if (activeErrs.length) {
+                        activeErrs.forEach((el, i) => {
+                            el.classList.remove('shake');
+                            void el.offsetWidth; // force reflow
+                            el.classList.add('shake');
+                            setTimeout(() => el.classList.remove('shake'), 700);
+                            // foco apenas no primeiro para não roubar foco de leitores de tela
+                            if (i === 0) {
+                                try { el.focus(); } catch (e) { /* noop */ }
+                            }
+                        });
+                    }
                 }
 
                 if (!temErro) {
