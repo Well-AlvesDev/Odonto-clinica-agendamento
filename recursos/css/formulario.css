@@ -1,0 +1,633 @@
+ * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+ }
+
+ body {
+     font-family: Arial, Helvetica, sans-serif;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: flex-start;
+     gap: 16px;
+     padding-top: 30px;
+     background-color: #fafafa;
+ }
+
+ /* Estilos da Navegação */
+ nav {
+     background: #ffffff;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+     /* full-bleed: garantir que a nav sempre toque as bordas da viewport */
+     width: 100vw;
+     margin-left: calc(50% - 50vw);
+     margin-right: calc(50% - 50vw);
+     padding: 12px 0;
+     /* apenas espaçamento vertical */
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     z-index: 1000;
+     /* Garantir que a nav fique acima do overlay */
+     box-sizing: border-box;
+ }
+
+ .nav-container {
+     max-width: 1200px;
+     margin: 0 auto;
+     display: flex;
+     align-items: center;
+     gap: 16px;
+     justify-content: space-between;
+     position: relative;
+     padding: 0 16px;
+     /* espaçamento interno controlado aqui */
+     /* para o menu mobile absoluto */
+ }
+
+ .nav-left {
+     display: flex;
+     align-items: center;
+     gap: 12px;
+ }
+
+ .nav-logo {
+     width: 64px;
+     height: 64px;
+     object-fit: contain;
+     flex-shrink: 0;
+ }
+
+ .nav-clinica-nome {
+     margin: 0;
+     white-space: nowrap;
+     font-family: 'Times New Roman', Times, serif;
+ }
+
+ .nav-links {
+     display: flex;
+     gap: 14px;
+     list-style: none;
+     margin: 0;
+     padding: 0;
+     align-items: center;
+ }
+
+ .nav-links li a {
+     text-decoration: none;
+     color: #333;
+     padding: 8px 12px;
+     border-radius: 8px;
+     transition: background 0.15s, color 0.15s;
+     font-weight: 500;
+ }
+
+ .nav-toggle {
+     display: none;
+     background: transparent;
+     border: none;
+     padding: 8px;
+     width: 44px;
+     height: 44px;
+     cursor: pointer;
+     align-items: center;
+     justify-content: center;
+     color: #333;
+     /* ícone usa currentColor */
+ }
+
+ .nav-toggle svg {
+     display: block;
+     width: 28px;
+     height: 24px;
+ }
+
+ .nav-toggle .line {
+     stroke: currentColor;
+     transition: transform 0.25s cubic-bezier(.2, .9, .2, 1), opacity 0.2s;
+     transform-origin: 14px 12px;
+ }
+
+ .nav-toggle.open .line-top {
+     transform: translateY(7px) rotate(45deg);
+ }
+
+ .nav-toggle.open .line-mid {
+     opacity: 0;
+     transform: scaleX(0);
+ }
+
+ .nav-toggle.open .line-bot {
+     transform: translateY(-7px) rotate(-45deg);
+ }
+
+ .nav-toggle:focus-visible {
+     outline: 3px solid rgba(58, 134, 255, 0.25);
+     border-radius: 8px;
+ }
+
+ @media (prefers-reduced-motion: reduce) {
+     .nav-toggle .line {
+         transition: none !important;
+     }
+
+     .nav-links {
+         transition: none !important;
+     }
+ }
+
+ /* Overlay para foco e escurecer o fundo */
+ .nav-overlay {
+     position: fixed;
+     left: 0;
+     right: 0;
+     top: 0;
+     bottom: 0;
+     background: rgba(0, 0, 0, 0.35);
+     opacity: 0;
+     pointer-events: none;
+     transition: opacity 0.25s ease;
+     z-index: 90;
+     /* Deve ficar abaixo da nav */
+ }
+
+ .nav-overlay.open {
+     opacity: 1;
+     pointer-events: auto;
+ }
+
+ /* Responsivo: menu hamburger para telas pequenas com animação */
+ @media (max-width: 768px) {
+     .nav-links {
+         position: fixed;
+         left: 0;
+         right: 0;
+         top: 64px;
+         background: #ffffff;
+         flex-direction: column;
+         gap: 0;
+         align-items: stretch;
+         padding: 8px 0;
+         box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+         border-radius: 0 0 10px 10px;
+         transform: translateY(-6px) scale(0.995);
+         opacity: 0;
+         pointer-events: none;
+         transition: transform 0.28s cubic-bezier(.2, .9, .2, 1), opacity 0.2s ease;
+         max-height: calc(100vh - 64px);
+         overflow: auto;
+         z-index: 995;
+         /* Acima do overlay, abaixo da nav */
+     }
+
+     .nav-links.open {
+         transform: translateY(0) scale(1);
+         opacity: 1;
+         pointer-events: auto;
+     }
+
+     .nav-links li a {
+         padding: 14px 18px;
+         border-bottom: 1px solid #f0f0f0;
+         display: block;
+     }
+
+     .nav-toggle {
+         display: inline-flex;
+     }
+ }
+
+ /* Bloquear rolagem quando o menu estiver aberto */
+ .no-scroll {
+     overflow: hidden !important;
+ }
+
+ /* Responsivo para telas pequenas */
+ @media (max-width: 600px) {
+
+     /* Manter a nav full-bleed em mobile; ajustar apenas espaçamento vertical */
+     nav {
+         padding: 12px 0;
+     }
+ }
+
+
+ /* Forçar tamanho consistente do logo e do nome na nav (não crescer em telas pequenas) */
+ .nav-logo {
+     width: 56px;
+     height: 56px;
+     max-width: none;
+     flex-shrink: 0;
+ }
+
+ .nav-clinica-nome {
+     font-size: 1.15rem;
+     white-space: nowrap;
+     margin: 0;
+ }
+
+ /* Overlay */
+ .modal-overlay {
+     display: none;
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: rgba(0, 0, 0, 0.5);
+     backdrop-filter: blur(4px);
+     z-index: 999;
+     animation: fadeIn 0.3s ease-in-out;
+ }
+
+ .modal-overlay.active {
+     display: block;
+ }
+
+ @keyframes fadeIn {
+     from {
+         opacity: 0;
+     }
+
+     to {
+         opacity: 1;
+     }
+ }
+
+ /* Container de botão e lista */
+ .agendamentos-wrapper {
+     width: 100%;
+     max-width: 380px;
+ }
+
+ #verAgendamentos {
+     width: 250px;
+     padding: 12px 16px;
+     background-color: #79889600;
+     color: #313131;
+     border: none;
+     border-radius: 30px;
+     cursor: pointer;
+     font-size: 14px;
+     font-weight: 400;
+     transition: all 0.3s ease;
+     border: 1px solid #3e7dc9;
+     margin-top: 50px;
+ }
+
+ #listaAgendamentos {
+     display: none;
+     position: fixed;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     width: 90%;
+     max-width: 400px;
+     background: white;
+     border-radius: 12px;
+     padding: 24px;
+     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+     z-index: 1000;
+     animation: slideUp 0.3s ease-out;
+     max-height: 70vh;
+     overflow-y: auto;
+ }
+
+ #listaAgendamentos.active {
+     display: block;
+ }
+
+ @keyframes slideUp {
+     from {
+         transform: translate(-50%, -45%);
+         opacity: 0;
+     }
+
+     to {
+         transform: translate(-50%, -50%);
+         opacity: 1;
+     }
+ }
+
+ #listaAgendamentos h3 {
+     font-size: 18px;
+     font-weight: 600;
+     color: #212121;
+     margin-bottom: 16px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+ }
+
+ .btn-fechar-modal {
+     background: none;
+     border: none;
+     font-size: 24px;
+     color: #757575;
+     cursor: pointer;
+     padding: 0;
+     width: 32px;
+     height: 32px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     transition: all 0.2s ease;
+ }
+
+ .btn-fechar-modal:hover {
+     color: #212121;
+     background-color: #f5f5f5;
+     border-radius: 4px;
+ }
+
+ #agendamentosConteudo {
+     max-height: 400px;
+     overflow-y: auto;
+ }
+
+ /* Estilo para itens de agendamento */
+ .item-agendamento {
+     background: #f5f5f5;
+     border-left: 4px solid #1976d2;
+     padding: 12px;
+     margin-bottom: 10px;
+     border-radius: 6px;
+     font-size: 14px;
+     color: #424242;
+ }
+
+ .item-agendamento strong {
+     color: #212121;
+     font-weight: 600;
+ }
+
+ #agendamentosConteudo p {
+     color: #757575;
+     font-size: 14px;
+     text-align: center;
+ }
+
+ /* Formulário */
+ form {
+     border: none;
+     padding: 24px;
+     border-radius: 12px;
+     width: 100%;
+     max-width: 380px;
+     background: white;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+     margin-bottom: 200px;
+ }
+
+ form h2 {
+     font-size: 18px;
+     font-weight: 600;
+     color: #212121;
+     margin-bottom: 20px;
+ }
+
+ form>div {
+     margin-bottom: 16px;
+ }
+
+ label {
+     display: block;
+     margin-bottom: 6px;
+     font-weight: 500;
+     color: #424242;
+     font-size: 14px;
+ }
+
+ input {
+     width: 100%;
+     padding: 10px 12px;
+     border: 1px solid #ddd;
+     border-radius: 6px;
+     font-size: 14px;
+     transition: border-color 0.2s;
+     background-color: #fafafa;
+ }
+
+ input:focus {
+     outline: none;
+     border-color: #1976d2;
+     background-color: white;
+     box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+ }
+
+ form button {
+     width: 100%;
+     padding: 12px;
+     background-color: #227ccb;
+     color: white;
+     border: none;
+     border-radius: 6px;
+     cursor: pointer;
+     font-size: 14px;
+     font-weight: 400;
+     transition: all 0.3s ease;
+     box-shadow: 0 2px 8px rgba(36, 106, 180, 0.15);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 8px;
+ }
+
+ form button:active {
+     transform: scale(0.98);
+ }
+
+ form button:disabled {
+     opacity: 0.7;
+     cursor: not-allowed;
+ }
+
+ .spinner-loader {
+     display: none;
+     width: 16px;
+     height: 16px;
+     border: 2px solid rgba(255, 255, 255, 0.3);
+     border-radius: 50%;
+     border-top-color: white;
+     animation: spin 0.8s linear infinite;
+ }
+
+ .spinner-loader.show {
+     display: inline-block;
+ }
+
+ @keyframes spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }
+
+ .btn-text {
+     display: inline;
+ }
+
+ .telefone-container {
+     display: flex;
+     gap: 8px;
+     align-items: center;
+ }
+
+ .telefone-prefixo {
+     font-weight: 500;
+     padding: 10px 12px;
+     background-color: #f5f5f5;
+     border-radius: 6px;
+     white-space: nowrap;
+     color: #424242;
+     font-size: 14px;
+ }
+
+ .telefone-container input {
+     flex: 1;
+ }
+
+ /* Scrollbar customizada */
+ #agendamentosConteudo::-webkit-scrollbar {
+     width: 6px;
+ }
+
+ #agendamentosConteudo::-webkit-scrollbar-track {
+     background: #f5f5f5;
+     border-radius: 3px;
+ }
+
+ #agendamentosConteudo::-webkit-scrollbar-thumb {
+     background: #bdbdbd;
+     border-radius: 3px;
+ }
+
+ #agendamentosConteudo::-webkit-scrollbar-thumb:hover {
+     background: #9e9e9e;
+ }
+
+ /* DROPDOWN CUSTOMIZADO UNIVERSAL */
+ .dropdown-container {
+     position: relative;
+     width: 100%;
+ }
+
+ .dropdown-toggle {
+     width: 100%;
+     padding: 10px 12px;
+     background-color: #fafafa;
+     border: 1px solid #ddd;
+     border-radius: 6px;
+     font-size: 14px;
+     color: #424242;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     transition: all 0.2s ease;
+     font-family: Arial, Helvetica, sans-serif;
+     font-weight: 400;
+ }
+
+ .dropdown-toggle[aria-expanded="true"] {
+     border-color: #1976d2;
+     background-color: white;
+     border-bottom-left-radius: 0;
+     border-bottom-right-radius: 0;
+ }
+
+ .dropdown-toggle[aria-expanded="true"] .dropdown-icon {
+     transform: rotate(180deg);
+ }
+
+ .dropdown-label {
+     flex: 1;
+     text-align: left;
+ }
+
+ .dropdown-icon {
+     width: 20px;
+     height: 20px;
+     flex-shrink: 0;
+     margin-left: 8px;
+     transition: transform 0.2s ease;
+     color: #757575;
+ }
+
+ .dropdown-menu {
+     position: absolute;
+     top: 100%;
+     left: 0;
+     right: 0;
+     list-style: none;
+     margin: 0;
+     padding: 8px 0;
+     background: white;
+     border: 1px solid #1976d2;
+     border-top: none;
+     border-radius: 0 0 6px 6px;
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+     display: none;
+     z-index: 1001;
+     max-height: 175px;
+     overflow-y: auto;
+ }
+
+ .dropdown-menu.open {
+     display: block;
+ }
+
+ .dropdown-option {
+     padding: 10px 12px;
+     color: #424242;
+     cursor: pointer;
+     transition: all 0.15s ease;
+     font-size: 14px;
+ }
+
+ .dropdown-option:hover {
+     background-color: #f5f5f5;
+     color: #1976d2;
+ }
+
+ .dropdown-option.selected {
+     background-color: #e3f2fd;
+     color: #1976d2;
+     font-weight: 500;
+ }
+
+ .dropdown-option[aria-selected="true"] {
+     background-color: #e3f2fd;
+     color: #1976d2;
+     font-weight: 500;
+ }
+
+ .dropdown-option:focus {
+     outline: none;
+     background-color: #e8f4f8;
+ }
+
+ .dropdown-option.disabled {
+     color: #bdbdbd;
+     cursor: not-allowed;
+ }
+
+ /* Scrollbar customizada para dropdown */
+ .dropdown-menu::-webkit-scrollbar {
+     width: 6px;
+ }
+
+ .dropdown-menu::-webkit-scrollbar-track {
+     background: #f5f5f5;
+     border-radius: 3px;
+ }
+
+ .dropdown-menu::-webkit-scrollbar-thumb {
+     background: #bdbdbd;
+     border-radius: 3px;
+ }
+
+ .dropdown-menu::-webkit-scrollbar-thumb:hover {
+     background: #9e9e9e;
+ }
