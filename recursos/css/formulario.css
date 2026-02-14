@@ -631,3 +631,12 @@
  .dropdown-menu::-webkit-scrollbar-thumb:hover {
      background: #9e9e9e;
  }
+
+ /* Ocultar seção de horários até uma data ser selecionada */
+ #horarioAgendamento.hidden {
+     display: none;
+ }
+
+ form>div:has(> #horarioAgendamento.hidden) {
+     display: none;
+ }

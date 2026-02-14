@@ -9,15 +9,308 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
 
     <!-- Todo css do formuario está no arquivo "formulario.css"-->
+    <style>
+        /* Loader fullscreen */
+        #loaderContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #loaderContainer.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #4c78ddd7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Estilos para erro */
+        .loader-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loader-spinner.hidden {
+            display: none;
+        }
+
+        .loader-error {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .loader-error.show {
+            display: flex;
+        }
+
+        .loader-error-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .loader-error-message {
+            font-size: 16px;
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .btn-retry {
+            padding: 12px 28px;
+            background: white;
+            color: #000;
+            border: 1px solid #000;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-retry:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-retry:active {
+            background: #efefef;
+        }
+
+        /* Estilos para Seleção de Datas */
+        .datas-container {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .datas-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .datas-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .datas-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .datas-scroll::-webkit-scrollbar-thumb {
+            background: #d37c7cd7;
+            border-radius: 10px;
+        }
+
+        .datas-scroll::-webkit-scrollbar-thumb:hover {
+            background: #c56a6ad0;
+        }
+
+        .data-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 70px;
+            padding: 12px 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            font-size: 14px;
+        }
+
+        .data-badge:hover {
+            border-color: #d37c7cd7;
+            background: #fff9f8;
+        }
+
+        .data-badge.selected {
+            background: #d37c7cd7;
+            border-color: #d37c7cd7;
+            color: white;
+        }
+
+        .data-badge-dia {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #999;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .data-badge.selected .data-badge-dia {
+            color: white;
+        }
+
+        .data-badge-data {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .data-badge.selected .data-badge-data {
+            color: white;
+        }
+
+        .data-badge-mes {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .data-badge.selected .data-badge-mes {
+            color: white;
+        }
+
+        /* Estilos para Seleção de Horários */
+        .horarios-container {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .horarios-scroll {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        .horario-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            min-height: 48px;
+        }
+
+        .horario-badge:hover {
+            border-color: #d37c7cd7;
+            background: #fff9f8;
+        }
+
+        .horario-badge.selected {
+            background: #d37c7cd7;
+            border-color: #d37c7cd7;
+            color: white;
+        }
+
+        .horario-badge:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Estilos para datas passadas */
+        .data-badge.passada {
+            opacity: 0.4;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            background: #f5f5f5 !important;
+            border-color: #ddd !important;
+            pointer-events: none;
+        }
+
+        .data-badge.passada .data-badge-data {
+            color: #999;
+        }
+
+        .data-badge.passada:hover {
+            border-color: #ddd !important;
+            background: #f5f5f5 !important;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Loader -->
+    <div id="loaderContainer">
+        <div class="loader-content">
+            <div class="loader-spinner">
+                <div class="spinner"></div>
+                <p class="loader-text">Um momento, por favor...</p>
+            </div>
+            <div class="loader-error">
+                <h2 class="loader-error-title">Temporariamente fora de sistema.</h2>
+                <p class="loader-error-message">Parece que o servidor está em um mau dia ou passando por manutenção.
+                    Tente novamente ou volte mais tarde. (503)</p>
+                <a href="../#contato">Fale conosco</a>
+                <button type="button" class="btn-retry" id="btnRetry">Tentar novamente</button>
+            </div>
+        </div>
+    </div>
+
     <header>
         <nav role="navigation" aria-label="Menu principal">
             <div class="nav-container">
                 <div class="nav-left">
                     <img src="../recursos/imgs/img1.webp" alt="Logo da Clínica" class="nav-logo">
-                    <h2 class="nav-clinica-nome" style="font-weight: 400; color: #d3636ed7; font-size: 25px;">Odonto
+                    <h2 class="nav-clinica-nome" style="font-weight: 400; color: #d37c7cd7; font-size: 19px;">Odonto
                         Clínica
                     </h2>
                 </div>
@@ -64,7 +357,7 @@
     <div id="nav-overlay" class="nav-overlay"></div>
 
     <form id="formularioAgendamento">
-        <img src="../recursos/imgs/img0.webp" alt="" style="width: 330px;">
+        <img src="../recursos/imgs/img0.webp" alt="" style="width: 270px; display: block; margin: 20px auto;">
         <h2 style="text-align: center; font-weight: 400; color: #303030;">Faça seu agendamento</h2>
         <p
             style=" text-align: center; font-size: 13px; margin-bottom: 15px; margin-top: -10px; color: rgb(63, 63, 63);">
@@ -109,6 +402,26 @@
                 </ul>
             </div>
             <input type="hidden" id="servico" name="servico" required>
+        </div>
+
+        <div>
+            <label for="dataAgendamento">Data:</label>
+            <div class="datas-container" id="datasContainer">
+                <div class="datas-scroll" id="datasScroll">
+                    <!-- Badges de datas serão adicionadas aqui via JavaScript -->
+                </div>
+            </div>
+            <input type="hidden" id="dataAgendamento" name="dataAgendamento" required>
+        </div>
+
+        <div>
+            <label for="horarioAgendamento">Horário:</label>
+            <div class="horarios-container" id="horariosContainer">
+                <div class="horarios-scroll" id="horariosScroll">
+                    <!-- Badges de horários serão adicionados aqui via JavaScript -->
+                </div>
+            </div>
+            <input type="hidden" id="horarioAgendamento" name="horarioAgendamento" required>
         </div>
 
         <button type="submit" id="btnAgendar">
@@ -236,14 +549,6 @@
                     if (defaultOption) {
                         defaultOption.classList.add('disabled');
                     }
-
-                    // Move o item selecionado para logo após "Selecione um serviço"
-                    if (option !== defaultOption) {
-                        this.menu.insertBefore(option.cloneNode(true), defaultOption.nextSibling);
-                        option.remove();
-                        // Atualiza a referência das opções
-                        this.options = this.container.querySelectorAll('.dropdown-option');
-                    }
                 }
 
                 this.closeMenu();
@@ -305,6 +610,483 @@
         // Inicializa o dropdown de serviço
         const dropdownServico = new CustomDropdown('dropdownServico');
 
+        // SELEÇÃO DE HORÁRIOS
+        class SeletorHorarios {
+            constructor(scrollContainerId, hiddenInputId) {
+                this.scrollContainer = document.getElementById(scrollContainerId);
+                this.hiddenInput = document.getElementById(hiddenInputId);
+                this.horarioSelecionado = null;
+                this.horariosDisponiveis = {};
+                this.dataAtual = null;
+            }
+
+            async carregarHorarios() {
+                try {
+                    console.log('Iniciando carregamento de horários...');
+                    // Verifica se a função existe
+                    if (typeof carregarHorariosDisponiveis === 'undefined') {
+                        console.warn('Função carregarHorariosDisponiveis não está disponível');
+                        this.limparHorarios();
+                        return;
+                    }
+
+                    // Carrega os horários disponíveis do Supabase
+                    this.horariosDisponiveis = await carregarHorariosDisponiveis();
+                    console.log('Horários carregados:', this.horariosDisponiveis);
+
+                    if (Object.keys(this.horariosDisponiveis).length === 0) {
+                        console.warn('Nenhum horário disponível');
+                        this.limparHorarios();
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar horários:', error);
+                    this.limparHorarios();
+                }
+            }
+
+            gerarBadgesParaData(data) {
+                this.dataAtual = data;
+                const horarios = this.horariosDisponiveis[data];
+
+                console.log(`Gerando badges para data ${data}, horários:`, horarios);
+
+                // Limpa o container
+                this.scrollContainer.innerHTML = '';
+
+                if (!horarios || horarios.length === 0) {
+                    this.scrollContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Nenhum horário disponível para este dia</p>';
+                    this.horarioSelecionado = null;
+                    this.hiddenInput.value = '';
+                    return;
+                }
+
+                // Cria badges para cada horário
+                horarios.forEach((horario) => {
+                    const badge = document.createElement('button');
+                    badge.type = 'button';
+                    badge.className = 'horario-badge';
+                    badge.setAttribute('data-horario', horario);
+                    badge.textContent = horario;
+
+                    badge.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.selecionarHorario(badge);
+                    });
+
+                    this.scrollContainer.appendChild(badge);
+                });
+
+                // Seleciona o primeiro horário por padrão
+                const primeiroHorario = this.scrollContainer.querySelector('.horario-badge');
+                if (primeiroHorario) {
+                    this.selecionarHorario(primeiroHorario);
+                }
+            }
+
+            selecionarHorario(badge) {
+                // Remove seleção anterior
+                const badgeSelecionado = this.scrollContainer.querySelector('.horario-badge.selected');
+                if (badgeSelecionado) {
+                    badgeSelecionado.classList.remove('selected');
+                }
+
+                // Seleciona o novo badge
+                badge.classList.add('selected');
+                const horario = badge.getAttribute('data-horario');
+                this.horarioSelecionado = horario;
+                this.hiddenInput.value = horario;
+
+                console.log(`Horário selecionado: ${horario}`);
+            }
+
+            limparHorarios() {
+                this.scrollContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Selecione uma data para ver os horários disponíveis</p>';
+                this.horarioSelecionado = null;
+                this.hiddenInput.value = '';
+            }
+
+            getHorario() {
+                return this.horarioSelecionado;
+            }
+
+            setHorario(horario) {
+                const badge = this.scrollContainer.querySelector(`[data-horario="${horario}"]`);
+                if (badge) {
+                    this.selecionarHorario(badge);
+                }
+            }
+        }
+
+        // SELEÇÃO DE DATAS
+        class SeletorDatas {
+            constructor(scrollContainerId, hiddenInputId) {
+                this.scrollContainer = document.getElementById(scrollContainerId);
+                this.hiddenInput = document.getElementById(hiddenInputId);
+                this.dataSelecionada = null;
+                this.datasDisponiveis = [];
+                this.init();
+            }
+
+            init() {
+                this.carregarEGerarBadges();
+            }
+
+            async carregarEGerarBadges() {
+                try {
+                    console.log('Iniciando carregamento de datas...');
+                    // Verifica se a função existe
+                    if (typeof carregarDatasDisponiveis === 'undefined') {
+                        console.warn('Função carregarDatasDisponiveis não está disponível, usando datas padrão');
+                        this.gerarBadgesDatasPadrao();
+                        return;
+                    }
+
+                    // Carrega as datas disponíveis do Supabase
+                    this.datasDisponiveis = await carregarDatasDisponiveis();
+                    console.log('Datas carregadas:', this.datasDisponiveis);
+
+                    if (this.datasDisponiveis.length === 0) {
+                        console.warn('Nenhuma data disponível, usando datas padrão');
+                        this.gerarBadgesDatasPadrao();
+                    } else {
+                        this.gerarBadgesDatasCom(this.datasDisponiveis);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar datas:', error);
+                    this.gerarBadgesDatasPadrao();
+                }
+            }
+
+            gerarBadgesDatasPadrao() {
+                const hoje = new Date();
+                const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+                const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+                // Limpa o container
+                this.scrollContainer.innerHTML = '';
+
+                // Gera últimos 2 dias + próximos 14 dias
+                for (let i = -2; i <= 14; i++) {
+                    const data = new Date(hoje);
+                    data.setDate(data.getDate() + i);
+
+                    const dia = diasDaSemana[data.getDay()];
+                    const numero = String(data.getDate()).padStart(2, '0');
+                    const mes = nomesMeses[data.getMonth()];
+                    const dataFormatada = data.toISOString().split('T')[0];
+
+                    // Verifica se é data passada
+                    const ehDataPassada = this.isDataPassada(dataFormatada);
+
+                    const badge = document.createElement('button');
+                    badge.type = 'button';
+                    badge.className = 'data-badge';
+                    if (ehDataPassada) {
+                        badge.classList.add('passada');
+                        badge.disabled = true;
+                    }
+                    badge.setAttribute('data-data', dataFormatada);
+
+                    badge.innerHTML = `
+                        <span class="data-badge-dia">${dia}</span>
+                        <span class="data-badge-data">${numero}</span>
+                        <span class="data-badge-mes">${mes}</span>
+                    `;
+
+                    badge.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (!ehDataPassada) {
+                            this.selecionarData(badge);
+                        }
+                    });
+
+                    this.scrollContainer.appendChild(badge);
+                }
+            }
+
+            gerarBadgesDatasCom(datasDisponiveis) {
+                const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+                const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+                // Limpa o container
+                this.scrollContainer.innerHTML = '';
+                console.log('Gerando badges com datas:', datasDisponiveis);
+
+                let badgesGeradas = 0;
+
+                // Cria badges para cada data disponível
+                datasDisponiveis.forEach((dataStr, index) => {
+                    try {
+                        console.log(`Processando data ${index + 1}/${datasDisponiveis.length}: "${dataStr}"`);
+
+                        // Remove espaços extras
+                        dataStr = dataStr.trim();
+
+                        let ano, mes, dia, dataFormatada;
+
+                        // Verifica se é formato DD/MM/YYYY
+                        if (dataStr.includes('/')) {
+                            const dataParts = dataStr.split('/');
+                            if (dataParts.length !== 3) {
+                                console.warn(`Formato de data inválido: "${dataStr}", partes: ${dataParts.length}`);
+                                return;
+                            }
+
+                            dia = parseInt(dataParts[0]);
+                            mes = parseInt(dataParts[1]);
+                            ano = parseInt(dataParts[2]);
+
+                            // Formata para YYYY-MM-DD para armazenar
+                            dataFormatada = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+                        }
+                        // Verifica se é formato YYYY-MM-DD
+                        else if (dataStr.includes('-')) {
+                            const dataParts = dataStr.split('-');
+                            if (dataParts.length !== 3) {
+                                console.warn(`Formato de data inválido: "${dataStr}", partes: ${dataParts.length}`);
+                                return;
+                            }
+
+                            ano = parseInt(dataParts[0]);
+                            mes = parseInt(dataParts[1]);
+                            dia = parseInt(dataParts[2]);
+                            dataFormatada = dataStr;
+                        }
+                        else {
+                            console.warn(`Formato de data não reconhecido: "${dataStr}"`);
+                            return;
+                        }
+
+                        if (isNaN(ano) || isNaN(mes) || isNaN(dia)) {
+                            console.warn(`Data com valores inválidos: ano=${ano}, mes=${mes}, dia=${dia}`);
+                            return;
+                        }
+
+                        // Cria data usando os valores
+                        const data = new Date(ano, mes - 1, dia);
+
+                        // Verifica se é data passada
+                        const ehDataPassada = this.isDataPassada(dataFormatada);
+
+                        const diaSemana = diasDaSemana[data.getDay()];
+                        const numeroData = String(data.getDate()).padStart(2, '0');
+                        const nomeMes = nomesMeses[data.getMonth()];
+
+                        const badge = document.createElement('button');
+                        badge.type = 'button';
+                        badge.className = 'data-badge';
+                        if (ehDataPassada) {
+                            badge.classList.add('passada');
+                            badge.disabled = true;
+                        }
+                        badge.setAttribute('data-data', dataFormatada);
+
+                        badge.innerHTML = `
+                            <span class="data-badge-dia">${diaSemana}</span>
+                            <span class="data-badge-data">${numeroData}</span>
+                            <span class="data-badge-mes">${nomeMes}</span>
+                        `;
+
+                        badge.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            if (!ehDataPassada) {
+                                this.selecionarData(badge);
+                            }
+                        });
+
+                        this.scrollContainer.appendChild(badge);
+                        badgesGeradas++;
+                        console.log(`Badge gerado com sucesso: ${dataFormatada} (${diaSemana}, ${numeroData}/${nomeMes})${ehDataPassada ? ' [PASSADA]' : ''}`);
+                    } catch (error) {
+                        console.error(`Erro ao processar data ${dataStr}:`, error);
+                    }
+                });
+
+                console.log(`Total de badges gerados: ${badgesGeradas}/${datasDisponiveis.length}`);
+            }
+
+            isDataPassada(dataFormatada) {
+                // dataFormatada deve estar no formato YYYY-MM-DD
+                const hoje = new Date();
+                const hojeFormatada = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+
+                // Comparação de string funciona para datas em YYYY-MM-DD
+                return dataFormatada < hojeFormatada;
+            }
+
+            gerarBadgesDatas() {
+                // Mantém por compatibilidade, mas agora usa carregarEGerarBadges
+                this.carregarEGerarBadges();
+            }
+
+            selecionarData(badge) {
+                // Verifica se o badge é uma data passada
+                if (badge.classList.contains('passada') || badge.disabled) {
+                    console.warn('Tentativa de selecionar data passada bloqueada');
+                    return;
+                }
+
+                // Remove seleção anterior
+                const badgeSelecionado = this.scrollContainer.querySelector('.data-badge.selected');
+                if (badgeSelecionado) {
+                    badgeSelecionado.classList.remove('selected');
+                }
+
+                // Seleciona o novo badge
+                badge.classList.add('selected');
+                const dataFormatada = badge.getAttribute('data-data');
+                this.dataSelecionada = dataFormatada;
+                this.hiddenInput.value = dataFormatada;
+
+                // Mostra a seção de horários
+                const horarioInput = document.getElementById('horarioAgendamento');
+                if (horarioInput) {
+                    horarioInput.classList.remove('hidden');
+                }
+
+                // Scroll suave para o badge selecionado
+                badge.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+                // Gera badges de horários para a data selecionada
+                if (typeof seletorHorarios !== 'undefined' && seletorHorarios) {
+                    seletorHorarios.gerarBadgesParaData(dataFormatada);
+                }
+            }
+
+            getData() {
+                return this.dataSelecionada;
+            }
+
+            setData(data) {
+                const badge = this.scrollContainer.querySelector(`[data-data="${data}"]`);
+                if (badge) {
+                    this.selecionarData(badge);
+                }
+            }
+        }
+
+        // Inicializa o seletor de datas - será feito dentro do DOMContentLoaded
+        let seletorDatas;
+        let seletorHorarios;
+
+        // Função para carregar e popular os serviços com loader
+        async function carregarEPopularServicos() {
+            const loaderContainer = document.getElementById('loaderContainer');
+            const loaderSpinner = loaderContainer.querySelector('.loader-spinner');
+            const loaderError = loaderContainer.querySelector('.loader-error');
+
+            // Garante que o loader está visível e mostra o spinner
+            loaderContainer.classList.remove('hide');
+            loaderSpinner.classList.remove('hidden');
+            loaderError.classList.remove('show');
+
+            try {
+                // Cria promises para o fetch e para o timer mínimo
+                const fetchPromise = carregarServicosDisponiveis();
+                const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
+
+                // Espera ambos terminarem (fetch e 2 segundos)
+                const servicos = await Promise.all([fetchPromise, timerPromise]).then(results => results[0]);
+
+                if (servicos.length === 0) {
+                    console.warn('Nenhum serviço disponível para carregar');
+                    // Mostra tela de erro
+                    loaderSpinner.classList.add('hidden');
+                    loaderError.classList.add('show');
+                    return;
+                }
+
+                // Obtém o menu do dropdown
+                const dropdownMenu = document.getElementById('dropdownMenu');
+
+                // Remove as opções antigas (mantém apenas "Selecione um serviço")
+                const opcoes = dropdownMenu.querySelectorAll('.dropdown-option');
+                opcoes.forEach(opcao => {
+                    if (opcao.getAttribute('data-value') !== '') {
+                        opcao.remove();
+                    }
+                });
+
+                // Adiciona as novas opções de serviços
+                servicos.forEach(servico => {
+                    const li = document.createElement('li');
+                    li.className = 'dropdown-option';
+                    li.setAttribute('data-value', servico);
+                    li.setAttribute('data-label', servico);
+                    li.textContent = servico;
+                    dropdownMenu.appendChild(li);
+                });
+
+                // Reinicializa o dropdown com as novas opções
+                dropdownServico.options = dropdownMenu.querySelectorAll('.dropdown-option');
+
+                // Reaplica os event listeners apenas às NOVAS opções
+                dropdownServico.options.forEach(option => {
+                    // Remove listeners antigos (se existirem)
+                    const clone = option.cloneNode(true);
+                    option.parentNode.replaceChild(clone, option);
+                });
+
+                // Recarrega referência após limpar listeners
+                dropdownServico.options = dropdownMenu.querySelectorAll('.dropdown-option');
+
+                // Adiciona listeners para as opções
+                dropdownServico.options.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        if (!option.classList.contains('disabled')) {
+                            dropdownServico.selectOption(option);
+                        }
+                        e.preventDefault();
+                    });
+                    option.addEventListener('keydown', (e) => dropdownServico.handleKeydown(e, option));
+                });
+
+                console.log('Serviços carregados e dropdown atualizado');
+                // Esconde o loader após sucesso
+                loaderContainer.classList.add('hide');
+            } catch (error) {
+                console.error('Erro ao carregar serviços:', error);
+                // Mostra tela de erro
+                loaderSpinner.classList.add('hidden');
+                loaderError.classList.add('show');
+            }
+        }
+
+        // Event listener do botão Tente novamente
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnRetry = document.getElementById('btnRetry');
+            if (btnRetry) {
+                btnRetry.addEventListener('click', carregarEPopularServicos);
+            }
+            // Inicializa os seletores de datas e horários aqui, após todos os scripts serem carregados
+            // Usa setTimeout para garantir que o supabase.js foi completamente carregado
+            setTimeout(() => {
+                seletorHorarios = new SeletorHorarios('horariosScroll', 'horarioAgendamento');
+                seletorHorarios.carregarHorarios();
+                seletorHorarios.limparHorarios();
+
+                seletorDatas = new SeletorDatas('datasScroll', 'dataAgendamento');
+
+                // Oculta a seção de horários inicialmente
+                const horarioInput = document.getElementById('horarioAgendamento');
+                if (horarioInput) {
+                    horarioInput.classList.add('hidden');
+                }
+            }, 100);
+        });
+
+        // Carrega os serviços ao inicializar a página
+        document.addEventListener('DOMContentLoaded', carregarEPopularServicos);
+
+        // Caso o script seja carregado após o DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', carregarEPopularServicos);
+        } else {
+            carregarEPopularServicos();
+        }
+
         // LÓGICA DE UI
         const btnVer = document.getElementById('verAgendamentos');
         const divLista = document.getElementById('listaAgendamentos');
@@ -362,9 +1144,21 @@
             const telefonComHifen = document.getElementById('telefone').value;
             const telefone = '(81)9' + telefonComHifen;
             const servico = dropdownServico.getValue();
+            const data = seletorDatas.getData();
+            const horario = seletorHorarios.getHorario();
 
             if (!servico) {
                 alert('Por favor, selecione um serviço');
+                return;
+            }
+
+            if (!data) {
+                alert('Por favor, selecione uma data');
+                return;
+            }
+
+            if (!horario) {
+                alert('Por favor, selecione um horário');
                 return;
             }
 
@@ -379,10 +1173,23 @@
                 spinner.classList.add('show');
                 btnText.textContent = 'ENVIANDO';
 
-                const novoId = await salvarNovoAgendamento(nome, telefone, servico);
-                alert(`Agendamento confirmado!\nID: ${novoId}`);
+                const novoId = await salvarNovoAgendamento(nome, telefone, servico, data, horario);
+                alert(`Agendamento confirmado!\nID: ${novoId}\nHorário: ${horario}`);
                 formulario.reset();
                 dropdownServico.setValue('');
+                seletorDatas.dataSelecionada = null;
+                seletorDatas.hiddenInput.value = '';
+                // Remove seleção visual de todas as datas
+                seletorDatas.scrollContainer.querySelectorAll('.data-badge.selected').forEach(badge => {
+                    badge.classList.remove('selected');
+                });
+                seletorHorarios.limparHorarios();
+
+                // Oculta a seção de horários novamente
+                const horarioInput = document.getElementById('horarioAgendamento');
+                if (horarioInput) {
+                    horarioInput.classList.add('hidden');
+                }
 
                 if (divLista.classList.contains('active')) {
                     carregarMeusAgendamentos(conteudoLista);
@@ -416,6 +1223,8 @@
                     navOverlay.classList.add('open');
                     navOverlay.setAttribute('aria-hidden', 'false');
                 }
+                // Fechar o modal de agendamentos quando abrir o menu
+                fecharModal();
                 document.body.classList.add('no-scroll');
                 // foco no primeiro link para acessibilidade
                 if (links[0]) links[0].focus();
