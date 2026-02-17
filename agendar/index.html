@@ -266,6 +266,29 @@
             cursor: not-allowed;
         }
 
+        /* Estilos para horários ocupados */
+        .horario-badge.ocupado {
+            opacity: 0.5;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .horario-badge.ocupado::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: #626262d7;
+            transform: translateY(-50%);
+        }
+
+        .horario-badge.ocupado:hover {
+            border-color: #e0e0e0;
+            background: white;
+        }
+
         /* Estilos para datas passadas */
         .data-badge.passada {
             opacity: 0.4;
@@ -370,6 +393,7 @@
 
         <div>
             <label for="telefone">Telefone:</label>
+            <p> </p>
             <div class="telefone-container">
                 <span class="telefone-prefixo">(81) 9</span>
                 <input type="tel" id="telefone" required placeholder="XXXX-XXXX" maxlength="9" inputmode="numeric">
@@ -416,6 +440,11 @@
 
         <div>
             <label for="horarioAgendamento">Horário:</label>
+            <p style="font-size: 12px; margin-top: -6px; margin-bottom: 8px; color: #606060;">* Confira se o tempo do
+                serviço cabe no horário que foi selecionado para agendamento. Se não for possível agendar nessa data,
+                tente buscar outras datas disponíveis.
+                <br> Tem dúvidas? <a href="../#contato" style="">Fale conosco</a>.
+            </p>
             <div class="horarios-container" id="horariosContainer">
                 <div class="horarios-scroll" id="horariosScroll">
                     <!-- Badges de horários serão adicionados aqui via JavaScript -->
@@ -521,13 +550,25 @@
                 this.toggle.setAttribute('aria-expanded', 'false');
             }
 
-            selectOption(option) {
+            async selectOption(option) {
                 this.currentValue = option.getAttribute('data-value');
                 this.currentLabel = option.getAttribute('data-label');
                 this.hiddenInput.value = this.currentValue;
 
-                // Atualiza o label do botão
-                this.toggle.querySelector('.dropdown-label').textContent = this.currentLabel;
+                // Atualiza o label do botão, incluindo duração se houver
+                let label = this.currentLabel;
+                let duracaoStr = '';
+                if (this.currentValue) {
+                    const duracaoMin = await obterDuracaoServico(this.currentValue);
+                    const horas = Math.floor(duracaoMin / 60);
+                    const minutos = duracaoMin % 60;
+                    if (horas >= 1) {
+                        duracaoStr = ` (${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min)`;
+                    } else {
+                        duracaoStr = ` (${minutos.toString().padStart(2, '0')}min)`;
+                    }
+                }
+                this.toggle.querySelector('.dropdown-label').textContent = label + duracaoStr;
 
                 // Atualiza o estado de seleção
                 this.options.forEach(opt => {
@@ -549,6 +590,18 @@
                     if (defaultOption) {
                         defaultOption.classList.add('disabled');
                     }
+                }
+
+                // Invalida o cache de horários ocupados pois mudou o serviço
+                if (typeof invalidarCacheHorariosOcupados === 'function') {
+                    invalidarCacheHorariosOcupados();
+                }
+
+                // Se uma data já está selecionada, regenera os horários com a nova duração do serviço
+                if (typeof seletorDatas !== 'undefined' && typeof seletorHorarios !== 'undefined' && seletorDatas && seletorDatas.dataSelecionada) {
+                    const duracao = this.currentValue ? await obterDuracaoServico(this.currentValue) : 0;
+                    console.log(`[SelectOption] Serviço alterado para "${this.currentValue}", duração: ${duracao}min, regenerando horários para ${seletorDatas.dataSelecionada}`);
+                    seletorHorarios.gerarBadgesParaData(seletorDatas.dataSelecionada, duracao);
                 }
 
                 this.closeMenu();
@@ -617,22 +670,30 @@
                 this.hiddenInput = document.getElementById(hiddenInputId);
                 this.horarioSelecionado = null;
                 this.horariosDisponiveis = {};
+                this.horariosOcupados = {};
                 this.dataAtual = null;
             }
 
             async carregarHorarios() {
                 try {
                     console.log('Iniciando carregamento de horários...');
-                    // Verifica se a função existe
-                    if (typeof carregarHorariosDisponiveis === 'undefined') {
-                        console.warn('Função carregarHorariosDisponiveis não está disponível');
+                    // Verifica se as funções existem
+                    if (typeof carregarHorariosDisponiveis === 'undefined' || typeof carregarHorariosOcupados === 'undefined') {
+                        console.warn('Funções de carregamento de horários não estão disponíveis');
                         this.limparHorarios();
                         return;
                     }
 
-                    // Carrega os horários disponíveis do Supabase
-                    this.horariosDisponiveis = await carregarHorariosDisponiveis();
-                    console.log('Horários carregados:', this.horariosDisponiveis);
+                    // Carrega os horários disponíveis e ocupados do Supabase (em paralelo)
+                    const [disponveis, ocupados] = await Promise.all([
+                        carregarHorariosDisponiveis(),
+                        carregarHorariosOcupados()
+                    ]);
+
+                    this.horariosDisponiveis = disponveis;
+                    this.horariosOcupados = ocupados;
+                    console.log('Horários disponíveis:', this.horariosDisponiveis);
+                    console.log('Horários ocupados:', this.horariosOcupados);
 
                     if (Object.keys(this.horariosDisponiveis).length === 0) {
                         console.warn('Nenhum horário disponível');
@@ -644,11 +705,16 @@
                 }
             }
 
-            gerarBadgesParaData(data) {
+            gerarBadgesParaData(data, duracao = 0) {
                 this.dataAtual = data;
                 const horarios = this.horariosDisponiveis[data];
+                const horariosOcupadosNaData = this.horariosOcupados[data] || [];
 
-                console.log(`Gerando badges para data ${data}, horários:`, horarios);
+                console.log(`\n=== Gerando badges para data: ${data} ===`);
+                console.log(`  Serviço selecionado com duração: ${duracao} minutos`);
+                console.log(`  Horários disponíveis:`, horarios);
+                console.log(`  Horários ocupados bruto:`, this.horariosOcupados);
+                console.log(`  Horários ocupados da data:`, horariosOcupadosNaData);
 
                 // Limpa o container
                 this.scrollContainer.innerHTML = '';
@@ -668,19 +734,49 @@
                     badge.setAttribute('data-horario', horario);
                     badge.textContent = horario;
 
-                    badge.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        this.selecionarHorario(badge);
-                    });
+                    // Verifica se o horário está dentro de um intervalo ocupado
+                    let ocupado = false;
+
+                    if (horariosOcupadosNaData && horariosOcupadosNaData.length > 0) {
+                        const horarioMin = horarioParaMinutos(horario);
+                        for (let intervalo of horariosOcupadosNaData) {
+                            if (!intervalo || typeof intervalo !== 'string') {
+                                continue;
+                            }
+                            const partes = intervalo.split('-');
+                            if (partes.length !== 2) {
+                                continue;
+                            }
+                            const [inicio, fim] = partes.map(h => horarioParaMinutos(h));
+                            if (horarioMin >= inicio && horarioMin < fim) {
+                                ocupado = true;
+                                console.log(`  ${horario}: BLOQUEADO (dentro do intervalo ${intervalo})`);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!ocupado) {
+                        console.log(`  ${horario}: DISPONÍVEL`);
+                        badge.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            this.selecionarHorario(badge);
+                        });
+                    } else {
+                        badge.classList.add('ocupado');
+                        badge.disabled = true;
+                        badge.addEventListener('click', (e) => {
+                            e.preventDefault();
+                        });
+                    }
 
                     this.scrollContainer.appendChild(badge);
                 });
 
-                // Seleciona o primeiro horário por padrão
-                const primeiroHorario = this.scrollContainer.querySelector('.horario-badge');
-                if (primeiroHorario) {
-                    this.selecionarHorario(primeiroHorario);
-                }
+                // Desmarca qualquer horário anterior e limpa o valor
+                this.horarioSelecionado = null;
+                this.hiddenInput.value = '';
+                console.log(`=== Fim geração de badges para ${data} ===\n`);
             }
 
             selecionarHorario(badge) {
@@ -949,9 +1045,16 @@
                 // Scroll suave para o badge selecionado
                 badge.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-                // Gera badges de horários para a data selecionada
+                // Gera badges de horários para a data selecionada com a duração do serviço
                 if (typeof seletorHorarios !== 'undefined' && seletorHorarios) {
-                    seletorHorarios.gerarBadgesParaData(dataFormatada);
+                    (async () => {
+                        const servicoSelecionado = dropdownServico.getValue();
+                        let duracao = 0;
+                        if (servicoSelecionado) {
+                            duracao = await obterDuracaoServico(servicoSelecionado);
+                        }
+                        seletorHorarios.gerarBadgesParaData(dataFormatada, duracao);
+                    })();
                 }
             }
 
@@ -1009,13 +1112,40 @@
                     }
                 });
 
-                // Adiciona as novas opções de serviços
+
+                // Carrega as durações dos serviços e exibe ao lado do nome
+                const duracoes = await carregarDuracoesServicos();
                 servicos.forEach(servico => {
                     const li = document.createElement('li');
                     li.className = 'dropdown-option';
                     li.setAttribute('data-value', servico);
                     li.setAttribute('data-label', servico);
-                    li.textContent = servico;
+
+                    // Normaliza o nome do serviço para buscar a duração
+                    const servicoNormalizado = servico
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, function (char) {
+                            const mapa = {
+                                'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+                                'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+                                'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+                                'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                                'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+                                'ç': 'c'
+                            };
+                            return mapa[char] || char;
+                        });
+                    const duracaoMin = duracoes[servicoNormalizado] || 0;
+                    const horas = Math.floor(duracaoMin / 60);
+                    const minutos = duracaoMin % 60;
+                    let duracaoStr = '';
+                    if (horas >= 1) {
+                        duracaoStr = ` (${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min)`;
+                    } else {
+                        duracaoStr = ` (${minutos.toString().padStart(2, '0')}min)`;
+                    }
+                    li.textContent = servico + duracaoStr;
                     dropdownMenu.appendChild(li);
                 });
 

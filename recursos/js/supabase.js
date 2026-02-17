@@ -4,6 +4,150 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+// =====================================================
+// UTILIDADES PARA VERIFICAR BLOQUEIOS DE HORÁRIOS
+// =====================================================
+
+// Converte horário em minutos desde o início do dia
+function horarioParaMinutos(horario) {
+    const [horas, minutos] = horario.split(':').map(Number);
+    return horas * 60 + minutos;
+}
+
+
+// CACHE DE DURAÇÕES DE SERVIÇOS
+const SERVICOS_DURACAO_CACHE_KEY = 'servicos_duracao_cache';
+const SERVICOS_DURACAO_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
+
+// Verifica se o cache de durações é válido
+function isDuracoesCacheValido() {
+    const cached = localStorage.getItem(SERVICOS_DURACAO_CACHE_KEY);
+    if (!cached) return false;
+
+    try {
+        const cacheData = JSON.parse(cached);
+        const now = Date.now();
+        const isValido = (now - cacheData.timestamp) < SERVICOS_DURACAO_CACHE_EXPIRY;
+
+        if (!isValido) {
+            localStorage.removeItem(SERVICOS_DURACAO_CACHE_KEY);
+        }
+
+        return isValido;
+    } catch (err) {
+        localStorage.removeItem(SERVICOS_DURACAO_CACHE_KEY);
+        return false;
+    }
+}
+
+// Salva durações em cache
+function salvarDuracoesEmCache(duracoes) {
+    const cacheData = {
+        duracoes: duracoes,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(SERVICOS_DURACAO_CACHE_KEY, JSON.stringify(cacheData));
+}
+
+// Obtém durações do cache
+function obterDuracoesDoCache() {
+    const cached = localStorage.getItem(SERVICOS_DURACAO_CACHE_KEY);
+    if (!cached) return null;
+
+    try {
+        const cacheData = JSON.parse(cached);
+        return cacheData.duracoes;
+    } catch (err) {
+        return null;
+    }
+}
+
+// Carrega as durações dos serviços do Supabase com cache
+// Retorna um objeto: { "canal": 60, "limpeza": 30, ... }
+async function carregarDuracoesServicos() {
+    try {
+        // Verifica se o cache é válido
+        if (isDuracoesCacheValido()) {
+            console.log('Durações de serviços carregadas do cache');
+            return obterDuracoesDoCache();
+        }
+
+        // Se cache inválido, faz o fetch
+        const { data, error } = await _supabase
+            .from('servicos_tempo')
+            .select('servico, duracao_minuto');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            console.warn('Nenhum serviço com duração encontrado na tabela');
+            return {};
+        }
+
+        // Cria um objeto normalizado { "servico": duracao }
+        const duracoes = {};
+        data.forEach(item => {
+            // Normaliza o nome do serviço removendo acentos
+            const servicoNormalizado = item.servico
+                .toLowerCase()
+                .trim()
+                .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, (char) => {
+                    const mapa = {
+                        'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+                        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+                        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+                        'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+                        'ç': 'c'
+                    };
+                    return mapa[char] || char;
+                });
+            duracoes[servicoNormalizado] = item.duracao_minuto;
+        });
+
+        // Salva em cache
+        salvarDuracoesEmCache(duracoes);
+
+        console.log('Durações de serviços carregadas do Supabase e cacheadas');
+        return duracoes;
+
+    } catch (err) {
+        console.error('Erro ao buscar durações de serviços:', err);
+
+        // Se falhar, tenta retornar do cache mesmo que expirado
+        const duracoesCache = obterDuracoesDoCache();
+        if (duracoesCache) {
+            console.log('Retornando durações do cache (expirado) devido a erro');
+            return duracoesCache;
+        }
+
+        return {};
+    }
+}
+
+// Obtém a duração de um serviço específico
+async function obterDuracaoServico(nomeServico) {
+    const duracoes = await carregarDuracoesServicos();
+
+    // Normaliza o nome do serviço
+    const servicoNormalizado = nomeServico
+        .toLowerCase()
+        .trim()
+        .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, (char) => {
+            const mapa = {
+                'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+                'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+                'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+                'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+                'ç': 'c'
+            };
+            return mapa[char] || char;
+        });
+
+    return duracoes[servicoNormalizado] || 0;
+}
+
 // CACHE NO LOCALSTORAGE
 const STORAGE_KEY = 'meus_agendamentos_ids';
 
@@ -69,7 +213,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
 
 // CACHE DE SERVIÇOS
 const SERVICOS_CACHE_KEY = 'servicos_cache';
-const SERVICOS_CACHE_EXPIRY = 2 * 60 * 1000; // 2 minutos em milissegundos
+const SERVICOS_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
 
 // Verifica se o cache de serviços é válido
 function isCacheValido() {
@@ -170,7 +314,7 @@ async function carregarServicosDisponiveis() {
 
 // CACHE DE DATAS
 const DATAS_CACHE_KEY = 'datas_cache';
-const DATAS_CACHE_EXPIRY = 2 * 60 * 1000; // 2 minutos em milissegundos
+const DATAS_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
 
 // Verifica se o cache de datas é válido
 function isDatassCacheValido() {
@@ -272,7 +416,7 @@ async function carregarDatasDisponiveis() {
 
 // CACHE DE HORÁRIOS
 const HORARIOS_CACHE_KEY = 'horarios_cache';
-const HORARIOS_CACHE_EXPIRY = 2 * 60 * 1000; // 2 minutos em milissegundos
+const HORARIOS_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
 
 // Verifica se o cache de horários é válido
 function isHorariosCacheValido() {
@@ -318,7 +462,7 @@ function obterHorariosDoCache() {
 }
 
 // Expande um intervalo de horas em horários de 30 em 30 minutos
-// Exemplo: "08:00-12:00" retorna ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00"]
+// Observação: não inclui o horário final do intervalo (ex.: para "08:00-12:00" retorna até "11:30", NÃO inclui "12:00").
 function expandirFaixaHoraria(faixaStr) {
     const [inicio, fim] = faixaStr.split('-').map(h => h.trim());
 
@@ -329,7 +473,8 @@ function expandirFaixaHoraria(faixaStr) {
     const minutosFim = horaFim * 60 + minFim;
 
     const horarios = [];
-    for (let min = minutosInicio; min <= minutosFim; min += 30) {
+    // Gera slots de 30 em 30 minutos até, mas EXCLUINDO, o minuto final do intervalo
+    for (let min = minutosInicio; min < minutosFim; min += 30) {
         const h = String(Math.floor(min / 60)).padStart(2, '0');
         const m = String(min % 60).padStart(2, '0');
         horarios.push(`${h}:${m}`);
@@ -354,6 +499,7 @@ function processarHorarios(horariosString, datasDisponiveisString) {
         }
 
         const horariosPorData = {};
+        const finaisPorData = {}; // guarda os horários FINAIS originais por data (para sanitização segura)
 
         horariosArray.forEach((horariosDia, index) => {
             if (index >= datasArray.length) {
@@ -372,21 +518,98 @@ function processarHorarios(horariosString, datasDisponiveisString) {
             // Processa as faixas de horário deste dia (separadas por vírgula)
             const faixas = horariosDia.split(',').map(f => f.trim());
             const horariosExpandidos = [];
+            finaisPorData[dataStr] = new Set();
 
             faixas.forEach(faixa => {
+                // Expande a faixa em slots de 30 minutos
                 const horariosExpandidosFaixa = expandirFaixaHoraria(faixa);
-                horariosExpandidos.push(...horariosExpandidosFaixa);
+
+                // Normaliza o horário final da faixa (defensivo) e remove qualquer slot
+                // que coincida exatamente com o fim do intervalo — assim garantimos
+                // que o "horário final do intervalo" NÃO aparecerá como badge.
+                const partes = faixa.split('-').map(s => s.trim());
+                const fimStrRaw = partes[1] || null;
+
+                if (fimStrRaw) {
+                    const [fh, fm] = fimStrRaw.split(':').map(Number);
+                    const fimNormalized = `${String(fh).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
+
+                    // registra o horário final original para sanitização posterior
+                    finaisPorData[dataStr].add(fimNormalized);
+
+                    const filtrados = horariosExpandidosFaixa.filter(h => h !== fimNormalized);
+                    if (filtrados.length !== horariosExpandidosFaixa.length) {
+                        console.log(`[processarHorarios] removido horário final do intervalo (${fimNormalized}) da faixa: ${faixa}`);
+                    }
+
+                    horariosExpandidos.push(...filtrados);
+                } else {
+                    horariosExpandidos.push(...horariosExpandidosFaixa);
+                }
             });
 
             horariosPorData[dataStr] = horariosExpandidos;
             console.log(`Horários da data ${dataStr}:`, horariosExpandidos);
         });
 
-        return horariosPorData;
+        // Sanitiza usando apenas os horários FINAIS conhecidos — assim **não** removemos
+        // o penúltimo (ou qualquer outro) quando ele não corresponde ao final original.
+        return sanitizeHorariosPorData(horariosPorData, finaisPorData);
     } catch (error) {
         console.error('Erro ao processar horários:', error);
         return {};
     }
+}
+
+// Remove o último horário de cada sequência contínua **APENAS** se esse horário
+// corresponde ao horário FINAL original de uma faixa.
+// finaisPorData (opcional) deve ser um objeto { 'YYYY-MM-DD': Set(['11:40','16:30',...]) }
+function sanitizeHorariosPorData(horariosPorData, finaisPorData = null) {
+    const resultado = {};
+
+    Object.keys(horariosPorData || {}).forEach(date => {
+        // Normaliza e ordena horários
+        const arr = Array.from(new Set((horariosPorData[date] || []).map(s => String(s).trim()).filter(Boolean)));
+        arr.sort((a, b) => horarioParaMinutos(a) - horarioParaMinutos(b));
+
+        const toRemove = new Set();
+        let runStart = 0;
+
+        for (let i = 0; i < arr.length; i++) {
+            const current = horarioParaMinutos(arr[i]);
+            const next = i + 1 < arr.length ? horarioParaMinutos(arr[i + 1]) : null;
+
+            if (next !== null && next - current === 30) {
+                // ainda dentro da sequência contínua
+            } else {
+                // fim da sequência - se a sequência tiver >= 2 slots, consideramos remover
+                const runLength = i - runStart + 1;
+                if (runLength >= 2) {
+                    const candidato = arr[i];
+
+                    // Se nos forneceram os horários finais originais, só removemos
+                    // quando o candidato for explicitamente um horário final nessa data.
+                    if (finaisPorData && finaisPorData[date] && finaisPorData[date].has(candidato)) {
+                        toRemove.add(candidato);
+                        console.log(`[sanitizeHorariosPorData] remoção do horário final da sequência em ${date}: ${candidato}`);
+                    } else if (!finaisPorData) {
+                        // Comportamento legado (sem informações dos finais): remove como antes.
+                        toRemove.add(candidato);
+                        console.log(`[sanitizeHorariosPorData][legacy] remoção do horário final da sequência em ${date}: ${candidato}`);
+                    } else {
+                        // Não remover — candidato NÃO corresponde ao fim original
+                        console.log(`[sanitizeHorariosPorData] candidato ${candidato} NÃO corresponde a um fim original; preservado`);
+                    }
+                }
+                runStart = i + 1;
+            }
+        }
+
+        resultado[date] = arr.filter(h => !toRemove.has(h));
+    });
+
+    return resultado;
+
 }
 
 // Carrega os horários disponíveis do Supabase com cache
@@ -395,8 +618,8 @@ async function carregarHorariosDisponiveis() {
     try {
         // Verifica se o cache é válido
         if (isHorariosCacheValido()) {
-            console.log('Horários carregados do cache');
-            return obterHorariosDoCache();
+            console.log('Horários carregados do cache (rápido, via localStorage)');
+            return obterHorariosDoCache() || {};
         }
 
         // Se cache inválido, faz o fetch
@@ -437,6 +660,151 @@ async function carregarHorariosDisponiveis() {
         if (horariosCache) {
             console.log('Retornando horários do cache (expirado) devido a erro');
             return horariosCache;
+        }
+
+        return {};
+    }
+}
+
+// CACHE DE HORÁRIOS OCUPADOS
+const HORARIOS_OCUPADOS_CACHE_KEY = 'horarios_ocupados_cache';
+const HORARIOS_OCUPADOS_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
+
+// Verifica se o cache de horários ocupados é válido
+function isHorariosOcupadosCacheValido() {
+    const cached = localStorage.getItem(HORARIOS_OCUPADOS_CACHE_KEY);
+    if (!cached) return false;
+
+    try {
+        const cacheData = JSON.parse(cached);
+        const now = Date.now();
+        const isValido = (now - cacheData.timestamp) < HORARIOS_OCUPADOS_CACHE_EXPIRY;
+
+        if (!isValido) {
+            localStorage.removeItem(HORARIOS_OCUPADOS_CACHE_KEY);
+        }
+
+        return isValido;
+    } catch (err) {
+        localStorage.removeItem(HORARIOS_OCUPADOS_CACHE_KEY);
+        return false;
+    }
+}
+
+// Invalida o cache de horários ocupados (para usar quando servico ou data muda)
+function invalidarCacheHorariosOcupados() {
+    localStorage.removeItem(HORARIOS_OCUPADOS_CACHE_KEY);
+    console.log('[Cache] Horários ocupados invalidados');
+}
+
+// Salva horários ocupados em cache
+function salvarHorariosOcupadosEmCache(horariosOcupados) {
+    const cacheData = {
+        horariosOcupados: horariosOcupados,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(HORARIOS_OCUPADOS_CACHE_KEY, JSON.stringify(cacheData));
+}
+
+// Obtém horários ocupados do cache
+function obterHorariosOcupadosDoCache() {
+    const cached = localStorage.getItem(HORARIOS_OCUPADOS_CACHE_KEY);
+    if (!cached) return null;
+
+    try {
+        const cacheData = JSON.parse(cached);
+        return cacheData.horariosOcupados;
+    } catch (err) {
+        return null;
+    }
+}
+
+// Carrega os horários ocupados do Supabase com cache
+// Retorna um objeto: { "2025-02-15": ["08:00", "08:30", ...], "2025-02-16": [...] }
+async function carregarHorariosOcupados() {
+    try {
+        // Verifica se o cache é válido
+        if (isHorariosOcupadosCacheValido()) {
+            console.log('[Horários Ocupados] Carregando do cache (válido)');
+            return obterHorariosOcupadosDoCache();
+        }
+
+        // Se cache inválido, faz o fetch pela RPC
+        console.log('[Horários Ocupados] Cache inválido ou não existe, buscando da RPC...');
+        const { data, error } = await _supabase
+            .rpc('buscar_horarios_ocupados');
+
+        if (error) {
+            console.error('[Horários Ocupados] Erro da RPC:', error);
+            throw error;
+        }
+
+        console.log('[Horários Ocupados] Resposta bruta da RPC:', data, typeof data);
+
+        // Converte a resposta em objeto { data: [horarios_intervalos] }
+        const horariosOcupadosPorData = {};
+
+        if (!data) {
+            console.warn('[Horários Ocupados] A RPC retornou null ou undefined');
+            salvarHorariosOcupadosEmCache(horariosOcupadosPorData);
+            return horariosOcupadosPorData;
+        }
+
+        if (!Array.isArray(data)) {
+            console.warn('[Horários Ocupados] A resposta da RPC não é um array:', typeof data);
+            salvarHorariosOcupadosEmCache(horariosOcupadosPorData);
+            return horariosOcupadosPorData;
+        }
+
+        data.forEach((item, index) => {
+            console.log(`[Horários Ocupados] Item ${index}:`, item);
+
+            if (!item || typeof item !== 'object') {
+                console.warn(`[Horários Ocupados] Item ${index} é inválido:`, item);
+                return;
+            }
+
+            if (!item.data) {
+                console.warn(`[Horários Ocupados] Item ${index} não tem campo 'data'`);
+                return;
+            }
+
+            // Normaliza a data se necessário
+            let dataStr = String(item.data).trim();
+            if (dataStr.includes('/')) {
+                const [dia, mes, ano] = dataStr.split('/');
+                dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            }
+
+            // Garante que horarios_ocupados é um array de strings
+            let horariosArray = item.horarios_ocupados;
+            if (!Array.isArray(horariosArray)) {
+                console.warn(`[Horários Ocupados] Para data ${dataStr}, horarios_ocupados não é array:`, horariosArray, typeof horariosArray);
+                horariosArray = [];
+            }
+
+            // Filtra e limpa os valores (remove null/undefined)
+            horariosArray = horariosArray.filter(h => h && typeof h === 'string');
+
+            console.log(`[Horários Ocupados] Horários ocupados para ${dataStr}:`, horariosArray);
+            horariosOcupadosPorData[dataStr] = horariosArray;
+        });
+
+        // Salva em cache
+        salvarHorariosOcupadosEmCache(horariosOcupadosPorData);
+
+        console.log('[Horários Ocupados] Carregado do Supabase e cacheado:', horariosOcupadosPorData);
+        return horariosOcupadosPorData;
+
+    } catch (err) {
+        console.error('[Horários Ocupados] Erro ao buscar:', err);
+        console.error('[Horários Ocupados] Stack:', err.stack);
+
+        // Se falhar, tenta retornar do cache mesmo que expirado
+        const horariosOcupadosCache = obterHorariosOcupadosDoCache();
+        if (horariosOcupadosCache) {
+            console.log('[Horários Ocupados] Retornando do cache (expirado) devido a erro');
+            return horariosOcupadosCache;
         }
 
         return {};
