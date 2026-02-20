@@ -307,6 +307,516 @@
             border-color: #ddd !important;
             background: #f5f5f5 !important;
         }
+
+        /* ===== ESTILOS DOS CARDS DE AGENDAMENTOS ===== */
+        #listaAgendamentos {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #listaAgendamentos h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 12px;
+        }
+
+        .agendamentos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 8px 0;
+        }
+
+        .card-agendamento {
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-agendamento::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #d37c7cd7 0%, #c56a6ad0 100%);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .card-usuario {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .card-usuario i {
+            font-size: 18px;
+            color: #d37c7cd7;
+            flex-shrink: 0;
+        }
+
+        .card-nome {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .badge-agendado {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            margin-bottom: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .card-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 6px 0;
+        }
+
+        .card-item i {
+            font-size: 18px;
+            color: #d37c7cd7;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .card-label {
+            display: block;
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .card-value {
+            display: block;
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .card-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .card-item-footer {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .card-item-footer i {
+            font-size: 16px;
+            color: #d37c7cd7;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .card-item-footer .card-label {
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        .card-item-footer .card-value {
+            font-size: 14px;
+        }
+
+        /* Responsivo para telas pequenas */
+        @media (max-width: 640px) {
+            .agendamentos-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .card-footer {
+                grid-template-columns: 1fr;
+            }
+
+            .card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .card-usuario {
+                width: 100%;
+            }
+
+            .badge-agendado {
+                align-self: flex-start;
+            }
+
+            #listaAgendamentos h3 {
+                font-size: 20px;
+                margin-bottom: 16px;
+            }
+        }
+
+        /* Barra de rolagem personalizada */
+        #listaAgendamentos::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        /* Modal de Revisão */
+        .modal-revisao {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-revisao:not(.hidden) {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-revisao.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .modal-revisao-conteudo {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-revisao-conteudo h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .revisao-dados {
+            margin: 24px 0;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #d37c7cd7;
+        }
+
+        .revisao-campo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .revisao-campo:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .revisao-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .revisao-valor {
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .revisao-botoes {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-editar,
+        .btn-confirmar {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-editar {
+            background: white;
+            color: #333;
+            border: 1px solid #d37c7cd7;
+        }
+
+        .btn-editar:hover {
+            background: #f9f9f9;
+            border-color: #c56a6ad0;
+        }
+
+        .btn-confirmar {
+            background: #d37c7cd7;
+            color: white;
+        }
+
+        .btn-confirmar:hover {
+            background: #c56a6ad0;
+        }
+
+        .btn-confirmar:disabled {
+            background: #c0c0c0;
+            cursor: not-allowed;
+        }
+
+        /* Mensagens de Aviso/Erro */
+        #mensagenContainer {
+            display: none;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #mensagenContainer.show {
+            display: block;
+        }
+
+        #mensagenContainer.erro {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+
+        #mensagenContainer.aviso {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            color: #d68910;
+        }
+
+        #mensagenContainer.sucesso {
+            background: #eafaf1;
+            border-left: 4px solid #27ae60;
+            color: #1e8449;
+        }
+
+        /* Container de Confirmação */
+        .confirmacao-container {
+            display: none;
+            max-width: 500px;
+            margin: 6px auto 30px;
+            padding: 40px 30px;
+            text-align: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            animation: slideUp 0.4s ease;
+        }
+
+        .confirmacao-container.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .confirmacao-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: #d37c7cd7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+        }
+
+        .confirmacao-titulo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .confirmacao-mensagem {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .confirmacao-dados {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .confirmacao-linha {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 13px;
+        }
+
+        .confirmacao-linha:last-child {
+            border-bottom: none;
+        }
+
+        .confirmacao-label {
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .confirmacao-valor {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .confirmacao-id {
+            background: #e8f5e9;
+            border: 1px solid #81c784;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 24px;
+            font-size: 12px;
+        }
+
+        .confirmacao-id-label {
+            color: #666;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 11px;
+        }
+
+        .confirmacao-id-valor {
+            color: #2e7d32;
+            font-weight: 700;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .confirmacao-botao {
+            padding: 12px 32px;
+            background: #cdcdcd41;
+            color: rgb(42, 134, 196);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #formularioAgendamento {
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        #formularioAgendamento.hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -359,12 +869,14 @@
         </nav>
 
         <!-- Overlay para fechar o menu e escurecer o fundo em mobile (fora da nav para não sobrepor) -->
-
+        <div id="TargetID"></div>
         <div id="listaAgendamentos">
             <h3>
                 <span>Meus Agendamentos </span>
                 <button type="button" class="btn-fechar-modal" id="btnFecharModal">&times;</button>
             </h3>
+            <p id="msgComparencimento" style="color: #303030; font-size: 12px; display: none;">Pedimos a gentileza de
+                comparecer no horário agendado.</p>
             <div id="agendamentosConteudo">
                 — Nenhum agendamento carregado —
             </div>
@@ -379,7 +891,47 @@
     <!-- Overlay para o menu de navegação mobile -->
     <div id="nav-overlay" class="nav-overlay"></div>
 
+    <!-- Modal de Revisão de Dados -->
+    <div id="modalRevisao" class="modal-revisao hidden">
+        <div class="modal-revisao-conteudo">
+            <h2>Revise seus dados</h2>
+            <p style="color: #666; margin-bottom: 24px;">Por favor, confirme se todos os dados estão corretos antes de
+                enviar seu agendamento.</p>
+
+            <div class="revisao-dados">
+                <div class="revisao-campo">
+                    <span class="revisao-label">Nome:</span>
+                    <span class="revisao-valor" id="revisaoNome">—</span>
+                </div>
+                <div class="revisao-campo">
+                    <span class="revisao-label">Telefone:</span>
+                    <span class="revisao-valor" id="revisaoTelefone">—</span>
+                </div>
+                <div class="revisao-campo">
+                    <span class="revisao-label">Serviço:</span>
+                    <span class="revisao-valor" id="revisaoServico">—</span>
+                </div>
+                <div class="revisao-campo">
+                    <span class="revisao-label">Data:</span>
+                    <span class="revisao-valor" id="revisaoData">—</span>
+                </div>
+                <div class="revisao-campo">
+                    <span class="revisao-label">Horário:</span>
+                    <span class="revisao-valor" id="revisaoHorario">—</span>
+                </div>
+            </div>
+
+            <div class="revisao-botoes">
+                <button type="button" class="btn-editar" id="btnEditar">Editar dados</button>
+                <button type="button" class="btn-confirmar" id="btnConfirmarRevisao">Confirmar agendamento</button>
+            </div>
+        </div>
+    </div>
+
     <form id="formularioAgendamento">
+        <!-- Container de Mensagens de Aviso/Erro -->
+        <div id="mensagenContainer"></div>
+
         <img src="../recursos/imgs/img0.webp" alt="" style="width: 270px; display: block; margin: 20px auto;">
         <h2 style="text-align: center; font-weight: 400; color: #303030;">Faça seu agendamento</h2>
         <p
@@ -443,7 +995,7 @@
             <p style="font-size: 12px; margin-top: -6px; margin-bottom: 8px; color: #606060;">* Confira se o tempo do
                 serviço cabe no horário que foi selecionado para agendamento. Se não for possível agendar nessa data,
                 tente buscar outras datas disponíveis.
-                <br> Tem dúvidas? <a href="../#contato" style="">Fale conosco</a>.
+                <br> Tem dúvidas? <a href="../#contato">Fale conosco</a>.
             </p>
             <div class="horarios-container" id="horariosContainer">
                 <div class="horarios-scroll" id="horariosScroll">
@@ -458,6 +1010,41 @@
             <span class="btn-text">AGENDAR</span>
         </button>
     </form>
+
+    <!-- Container de Confirmação de Agendamento -->
+    <div id="confirmacaoContainer" class="confirmacao-container">
+        <div class="confirmacao-icon">✓</div>
+        <h2 class="confirmacao-titulo">Agendamento Confirmado!</h2>
+        <p class="confirmacao-mensagem">Seu agendamento foi realizado com sucesso. Você receberá um lembrete antes da
+            data marcada.</p>
+
+        <div class="confirmacao-id">
+            <span class="confirmacao-id-label">ID do Agendamento:</span>
+            <span class="confirmacao-id-valor" id="confirmacaoId">—</span>
+        </div>
+
+        <div class="confirmacao-dados">
+            <div class="confirmacao-linha">
+                <span class="confirmacao-label">Nome:</span>
+                <span class="confirmacao-valor" id="confirmacaoNome">—</span>
+            </div>
+            <div class="confirmacao-linha">
+                <span class="confirmacao-label">Serviço:</span>
+                <span class="confirmacao-valor" id="confirmacaoServico">—</span>
+            </div>
+            <div class="confirmacao-linha">
+                <span class="confirmacao-label">Data:</span>
+                <span class="confirmacao-valor" id="confirmacaoData">—</span>
+            </div>
+            <div class="confirmacao-linha">
+                <span class="confirmacao-label">Horário:</span>
+                <span class="confirmacao-valor" id="confirmacaoHorario">—</span>
+            </div>
+        </div>
+
+        <button type="button" class="confirmacao-botao" id="btnNovoAgendamento">Fazer novo agendamento</button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../recursos/js/supabase.js"></script>
 
@@ -600,7 +1187,6 @@
                 // Se uma data já está selecionada, regenera os horários com a nova duração do serviço
                 if (typeof seletorDatas !== 'undefined' && typeof seletorHorarios !== 'undefined' && seletorDatas && seletorDatas.dataSelecionada) {
                     const duracao = this.currentValue ? await obterDuracaoServico(this.currentValue) : 0;
-                    console.log(`[SelectOption] Serviço alterado para "${this.currentValue}", duração: ${duracao}min, regenerando horários para ${seletorDatas.dataSelecionada}`);
                     seletorHorarios.gerarBadgesParaData(seletorDatas.dataSelecionada, duracao);
                 }
 
@@ -676,10 +1262,8 @@
 
             async carregarHorarios() {
                 try {
-                    console.log('Iniciando carregamento de horários...');
                     // Verifica se as funções existem
                     if (typeof carregarHorariosDisponiveis === 'undefined' || typeof carregarHorariosOcupados === 'undefined') {
-                        console.warn('Funções de carregamento de horários não estão disponíveis');
                         this.limparHorarios();
                         return;
                     }
@@ -692,15 +1276,11 @@
 
                     this.horariosDisponiveis = disponveis;
                     this.horariosOcupados = ocupados;
-                    console.log('Horários disponíveis:', this.horariosDisponiveis);
-                    console.log('Horários ocupados:', this.horariosOcupados);
 
                     if (Object.keys(this.horariosDisponiveis).length === 0) {
-                        console.warn('Nenhum horário disponível');
                         this.limparHorarios();
                     }
                 } catch (error) {
-                    console.error('Erro ao carregar horários:', error);
                     this.limparHorarios();
                 }
             }
@@ -709,12 +1289,6 @@
                 this.dataAtual = data;
                 const horarios = this.horariosDisponiveis[data];
                 const horariosOcupadosNaData = this.horariosOcupados[data] || [];
-
-                console.log(`\n=== Gerando badges para data: ${data} ===`);
-                console.log(`  Serviço selecionado com duração: ${duracao} minutos`);
-                console.log(`  Horários disponíveis:`, horarios);
-                console.log(`  Horários ocupados bruto:`, this.horariosOcupados);
-                console.log(`  Horários ocupados da data:`, horariosOcupadosNaData);
 
                 // Limpa o container
                 this.scrollContainer.innerHTML = '';
@@ -737,7 +1311,13 @@
                     // Verifica se o horário está dentro de um intervalo ocupado
                     let ocupado = false;
 
-                    if (horariosOcupadosNaData && horariosOcupadosNaData.length > 0) {
+                    // Verifica se o horário já passou
+                    const horarioPassado = this.isHorarioPassado(data, horario);
+                    if (horarioPassado) {
+                        ocupado = true;
+                    }
+
+                    if (!ocupado && horariosOcupadosNaData && horariosOcupadosNaData.length > 0) {
                         const horarioMin = horarioParaMinutos(horario);
                         for (let intervalo of horariosOcupadosNaData) {
                             if (!intervalo || typeof intervalo !== 'string') {
@@ -750,14 +1330,12 @@
                             const [inicio, fim] = partes.map(h => horarioParaMinutos(h));
                             if (horarioMin >= inicio && horarioMin < fim) {
                                 ocupado = true;
-                                console.log(`  ${horario}: BLOQUEADO (dentro do intervalo ${intervalo})`);
                                 break;
                             }
                         }
                     }
 
                     if (!ocupado) {
-                        console.log(`  ${horario}: DISPONÍVEL`);
                         badge.addEventListener('click', (e) => {
                             e.preventDefault();
                             this.selecionarHorario(badge);
@@ -776,7 +1354,27 @@
                 // Desmarca qualquer horário anterior e limpa o valor
                 this.horarioSelecionado = null;
                 this.hiddenInput.value = '';
-                console.log(`=== Fim geração de badges para ${data} ===\n`);
+            }
+
+            isHorarioPassado(data, horario) {
+                // data deve estar no formato YYYY-MM-DD
+                // horario deve estar no formato HH:MM
+                const hoje = new Date();
+                const hojeFormatada = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+                const horaAtual = `${String(hoje.getHours()).padStart(2, '0')}:${String(hoje.getMinutes()).padStart(2, '0')}`;
+
+                // Se a data é anterior a hoje, o horário já passou
+                if (data < hojeFormatada) {
+                    return true;
+                }
+
+                // Se é hoje, verifica se o horário já passou
+                if (data === hojeFormatada) {
+                    return horario < horaAtual;
+                }
+
+                // Se é uma data futura, o horário não passou
+                return false;
             }
 
             selecionarHorario(badge) {
@@ -791,8 +1389,6 @@
                 const horario = badge.getAttribute('data-horario');
                 this.horarioSelecionado = horario;
                 this.hiddenInput.value = horario;
-
-                console.log(`Horário selecionado: ${horario}`);
             }
 
             limparHorarios() {
@@ -829,26 +1425,21 @@
 
             async carregarEGerarBadges() {
                 try {
-                    console.log('Iniciando carregamento de datas...');
                     // Verifica se a função existe
                     if (typeof carregarDatasDisponiveis === 'undefined') {
-                        console.warn('Função carregarDatasDisponiveis não está disponível, usando datas padrão');
                         this.gerarBadgesDatasPadrao();
                         return;
                     }
 
                     // Carrega as datas disponíveis do Supabase
                     this.datasDisponiveis = await carregarDatasDisponiveis();
-                    console.log('Datas carregadas:', this.datasDisponiveis);
 
                     if (this.datasDisponiveis.length === 0) {
-                        console.warn('Nenhuma data disponível, usando datas padrão');
                         this.gerarBadgesDatasPadrao();
                     } else {
                         this.gerarBadgesDatasCom(this.datasDisponiveis);
                     }
                 } catch (error) {
-                    console.error('Erro ao carregar datas:', error);
                     this.gerarBadgesDatasPadrao();
                 }
             }
@@ -908,15 +1499,12 @@
 
                 // Limpa o container
                 this.scrollContainer.innerHTML = '';
-                console.log('Gerando badges com datas:', datasDisponiveis);
 
                 let badgesGeradas = 0;
 
                 // Cria badges para cada data disponível
                 datasDisponiveis.forEach((dataStr, index) => {
                     try {
-                        console.log(`Processando data ${index + 1}/${datasDisponiveis.length}: "${dataStr}"`);
-
                         // Remove espaços extras
                         dataStr = dataStr.trim();
 
@@ -926,7 +1514,6 @@
                         if (dataStr.includes('/')) {
                             const dataParts = dataStr.split('/');
                             if (dataParts.length !== 3) {
-                                console.warn(`Formato de data inválido: "${dataStr}", partes: ${dataParts.length}`);
                                 return;
                             }
 
@@ -941,7 +1528,6 @@
                         else if (dataStr.includes('-')) {
                             const dataParts = dataStr.split('-');
                             if (dataParts.length !== 3) {
-                                console.warn(`Formato de data inválido: "${dataStr}", partes: ${dataParts.length}`);
                                 return;
                             }
 
@@ -951,12 +1537,10 @@
                             dataFormatada = dataStr;
                         }
                         else {
-                            console.warn(`Formato de data não reconhecido: "${dataStr}"`);
                             return;
                         }
 
                         if (isNaN(ano) || isNaN(mes) || isNaN(dia)) {
-                            console.warn(`Data com valores inválidos: ano=${ano}, mes=${mes}, dia=${dia}`);
                             return;
                         }
 
@@ -994,13 +1578,9 @@
 
                         this.scrollContainer.appendChild(badge);
                         badgesGeradas++;
-                        console.log(`Badge gerado com sucesso: ${dataFormatada} (${diaSemana}, ${numeroData}/${nomeMes})${ehDataPassada ? ' [PASSADA]' : ''}`);
                     } catch (error) {
-                        console.error(`Erro ao processar data ${dataStr}:`, error);
                     }
                 });
-
-                console.log(`Total de badges gerados: ${badgesGeradas}/${datasDisponiveis.length}`);
             }
 
             isDataPassada(dataFormatada) {
@@ -1020,7 +1600,6 @@
             selecionarData(badge) {
                 // Verifica se o badge é uma data passada
                 if (badge.classList.contains('passada') || badge.disabled) {
-                    console.warn('Tentativa de selecionar data passada bloqueada');
                     return;
                 }
 
@@ -1094,7 +1673,6 @@
                 const servicos = await Promise.all([fetchPromise, timerPromise]).then(results => results[0]);
 
                 if (servicos.length === 0) {
-                    console.warn('Nenhum serviço disponível para carregar');
                     // Mostra tela de erro
                     loaderSpinner.classList.add('hidden');
                     loaderError.classList.add('show');
@@ -1173,11 +1751,9 @@
                     option.addEventListener('keydown', (e) => dropdownServico.handleKeydown(e, option));
                 });
 
-                console.log('Serviços carregados e dropdown atualizado');
                 // Esconde o loader após sucesso
                 loaderContainer.classList.add('hide');
             } catch (error) {
-                console.error('Erro ao carregar serviços:', error);
                 // Mostra tela de erro
                 loaderSpinner.classList.add('hidden');
                 loaderError.classList.add('show');
@@ -1224,6 +1800,35 @@
         const conteudoLista = document.getElementById('agendamentosConteudo');
         const formulario = document.getElementById('formularioAgendamento');
         const telefonInput = document.getElementById('telefone');
+        const mensagenContainer = document.getElementById('mensagenContainer');
+
+        // Função para exibir mensagens
+        function exibirMensagem(texto, tipo = 'erro') {
+            mensagenContainer.textContent = texto;
+            mensagenContainer.className = `show ${tipo}`;
+
+            // Fecha o modal de revisão se estiver aberto
+            const modal = document.getElementById('modalRevisao');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+
+            // Scroll para o elemento de destino
+            setTimeout(() => {
+                const scrollTarget = document.getElementById('TargetID');
+                scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
+            // Auto-hide após 12 segundos
+            setTimeout(() => {
+                mensagenContainer.classList.remove('show');
+            }, 20000);
+        }
+
+        // Função para limpar mensagens
+        function limparMensagem() {
+            mensagenContainer.classList.remove('show');
+        }
 
         // Abre modal
         function abrirModal() {
@@ -1269,6 +1874,7 @@
         // Envio do formulário
         formulario.addEventListener('submit', async (e) => {
             e.preventDefault();
+            limparMensagem();
 
             const nome = document.getElementById('nome').value;
             const telefonComHifen = document.getElementById('telefone').value;
@@ -1278,44 +1884,108 @@
             const horario = seletorHorarios.getHorario();
 
             if (!servico) {
-                alert('Por favor, selecione um serviço');
+                exibirMensagem('Por favor, selecione um serviço', 'aviso');
                 return;
             }
 
             if (!data) {
-                alert('Por favor, selecione uma data');
+                exibirMensagem('Por favor, selecione uma data', 'aviso');
                 return;
             }
 
             if (!horario) {
-                alert('Por favor, selecione um horário');
+                exibirMensagem('Por favor, selecione um horário', 'aviso');
                 return;
             }
 
-            // Obtém elementos do botão
-            const btnAgendar = document.getElementById('btnAgendar');
-            const spinner = btnAgendar.querySelector('.spinner-loader');
-            const btnText = btnAgendar.querySelector('.btn-text');
+            // Armazena os dados para confirmar depois
+            const dadosAgendamento = {
+                nome,
+                telefonComHifen,
+                telefone,
+                servico,
+                data,
+                horario
+            };
+
+            // Formata a data para exibição (DD/MM/YYYY)
+            let dataFormatada = data;
+            if (data.includes('-')) {
+                const [ano, mes, dia] = data.split('-');
+                dataFormatada = `${dia}/${mes}/${ano}`;
+            }
+
+            // Preenche o modal com os dados
+            document.getElementById('revisaoNome').textContent = nome;
+            document.getElementById('revisaoTelefone').textContent = telefone;
+            document.getElementById('revisaoServico').textContent = servico;
+            document.getElementById('revisaoData').textContent = dataFormatada;
+            document.getElementById('revisaoHorario').textContent = horario;
+
+            // Mostra o modal de revisão
+            const modal = document.getElementById('modalRevisao');
+            modal.classList.remove('hidden');
+        });
+
+        // Evento do botão "Editar dados"
+        document.getElementById('btnEditar').addEventListener('click', () => {
+            const modal = document.getElementById('modalRevisao');
+            modal.classList.add('hidden');
+        });
+
+        // Evento do botão "Confirmar agendamento"
+        document.getElementById('btnConfirmarRevisao').addEventListener('click', async () => {
+            const btnConfirmar = document.getElementById('btnConfirmarRevisao');
+            const btnEditar = document.getElementById('btnEditar');
+            const modal = document.getElementById('modalRevisao');
+            const confirmacaoContainer = document.getElementById('confirmacaoContainer');
 
             try {
-                // Desabilita botão, mostra spinner e muda texto
-                btnAgendar.disabled = true;
-                spinner.classList.add('show');
-                btnText.textContent = 'ENVIANDO';
+                // Desabilita botões durante o envio
+                btnConfirmar.disabled = true;
+                btnEditar.disabled = true;
+                btnConfirmar.textContent = 'ENVIANDO...';
+
+                // Obtém os dados do modal
+                const nome = document.getElementById('revisaoNome').textContent;
+                const telefone = document.getElementById('revisaoTelefone').textContent;
+                const servico = document.getElementById('revisaoServico').textContent;
+                const dataFormatada = document.getElementById('revisaoData').textContent;
+                const horario = document.getElementById('revisaoHorario').textContent;
+
+                // Converte a data de volta para o formato esperado
+                let data = dataFormatada;
+                if (dataFormatada.includes('/')) {
+                    const [dia, mes, ano] = dataFormatada.split('/');
+                    data = `${ano}-${mes}-${dia}`;
+                }
 
                 const novoId = await salvarNovoAgendamento(nome, telefone, servico, data, horario);
-                alert(`Agendamento confirmado!\nID: ${novoId}\nHorário: ${horario}`);
+
+                // Fecha o modal de revisão
+                modal.classList.add('hidden');
+
+                // Preenche o container de confirmação com os dados
+                document.getElementById('confirmacaoId').textContent = novoId;
+                document.getElementById('confirmacaoNome').textContent = nome;
+                document.getElementById('confirmacaoServico').textContent = servico;
+                document.getElementById('confirmacaoData').textContent = dataFormatada;
+                document.getElementById('confirmacaoHorario').textContent = horario;
+
+                // Esconde o formulário e mostra o container de confirmação
+                formulario.classList.add('hidden');
+                confirmacaoContainer.classList.add('active');
+
+                // Reseta o formulário (pero fica escondido)
                 formulario.reset();
                 dropdownServico.setValue('');
                 seletorDatas.dataSelecionada = null;
                 seletorDatas.hiddenInput.value = '';
-                // Remove seleção visual de todas as datas
                 seletorDatas.scrollContainer.querySelectorAll('.data-badge.selected').forEach(badge => {
                     badge.classList.remove('selected');
                 });
                 seletorHorarios.limparHorarios();
 
-                // Oculta a seção de horários novamente
                 const horarioInput = document.getElementById('horarioAgendamento');
                 if (horarioInput) {
                     horarioInput.classList.add('hidden');
@@ -1325,14 +1995,32 @@
                     carregarMeusAgendamentos(conteudoLista);
                 }
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao salvar: ' + error.message);
+                const mensagemErro = error.message || 'Erro ao salvar o agendamento';
+                exibirMensagem(mensagemErro, 'erro');
             } finally {
-                // Restaura o estado do botão
-                btnAgendar.disabled = false;
-                spinner.classList.remove('show');
-                btnText.textContent = 'AGENDAR';
+                // Restaura os botões
+                btnConfirmar.disabled = false;
+                btnEditar.disabled = false;
+                btnConfirmar.textContent = 'CONFIRMAR AGENDAMENTO';
             }
+        });
+
+        // Evento do botão "Fazer novo agendamento"
+        document.getElementById('btnNovoAgendamento').addEventListener('click', () => {
+            const confirmacaoContainer = document.getElementById('confirmacaoContainer');
+            const modalRevisao = document.getElementById('modalRevisao');
+
+            // Esconde o container de confirmação
+            confirmacaoContainer.classList.remove('active');
+
+            // Limpa o modal de revisão
+            modalRevisao.classList.add('hidden');
+
+            // Mostra o formulário novamente
+            formulario.classList.remove('hidden');
+
+            // Scroll suave para o formulário
+            formulario.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
 
         // Inicializa menu responsivo com melhorias (overlay, ESC, foco)

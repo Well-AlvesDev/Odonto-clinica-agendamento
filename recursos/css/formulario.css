@@ -280,11 +280,14 @@
  #listaAgendamentos {
      display: none;
      position: fixed;
-     top: 50%;
-     left: 50%;
-     transform: translate(-50%, -50%);
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     margin: auto;
      width: 90%;
      max-width: 400px;
+     height: fit-content;
      background: white;
      border-radius: 12px;
      padding: 24px;
@@ -301,12 +304,12 @@
 
  @keyframes slideUp {
      from {
-         transform: translate(-50%, -45%);
+         transform: scale(0.95);
          opacity: 0;
      }
 
      to {
-         transform: translate(-50%, -50%);
+         transform: scale(1);
          opacity: 1;
      }
  }

@@ -165,9 +165,109 @@ function lerIdsLocais() {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 }
 
+// Remove IDs de agendamentos com datas passadas do cache
+// Remove IDs de agendamentos com datas/horários passados do cache
+function limparIdsComDataPassada(agendamentos) {
+    const agora = new Date();
+
+    const idsValidos = [];
+
+    agendamentos.forEach((item) => {
+        try {
+            if (!item || !item.id) {
+                return;
+            }
+
+            let data = String(item.data || '').trim();
+            let horario = String(item.horario || '').trim();
+
+            if (!data) {
+                idsValidos.push(item.id);
+                return;
+            }
+
+            let dataObj;
+
+            if (data.includes('/')) {
+                // Formato DD/MM/YYYY
+                const [dia, mes, ano] = data.split('/').map(Number);
+
+                if (isNaN(dia) || isNaN(mes) || isNaN(ano)) {
+                    idsValidos.push(item.id);
+                    return;
+                }
+
+                dataObj = new Date(ano, mes - 1, dia);
+            } else if (data.includes('-')) {
+                // Formato YYYY-MM-DD
+                const [ano, mesStr, diaStr] = data.split('-');
+                const mes = parseInt(mesStr);
+                const dia = parseInt(diaStr);
+                const anoNum = parseInt(ano);
+
+                if (isNaN(dia) || isNaN(mes) || isNaN(anoNum)) {
+                    idsValidos.push(item.id);
+                    return;
+                }
+
+                dataObj = new Date(anoNum, mes - 1, dia);
+            } else {
+                idsValidos.push(item.id);
+                return;
+            }
+
+            if (isNaN(dataObj.getTime())) {
+                idsValidos.push(item.id);
+                return;
+            }
+
+            // Se tem horário, adiciona à comparação
+            if (horario && horario.includes(':')) {
+                const [horas, minutos] = horario.split(':').map(Number);
+
+                if (!isNaN(horas) && !isNaN(minutos)) {
+                    dataObj.setHours(horas, minutos, 0, 0);
+                } else {
+                    dataObj.setHours(0, 0, 0, 0);
+                }
+            } else {
+                dataObj.setHours(0, 0, 0, 0);
+            }
+
+            // Só mantém se a data/hora é futura
+            if (dataObj > agora) {
+                idsValidos.push(item.id);
+            }
+        } catch (err) {
+            if (item && item.id) {
+                idsValidos.push(item.id);
+            }
+        }
+    });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(idsValidos));
+}
+
 // Carrega os agendamentos do usuário
 async function carregarMeusAgendamentos(conteudoLista) {
-    conteudoLista.innerHTML = 'Carregando...';
+    // Esconde a mensagem de comparecimento no início do carregamento
+    const msgComparencimento = document.getElementById('msgComparencimento');
+    if (msgComparencimento) {
+        msgComparencimento.style.display = 'none';
+    }
+
+    conteudoLista.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 40px 20px;">
+            <div style="width: 50px; height: 50px; border: 4px solid #f0f0f0; border-top: 4px solid #d37c7cd7; border-radius: 50%; animation: spin-loader 1s linear infinite;"></div>
+            <p style="color: #666; font-size: 14px; margin: 0;">Carregando seus agendamentos...</p>
+        </div>
+        <style>
+            @keyframes spin-loader {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    `;
 
     const meusIds = (lerIdsLocais() || []).filter(Boolean);
 
@@ -182,28 +282,88 @@ async function carregarMeusAgendamentos(conteudoLista) {
         const { data, error } = await _supabase
             .rpc('buscar_agendamentos_por_ids', { lista_ids: meusIds });
 
-        console.log('Resposta da RPC:', { data, error });
-
         if (error) throw error;
 
         if (!data || data.length === 0) {
             conteudoLista.innerHTML = '<p>Nenhum registro encontrado.</p>';
+            // Esconde a mensagem de comparecimento se não houver agendamentos
+            const msgComparencimento = document.getElementById('msgComparencimento');
+            if (msgComparencimento) {
+                msgComparencimento.style.display = 'none';
+            }
             return;
         }
 
-        let html = '';
-        data.forEach(item => {
+        // Limpa IDs de agendamentos com datas passadas
+        limparIdsComDataPassada(data);
+
+        // Obtém os IDs válidos após a limpeza
+        const idsValidos = (lerIdsLocais() || []).filter(Boolean);
+
+        // Filtra apenas os agendamentos com IDs válidos
+        const agendamentosValidos = data.filter(item => idsValidos.includes(item.id));
+
+        if (agendamentosValidos.length === 0) {
+            conteudoLista.innerHTML = '<p>Você ainda não fez agendamentos válidos neste dispositivo.</p>';
+            const msgComparencimento = document.getElementById('msgComparencimento');
+            if (msgComparencimento) {
+                msgComparencimento.style.display = 'none';
+            }
+            return;
+        }
+
+        let html = '<div class="agendamentos-grid">';
+        agendamentosValidos.forEach(item => {
             html += `
-                <div class="item-agendamento">
-                    <strong>Nome:</strong> ${item.nome} <br>
-                    <strong>Tel:</strong> ${item.telefone} <br>
-                    <strong>Serviço:</strong> ${item.servico} <br>
-                    <strong>Data:</strong> ${item.data} <br>
-                    <strong>Horário:</strong> ${item.horario}
+                <div class="card-agendamento">
+                    <div class="card-header">
+                        <div class="card-usuario">
+                            <i class="ri-user-line"></i>
+                            <span class="card-nome">${item.nome}</span>
+                        </div>
+                        <div class="card-status">
+                            <span class="badge-agendado">Agendado</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-item">
+                            <i class="ri-phone-line"></i>
+                            <span class="card-label">Telefone</span>
+                            <span class="card-value">${item.telefone}</span>
+                        </div>
+                        <div class="card-item">
+                            <i class="ri-bubble-chart-line"></i>
+                            <span class="card-label">Serviço</span>
+                            <span class="card-value">${item.servico}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-item-footer">
+                            <i class="ri-calendar-line"></i>
+                            <div>
+                                <span class="card-label">Data</span>
+                                <span class="card-value">${item.data}</span>
+                            </div>
+                        </div>
+                        <div class="card-item-footer">
+                            <i class="ri-time-line"></i>
+                            <div>
+                                <span class="card-label">Horário</span>
+                                <span class="card-value">${item.horario}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         });
+        html += '</div>';
         conteudoLista.innerHTML = html;
+
+        // Mostra a mensagem de comparecimento após os cards serem renderizados
+        const msgComparencimento = document.getElementById('msgComparencimento');
+        if (msgComparencimento) {
+            msgComparencimento.style.display = 'block';
+        }
 
     } catch (err) {
         console.error('Erro ao buscar agendamentos:', err);
