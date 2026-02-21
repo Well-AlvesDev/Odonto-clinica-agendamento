@@ -71,7 +71,6 @@
 
         button:hover {
             background-color: #b71c1c;
-            transform: translateY(-2px);
         }
 
         button:active {
@@ -111,7 +110,8 @@
 
         .card {
             background-color: white;
-            padding: 20px;
+            /* extra bottom padding to make room for action buttons */
+            padding: 20px 20px 40px 20px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             cursor: pointer;
@@ -120,6 +120,8 @@
             align-items: center;
             gap: 15px;
             border-left: 5px solid #255996;
+            position: relative;
+            /* needed for absolute-positioned actions */
         }
 
         .card.card-1 {
@@ -148,7 +150,6 @@
 
         .card:hover {
             box-shadow: 0 4px 16px rgba(37, 89, 150, 0.2);
-            transform: translateY(-2px);
         }
 
         .card:active {
@@ -179,6 +180,45 @@
             color: #255996;
             margin-bottom: 5px;
             word-break: break-word;
+        }
+
+        /* action buttons shown on each card */
+        .card-actions {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .card-actions button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 6px;
+            color: #555;
+            transition: color 0.2s;
+        }
+
+        .card-actions button:hover {
+            color: #000;
+        }
+
+        .card-actions .btn-excluir {
+            color: #e74c3c;
+        }
+
+        .card-actions .btn-excluir:hover {
+            color: #c0392b;
+        }
+
+        .card-actions .btn-editar {
+            color: #2ecc71;
+        }
+
+        .card-actions .btn-editar:hover {
+            color: #27ae60;
         }
 
         .card-servico {
@@ -238,8 +278,60 @@
             max-width: 500px;
             max-height: 80vh;
             overflow-y: auto;
-            animation: slideUp 0.3s ease;
         }
+
+        /* additional styles for edit form inside modal */
+        .modal-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-container form label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-container form input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .modal-container form input:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+
+        /* telephone prefix styling */
+        .telefone-input {
+            display: flex;
+            align-items: center;
+            max-width: 220px;
+            /* restrito para não ocupar a largura inteira */
+        }
+
+        .telefone-input .prefix {
+            padding: 8px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 6px 0 0 6px;
+            font-size: 14px;
+        }
+
+        .telefone-input input {
+            flex: 1;
+            min-width: 0;
+            /* permite encolher dentro do max-width do container */
+            border: 1px solid #ccc;
+            border-radius: 0 6px 6px 0;
+            padding: 8px;
+            font-size: 14px;
+            width: 100%;
+        }
+
 
         @keyframes slideUp {
             from {
@@ -355,7 +447,8 @@
             .card {
                 flex-direction: column;
                 text-align: center;
-                padding: 25px;
+                /* keep extra space at bottom even on larger screens */
+                padding: 25px 25px 60px 25px;
             }
 
             .card-avatar {
@@ -389,10 +482,40 @@
             <h1>Agendamentos</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Usuário</span>
-                <button onclick="fazerLogout()">Sair</button>
+                <button onclick="fazerLogout()" style="font-weight: 400;">Sair</button>
             </div>
         </header>
 
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button id="botaoAtualizar" onclick="carregarAgendamentos()"
+                style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><img
+                    src="../recursos/imgs/updatelist.png" alt="update data"
+                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Atualizar</button>
+            <button id="botaoCadastrar"
+                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px;"><img
+                    src="../recursos/imgs/cadastrar.png" alt="add"
+                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Cadastrar</button>
+        </div>
+        <!-- loader minimalista -->
+        <div id="loaderOverlay"
+            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.8); z-index:1001; align-items:center; justify-content:center; flex-direction:column;">
+            <div
+                style="border:4px solid #ccc; border-top:4px solid #255996; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;">
+            </div>
+            <div style="margin-top:10px; font-size:14px; color:#255996; font-weight:600;">Atualizando lista de
+                agendamentos...</div>
+        </div>
+        <style>
+            @keyframes spin {
+                from {
+                    transform: rotate(0deg);
+                }
+
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
         <div class="filtros">
             <input type="search" id="filtroNome" placeholder="Buscar por nome..." />
             <input type="search" id="filtroServico" placeholder="Buscar por serviço..." />
@@ -421,11 +544,15 @@
         </div>
     </div>
 
+    <!-- carregar biblioteca Supabase e código comum para operações -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabaseV2.js"></script>
+
     <script>
         // ===================================================
-        // VARIÁVEIS GLOBAIS
+        // VARIÁVEIS GLOBAIS (declaração já existente em supabaseV2.js)
         // ===================================================
-        let agendamentosGlobais = [];
+        // não re-declara `agendamentosGlobais` para evitar erro de sintaxe
 
         // ===================================================
         // CARREGAR AGENDAMENTOS
@@ -436,10 +563,18 @@
             configurarFiltros();
         });
 
-        function carregarAgendamentos() {
-            // Verificar se usuário está logado
+        async function carregarAgendamentos() {
+            // mostrar loader e desabilitar botão
+            showLoader();
+            document.getElementById('botaoAtualizar').disabled = true;
+
+            // para cumprir requisito de 2 segundos mínimo
+            const minimo = new Promise(r => setTimeout(r, 2000));
+
+            // Verificar se usuário está logado e tem credenciais em cache
             const usuarioLogado = sessionStorage.getItem('usuarioLogado');
-            if (!usuarioLogado) {
+            const senhaCache = sessionStorage.getItem('senhaUsuario');
+            if (!usuarioLogado || !senhaCache) {
                 window.location.href = './login.html';
                 return;
             }
@@ -447,24 +582,32 @@
             // Exibir nome do usuário
             document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px;">/ ${usuarioLogado}`;
 
-            // Pegar agendamentos do sessionStorage
-            const agendamentosJson = sessionStorage.getItem('agendamentos');
-
+            // Tentar buscar os agendamentos atualizados no servidor
             try {
+                const dados = await buscarAgendamentosDoServidor(usuarioLogado, senhaCache);
+                agendamentosGlobais = dados;
+                sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+                console.log('Agendamentos atualizados:', agendamentosGlobais);
+            } catch (erro) {
+                console.error('Falha ao buscar agendamentos:', erro);
+                // caso dê problema, carregar do cache
+                const agendamentosJson = sessionStorage.getItem('agendamentos');
                 if (agendamentosJson) {
                     agendamentosGlobais = JSON.parse(agendamentosJson);
-                    console.log('Agendamentos carregados:', agendamentosGlobais);
                 } else {
                     agendamentosGlobais = [];
-                    console.warn('Nenhum agendamento encontrado no sessionStorage');
                 }
-            } catch (erro) {
-                console.error('Erro ao parsear agendamentos:', erro);
-                agendamentosGlobais = [];
             }
 
             // Exibir agendamentos em cards
             exibirAgendamentos(agendamentosGlobais);
+
+            // aguardar o mínimo e então esconder loader
+            await minimo;
+            hideLoader();
+            document.getElementById('botaoAtualizar').disabled = false;
+            // mover o usuário para o topo da página após atualizar
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function exibirAgendamentos(agendamentos) {
@@ -496,6 +639,25 @@
                     </div>
                 `;
 
+                // create action buttons container
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
+                actions.innerHTML = `
+                    <button class="btn-editar" title="Editar"><a style="text-decoration: none; font-weight: 400; color: #007bff;">Editar</a></button>
+                    <button class="btn-excluir" title="Excluir"><a>Excluir</a></button>
+                `;
+
+                // stop event propagation so clicking the buttons doesn't open the modal
+                actions.querySelector('.btn-editar').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editarAgendamento(agendamento);
+                });
+                actions.querySelector('.btn-excluir').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    excluirAgendamento(agendamento);
+                });
+
+                card.appendChild(actions);
                 containerCards.appendChild(card);
             });
         }
@@ -509,11 +671,25 @@
             return data;
         }
 
+
         function atualizarDataAtual() {
             const hoje = new Date();
             const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const dataFormatada = hoje.toLocaleDateString('pt-BR', opcoes);
             document.getElementById('dataAtual').textContent = `Hoje: ${dataFormatada}`;
+        }
+
+        // ---------------------------------------------------
+        // Controle simples de loader
+        // ---------------------------------------------------
+        function showLoader() {
+            const l = document.getElementById('loaderOverlay');
+            if (l) l.style.display = 'flex';
+        }
+
+        function hideLoader() {
+            const l = document.getElementById('loaderOverlay');
+            if (l) l.style.display = 'none';
         }
 
         function configurarFiltros() {
@@ -542,6 +718,12 @@
         // FUNÇÕES DO MODAL
         // ===================================================
         function abrirModal(agendamento) {
+            // guarantee header reads "Detalhes do Agendamento"
+            const header = document.querySelector('#modalOverlay .modal-header h2');
+            if (header) {
+                header.textContent = 'Detalhes do Agendamento';
+            }
+
             const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
 
             const conteudo = `
@@ -586,6 +768,11 @@
         function fecharModal() {
             document.getElementById('modalOverlay').classList.remove('ativo');
             document.body.style.overflow = 'auto';
+            // reset header title in case it was changed for editing
+            const header = document.querySelector('#modalOverlay .modal-header h2');
+            if (header) {
+                header.textContent = 'Detalhes do Agendamento';
+            }
         }
 
         // Fechar modal ao pressionar ESC
@@ -598,8 +785,175 @@
         function fazerLogout() {
             if (confirm('Tem certeza que deseja fazer logout?')) {
                 sessionStorage.removeItem('usuarioLogado');
+                sessionStorage.removeItem('senhaUsuario');
                 sessionStorage.removeItem('agendamentos');
                 window.location.href = './login.html';
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // operações para editar/excluir (simples - para demonstração)
+        // ----------------------------------------------------------------
+        function editarAgendamento(agendamento) {
+            // monta formulário para edição (ID não editável)
+            const header = document.querySelector('#modalOverlay .modal-header h2');
+            if (header) {
+                header.textContent = 'Editar Agendamento';
+            }
+
+            // preparar valor do telefone: extrair somente os 8 dígitos após prefixo
+            let phoneValue = '';
+            if (agendamento.telefone) {
+                const digits = agendamento.telefone.replace(/\D/g, '');
+                // remove prefix 819
+                if (digits.length > 3) {
+                    phoneValue = digits.slice(3);
+                    if (phoneValue.length > 4) {
+                        phoneValue = phoneValue.slice(0, 4) + '-' + phoneValue.slice(4);
+                    }
+                }
+            }
+
+            const html = `
+                <form id="formEditar">
+                    <div class="modal-detalhe">
+                        <label>ID</label>
+                        <input type="text" value="${agendamento.id}" disabled />
+                    </div>
+
+                    <div class="modal-detalhe">
+                        <label>Nome Completo</label>
+                        <input type="text" id="editNome" value="${agendamento.nome}" required />
+                    </div>
+
+                    <div class="modal-detalhe">
+                        <label>Telefone</label>
+                        <div class="telefone-input">
+                            <span class="prefix">(81)9</span>
+                            <input type="text" id="editTelefone" maxlength="9" placeholder="1234-5678" value="${phoneValue}" />
+                        </div>
+                    </div>
+
+                    <div class="modal-detalhe">
+                        <label>Serviço</label>
+                        <input type="text" id="editServico" value="${agendamento.servico}" required />
+                    </div>
+
+                    <div class="modal-detalhe">
+                        <label>Data do Agendamento</label>
+                        <input type="date" id="editData" value="${agendamento.data}" required />
+                    </div>
+
+                    <div class="modal-detalhe">
+                        <label>Horário</label>
+                        <input type="time" id="editHorario" value="${agendamento.horario}" required />
+                    </div>
+
+                    <div style="text-align:right; margin-top:20px;">
+                        <button type="button" onclick="fecharModal()">Cancelar</button>
+                        <button type="submit" style="font-weight: 400; background-color: #255996; color: white; padding: 10px 20px; border: none; border-radius: 4px;">Salvar</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('modalConteudo').innerHTML = html;
+            document.getElementById('modalOverlay').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
+
+            const form = document.getElementById('formEditar');
+
+            // mask input for phone field
+            const telInput = document.getElementById('editTelefone');
+            telInput.addEventListener('input', () => {
+                let v = telInput.value.replace(/\D/g, '').slice(0, 8);
+                if (v.length > 4) {
+                    v = v.slice(0, 4) + '-' + v.slice(4);
+                }
+                telInput.value = v;
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                agendamento.nome = document.getElementById('editNome').value;
+                // format phone with prefix
+                let raw = document.getElementById('editTelefone').value.replace(/\D/g, '');
+                if (raw.length >= 8) {
+                    agendamento.telefone = `(81)9${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+                } else {
+                    agendamento.telefone = `(81)9${raw}`;
+                }
+                agendamento.servico = document.getElementById('editServico').value;
+                agendamento.data = document.getElementById('editData').value;
+                agendamento.horario = document.getElementById('editHorario').value;
+
+                // atualizar cache e interface
+                sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+                exibirAgendamentos(agendamentosGlobais);
+                fecharModal();
+                alert('Agendamento atualizado com sucesso!');
+            });
+        }
+
+        // confirmação customizada para evitar bloqueio do thread
+        function confirmarAsync(mensagem) {
+            return new Promise(resolve => {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay ativo';
+                modal.innerHTML = `
+                    <div class="modal-container" style="max-width:300px;">
+                        <div class="modal-header">
+                            <h2>Confirmação</h2>
+                        </div>
+                        <p>${mensagem}</p>
+                        <div style="text-align:right; margin-top:20px;">
+                            <button id="confirmSim" style="margin-right:10px;">Sim</button>
+                            <button id="confirmNao">Não</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                modal.querySelector('#confirmSim').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve(true);
+                });
+                modal.querySelector('#confirmNao').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                });
+            });
+        }
+
+        async function excluirAgendamento(agendamento) {
+            const confirmado = await confirmarAsync(`Deseja realmente excluir o agendamento de ${agendamento.nome}?`);
+            if (!confirmado) return;
+
+            // mostrar loader global e desabilitar interação
+            showLoader();
+
+            // credenciais em cache
+            const nomeUsuario = sessionStorage.getItem('usuarioLogado');
+            const senhaCache = sessionStorage.getItem('senhaUsuario');
+            console.log('Credenciais cache', { nomeUsuario, senhaCache });
+
+            try {
+                const resultado = await excluirAgendamentoNoServidor(agendamento.id, nomeUsuario, senhaCache);
+
+                if (resultado.sucesso) {
+                    agendamentosGlobais = agendamentosGlobais.filter(a => a.id !== agendamento.id);
+                    sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+                    exibirAgendamentos(agendamentosGlobais);
+                    alert('Agendamento excluído com sucesso.');
+                } else {
+                    alert('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'));
+                }
+            } catch (erro) {
+                console.error('Falha ao excluir agendamento:', erro);
+                // se for Error, mostre a mensagem
+                const msg = erro && erro.message ? erro.message : 'Erro ao excluir agendamento. Verifique sua conexão e tente novamente.';
+                alert(msg);
+            } finally {
+                hideLoader();
             }
         }
     </script>

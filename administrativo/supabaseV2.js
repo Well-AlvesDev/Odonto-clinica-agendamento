@@ -67,6 +67,8 @@ async function fazerLogin() {
 
                 // Salvar em sessionStorage para outras páginas acessarem
                 sessionStorage.setItem('usuarioLogado', nomeUsuario);
+                // manter também a senha em cache de sessão conforme solicitado
+                sessionStorage.setItem('senhaUsuario', senhaUsuario);
                 sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
 
                 // Redirecionar para página de agendamentos após 1.5 segundos
@@ -121,6 +123,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const nomeInput = document.getElementById('nomeUsuario');
     const senhaInput = document.getElementById('senhaUsuario');
 
+    // Preencher campos com valores em cache (se existirem)
+    const cachedUser = sessionStorage.getItem('usuarioLogado');
+    const cachedPass = sessionStorage.getItem('senhaUsuario');
+    if (nomeInput && cachedUser) {
+        nomeInput.value = cachedUser;
+    }
+    if (senhaInput && cachedPass) {
+        senhaInput.value = cachedPass;
+    }
+
     // Permitir enter nos inputs
     if (nomeInput && senhaInput) {
         nomeInput.addEventListener('keypress', function (event) {
@@ -136,3 +148,66 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// ---------------------------------------------------
+// Função auxiliar exposta globalmente para recuperar agendamentos
+// com base em credenciais já em cache na sessão.
+// ---------------------------------------------------
+async function buscarAgendamentosDoServidor(nomeUsuario, senhaUsuario) {
+    const { data, error } = await _supabase.rpc('validar_login_admin', {
+        p_nome: nomeUsuario,
+        p_senha: senhaUsuario
+    });
+    if (error) {
+        throw error;
+    }
+    if (data && data.length > 0) {
+        const resultado = data[0];
+        if (resultado.sucesso) {
+            return resultado.agendamentos || [];
+        }
+        throw new Error(resultado.mensagem || 'Login inválido');
+    }
+    throw new Error('Resposta inválida do servidor');
+}
+
+// ---------------------------------------------------
+// Função auxiliar para solicitar exclusão de um agendamento
+// no servidor usando credenciais de cache. O campo 'id' é
+// um UUID, portanto a função SQL deve aceitar uuid como tipo
+// (não integer). A função no banco deve ser criada com
+// SECURITY DEFINER para poder bypassar as políticas RLS e
+// apagar a linha.
+// ---------------------------------------------------
+async function excluirAgendamentoNoServidor(id, nomeUsuario, senhaUsuario) {
+    // usamos um nome diferente para evitar ambiguidade se houver múltiplas
+    // assinaturas no banco (ex: integer vs uuid). Certifique-se de que a
+    // função SQL no servidor esteja criada como `excluir_agendamento_uuid`.
+    const { data, error } = await _supabase.rpc('excluir_agendamento_uuid', {
+        p_id: id,
+        p_nome: nomeUsuario,
+        p_senha: senhaUsuario
+    });
+
+    // DEBUG: ver o que o Supabase retornou
+    console.log('RPC excluir_agendamento_uuid ->', { data, error });
+
+    if (error) {
+        throw error;
+    }
+
+    if (data) {
+        // dependendo de como a função SQL foi definida, o retorno pode
+        // vir como objeto direto ou como array de um elemento.
+        const resultado = Array.isArray(data) ? data[0] : data;
+        // sempre devolvemos o objeto para que o chamador trate `sucesso:false`
+        return resultado || { sucesso: false, mensagem: 'Retorno vazio' };
+    }
+
+    // se `data` foi null/undefined algo deu muito errado na RPC
+    throw new Error('Resposta inválida do servidor');
+}
+
+// tornar disponíveis na janela diretamente
+window.buscarAgendamentosDoServidor = buscarAgendamentosDoServidor;
+window.excluirAgendamentoNoServidor = excluirAgendamentoNoServidor;
