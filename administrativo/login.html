@@ -1,11 +1,107 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área Administrativa</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .mensagem {
+            padding: 12px;
+            margin: 15px auto;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+            font-weight: bold;
+        }
+
+        input {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #255996;
+            box-shadow: 0 0 5px rgba(37, 89, 150, 0.3);
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #255996;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #1a4073;
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        a {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            color: #255996;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
+
 <body>
-    
+    <main class="container">
+        <img src="../recursos/imgs/login-icon.png" alt="Ícone de login"
+            style="display: block; margin: 20px auto; width: 100px; height: 100px;">
+        <h1 style="text-align: center; margin-top: 20px;">Área Administrativa</h1>
+        <p style="text-align: center; margin-top: 20px;">Faça login para acessar a área administrativa. <br> Esta área é
+            restrita a usuários autorizados.</p>
+
+        <div id="mensagemErro" class="mensagem"></div>
+
+        <input type="text" id="nomeUsuario" placeholder="Nome de usuário" required>
+        <input type="password" id="senhaUsuario" placeholder="Senha" required>
+        <button id="botaoEntrar" onclick="fazerLogin()"
+            style="background-color: #255996; color: white; border: none; cursor: pointer;">Entrar</button>
+        <a href="../index.html">Voltar à página principal</a>
+    </main>
+
+    <!-- Script do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Script de login seguro -->
+    <script src="./supabaseV2.js"></script>
 </body>
+
 </html>

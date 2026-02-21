@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - Área Administrativa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: #333;
+            font-family: sans-serif;
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #131313;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .user-info span {
+            font-weight: 400;
+            color: #6198e5;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #b71c1c;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .filtros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input[type="search"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 150px;
+            font-size: 14px;
+            background-color: white;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="search"]:focus {
+            outline: none;
+            border-color: #255996;
+            box-shadow: 0 0 8px rgba(37, 89, 150, 0.2);
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 5px solid #255996;
+        }
+
+        .card.card-1 {
+            border-left-color: #255996;
+        }
+
+        .card.card-2 {
+            border-left-color: #2ecc71;
+        }
+
+        .card.card-3 {
+            border-left-color: #e67e22;
+        }
+
+        .card.card-4 {
+            border-left-color: #e74c3c;
+        }
+
+        .card.card-5 {
+            border-left-color: #9b59b6;
+        }
+
+        .card.card-6 {
+            border-left-color: #1abc9c;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(37, 89, 150, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card:active {
+            transform: translateY(0);
+        }
+
+        .card-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #255996 0%, #1e4573 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(37, 89, 150, 0.2);
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-nome {
+            font-size: 16px;
+            font-weight: 700;
+            color: #255996;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .card-servico {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .card-data-horario {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .sem-dados {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+            font-size: 16px;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.ativo {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-container {
+            background-color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            color: #255996;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #eeeeee;
+        }
+
+        .modal-detalhe {
+            margin-bottom: 20px;
+        }
+
+        .modal-detalhe-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .modal-detalhe-valor {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .modal-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #255996 0%, #1e4573 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            margin: 0 auto 20px;
+            box-shadow: 0 2px 8px rgba(37, 89, 150, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* Responsivo */
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            header {
+                padding: 25px 30px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+
+
+            .filtros {
+                gap: 12px;
+            }
+
+            input[type="search"] {
+                min-width: 250px;
+            }
+
+            .cards-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .card {
+                flex-direction: column;
+                text-align: center;
+                padding: 25px;
+            }
+
+            .card-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin: 0 auto 10px;
+            }
+
+            .card-content {
+                width: 100%;
+            }
+
+            .modal-container {
+                border-radius: 10px;
+                max-height: 90vh;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .cards-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Agendamentos</h1>
+            <div class="user-info">
+                <span id="usuarioLogado">Usuário</span>
+                <button onclick="fazerLogout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="filtros">
+            <input type="search" id="filtroNome" placeholder="Buscar por nome..." />
+            <input type="search" id="filtroServico" placeholder="Buscar por serviço..." />
+        </div>
+
+        <div id="containerCards" class="cards-container">
+            <div class="sem-dados">Carregando agendamentos...</div>
+        </div>
+
+        <footer>
+            <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
+            <p id="dataAtual"></p>
+        </footer>
+    </div>
+
+    <!-- Modal para detalhes do agendamento -->
+    <div id="modalOverlay" class="modal-overlay" onclick="fecharModal()">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Detalhes do Agendamento</h2>
+                <button class="modal-close" onclick="fecharModal()">✕</button>
+            </div>
+            <div id="modalConteudo">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================
+        // VARIÁVEIS GLOBAIS
+        // ===================================================
+        let agendamentosGlobais = [];
+
+        // ===================================================
+        // CARREGAR AGENDAMENTOS
+        // ===================================================
+        document.addEventListener('DOMContentLoaded', function () {
+            carregarAgendamentos();
+            atualizarDataAtual();
+            configurarFiltros();
+        });
+
+        function carregarAgendamentos() {
+            // Verificar se usuário está logado
+            const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+            if (!usuarioLogado) {
+                window.location.href = './login.html';
+                return;
+            }
+
+            // Exibir nome do usuário
+            document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px;">/ ${usuarioLogado}`;
+
+            // Pegar agendamentos do sessionStorage
+            const agendamentosJson = sessionStorage.getItem('agendamentos');
+
+            try {
+                if (agendamentosJson) {
+                    agendamentosGlobais = JSON.parse(agendamentosJson);
+                    console.log('Agendamentos carregados:', agendamentosGlobais);
+                } else {
+                    agendamentosGlobais = [];
+                    console.warn('Nenhum agendamento encontrado no sessionStorage');
+                }
+            } catch (erro) {
+                console.error('Erro ao parsear agendamentos:', erro);
+                agendamentosGlobais = [];
+            }
+
+            // Exibir agendamentos em cards
+            exibirAgendamentos(agendamentosGlobais);
+        }
+
+        function exibirAgendamentos(agendamentos) {
+            const containerCards = document.getElementById('containerCards');
+
+            if (!agendamentos || agendamentos.length === 0) {
+                containerCards.innerHTML = '<div class="sem-dados">Nenhum agendamento registrado</div>';
+                return;
+            }
+
+            // Limpar container
+            containerCards.innerHTML = '';
+
+            // Adicionar cards
+            agendamentos.forEach((agendamento, indice) => {
+                const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
+                const corIndex = (indice % 6) + 1;
+
+                const card = document.createElement('div');
+                card.className = `card card-${corIndex}`;
+                card.onclick = () => abrirModal(agendamento);
+
+                card.innerHTML = `
+                    <div class="card-avatar">${primeiraLetra}</div>
+                    <div class="card-content">
+                        <div class="card-nome">${agendamento.nome}</div>
+                        <div class="card-servico">${agendamento.servico}</div>
+                        <div class="card-data-horario">${formatarData(agendamento.data)} às ${agendamento.horario}</div>
+                    </div>
+                `;
+
+                containerCards.appendChild(card);
+            });
+        }
+
+        function formatarData(data) {
+            if (!data) return '-';
+            const partes = data.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+            return data;
+        }
+
+        function atualizarDataAtual() {
+            const hoje = new Date();
+            const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dataFormatada = hoje.toLocaleDateString('pt-BR', opcoes);
+            document.getElementById('dataAtual').textContent = `Hoje: ${dataFormatada}`;
+        }
+
+        function configurarFiltros() {
+            const filtroNome = document.getElementById('filtroNome');
+            const filtroServico = document.getElementById('filtroServico');
+
+            filtroNome.addEventListener('input', executarFiltros);
+            filtroServico.addEventListener('input', executarFiltros);
+        }
+
+        function executarFiltros() {
+            const filtroNome = document.getElementById('filtroNome').value.toLowerCase();
+            const filtroServico = document.getElementById('filtroServico').value.toLowerCase();
+
+            // Filtrar agendamentos
+            const agendamentosFiltrados = agendamentosGlobais.filter((agendamento) => {
+                const nomeMatch = agendamento.nome.toLowerCase().includes(filtroNome);
+                const servicoMatch = agendamento.servico.toLowerCase().includes(filtroServico);
+                return nomeMatch && servicoMatch;
+            });
+
+            exibirAgendamentos(agendamentosFiltrados);
+        }
+
+        // ===================================================
+        // FUNÇÕES DO MODAL
+        // ===================================================
+        function abrirModal(agendamento) {
+            const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
+
+            const conteudo = `
+                <div class="modal-avatar">${primeiraLetra}</div>
+                
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">ID</div>
+                    <div class="modal-detalhe-valor">${agendamento.id}</div>
+                </div>
+
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">Nome Completo</div>
+                    <div class="modal-detalhe-valor">${agendamento.nome}</div>
+                </div>
+
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">Telefone</div>
+                    <div class="modal-detalhe-valor">${agendamento.telefone}</div>
+                </div>
+
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">Serviço</div>
+                    <div class="modal-detalhe-valor">${agendamento.servico}</div>
+                </div>
+
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">Data do Agendamento</div>
+                    <div class="modal-detalhe-valor">${formatarData(agendamento.data)}</div>
+                </div>
+
+                <div class="modal-detalhe">
+                    <div class="modal-detalhe-label">Horário</div>
+                    <div class="modal-detalhe-valor">${agendamento.horario}</div>
+                </div>
+            `;
+
+            document.getElementById('modalConteudo').innerHTML = conteudo;
+            document.getElementById('modalOverlay').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function fecharModal() {
+            document.getElementById('modalOverlay').classList.remove('ativo');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Fechar modal ao pressionar ESC
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                fecharModal();
+            }
+        });
+
+        function fazerLogout() {
+            if (confirm('Tem certeza que deseja fazer logout?')) {
+                sessionStorage.removeItem('usuarioLogado');
+                sessionStorage.removeItem('agendamentos');
+                window.location.href = './login.html';
+            }
+        }
+    </script>
+</body>
+
+</html>
