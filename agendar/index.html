@@ -1145,8 +1145,18 @@
                 // Atualiza o label do botão, incluindo duração se houver
                 let label = this.currentLabel;
                 let duracaoStr = '';
+
                 if (this.currentValue) {
-                    const duracaoMin = await obterDuracaoServico(this.currentValue);
+                    let duracaoMin = 0;
+                    if (window.duracoesServicosCache) {
+                        const chave = (typeof normalizarServicoNome === 'function')
+                            ? normalizarServicoNome(this.currentValue)
+                            : this.currentValue.toLowerCase().trim();
+                        duracaoMin = window.duracoesServicosCache[chave] || 0;
+                    } else {
+                        duracaoMin = await obterDuracaoServico(this.currentValue);
+                    }
+
                     const horas = Math.floor(duracaoMin / 60);
                     const minutos = duracaoMin % 60;
                     if (horas >= 1) {
@@ -1186,7 +1196,17 @@
 
                 // Se uma data já está selecionada, regenera os horários com a nova duração do serviço
                 if (typeof seletorDatas !== 'undefined' && typeof seletorHorarios !== 'undefined' && seletorDatas && seletorDatas.dataSelecionada) {
-                    const duracao = this.currentValue ? await obterDuracaoServico(this.currentValue) : 0;
+                    let duracao = 0;
+                    if (this.currentValue) {
+                        if (window.duracoesServicosCache) {
+                            const chave = (typeof normalizarServicoNome === 'function')
+                                ? normalizarServicoNome(this.currentValue)
+                                : this.currentValue.toLowerCase().trim();
+                            duracao = window.duracoesServicosCache[chave] || 0;
+                        } else {
+                            duracao = await obterDuracaoServico(this.currentValue);
+                        }
+                    }
                     seletorHorarios.gerarBadgesParaData(seletorDatas.dataSelecionada, duracao);
                 }
 
@@ -1630,7 +1650,14 @@
                         const servicoSelecionado = dropdownServico.getValue();
                         let duracao = 0;
                         if (servicoSelecionado) {
-                            duracao = await obterDuracaoServico(servicoSelecionado);
+                            if (window.duracoesServicosCache) {
+                                const chave = (typeof normalizarServicoNome === 'function')
+                                    ? normalizarServicoNome(servicoSelecionado)
+                                    : servicoSelecionado.toLowerCase().trim();
+                                duracao = window.duracoesServicosCache[chave] || 0;
+                            } else {
+                                duracao = await obterDuracaoServico(servicoSelecionado);
+                            }
                         }
                         seletorHorarios.gerarBadgesParaData(dataFormatada, duracao);
                     })();
@@ -1665,11 +1692,12 @@
             loaderError.classList.remove('show');
 
             try {
-                // Cria promises para o fetch e para o timer mínimo
+                // inicia buscas em paralelo para não ficar dependente de ordem
                 const fetchPromise = carregarServicosDisponiveis();
+                const duracoesPromise = carregarDuracoesServicos(); // começa imediatamente
                 const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
 
-                // Espera ambos terminarem (fetch e 2 segundos)
+                // aguarda resultado dos serviços e do timer mínimo
                 const servicos = await Promise.all([fetchPromise, timerPromise]).then(results => results[0]);
 
                 if (servicos.length === 0) {
@@ -1690,30 +1718,32 @@
                     }
                 });
 
+                // aguarda durações (já começou antes)
+                const duracoes = await duracoesPromise;
 
-                // Carrega as durações dos serviços e exibe ao lado do nome
-                const duracoes = await carregarDuracoesServicos();
                 servicos.forEach(servico => {
                     const li = document.createElement('li');
                     li.className = 'dropdown-option';
                     li.setAttribute('data-value', servico);
                     li.setAttribute('data-label', servico);
 
-                    // Normaliza o nome do serviço para buscar a duração
-                    const servicoNormalizado = servico
-                        .toLowerCase()
-                        .trim()
-                        .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, function (char) {
-                            const mapa = {
-                                'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-                                'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-                                'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-                                'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-                                'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-                                'ç': 'c'
-                            };
-                            return mapa[char] || char;
-                        });
+                    // normaliza usando função global, se disponível
+                    const servicoNormalizado = (typeof normalizarServicoNome === 'function')
+                        ? normalizarServicoNome(servico)
+                        : servico
+                            .toLowerCase()
+                            .trim()
+                            .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, c => {
+                                const mapa = {
+                                    'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+                                    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+                                    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+                                    'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                                    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+                                    'ç': 'c'
+                                };
+                                return mapa[c] || c;
+                            });
                     const duracaoMin = duracoes[servicoNormalizado] || 0;
                     const horas = Math.floor(duracaoMin / 60);
                     const minutos = duracaoMin % 60;
@@ -1965,6 +1995,15 @@
                 // Fecha o modal de revisão
                 modal.classList.add('hidden');
 
+                // Invalida cache de horários ocupados para forçar novo fetch
+                if (typeof invalidarCacheHorariosOcupados === 'function') {
+                    invalidarCacheHorariosOcupados();
+                }
+                // Também recarrega os horários na instância para refletir a nova ocupação
+                if (typeof seletorHorarios !== 'undefined' && seletorHorarios) {
+                    seletorHorarios.carregarHorarios();
+                }
+
                 // Preenche o container de confirmação com os dados
                 document.getElementById('confirmacaoId').textContent = novoId;
                 document.getElementById('confirmacaoNome').textContent = nome;
@@ -2015,6 +2054,24 @@
 
             // Limpa o modal de revisão
             modalRevisao.classList.add('hidden');
+
+            // Invalida cache de durações para forçar atualização imediata
+            if (typeof invalidarCacheDuracoesServicos === 'function') {
+                invalidarCacheDuracoesServicos();
+            }
+
+            // Também recarrega a lista de serviços para que qualquer duração nova seja exibida
+            if (typeof carregarEPopularServicos === 'function') {
+                carregarEPopularServicos();
+            }
+
+            // também limpa o cache de horários ocupados, visto que novo agendamento pode bloquear um horário
+            if (typeof invalidarCacheHorariosOcupados === 'function') {
+                invalidarCacheHorariosOcupados();
+            }
+            if (typeof seletorHorarios !== 'undefined' && seletorHorarios) {
+                seletorHorarios.carregarHorarios();
+            }
 
             // Mostra o formulário novamente
             formulario.classList.remove('hidden');

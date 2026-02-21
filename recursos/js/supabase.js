@@ -62,75 +62,15 @@ function obterDuracoesDoCache() {
     }
 }
 
-// Carrega as durações dos serviços do Supabase com cache
-// Retorna um objeto: { "canal": 60, "limpeza": 30, ... }
-async function carregarDuracoesServicos() {
-    try {
-        // Verifica se o cache é válido
-        if (isDuracoesCacheValido()) {
-            console.log('Durações de serviços carregadas do cache');
-            return obterDuracoesDoCache();
-        }
-
-        // Se cache inválido, faz o fetch
-        const { data, error } = await _supabase
-            .from('servicos_tempo')
-            .select('servico, duracao_minuto');
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-            console.warn('Nenhum serviço com duração encontrado na tabela');
-            return {};
-        }
-
-        // Cria um objeto normalizado { "servico": duracao }
-        const duracoes = {};
-        data.forEach(item => {
-            // Normaliza o nome do serviço removendo acentos
-            const servicoNormalizado = item.servico
-                .toLowerCase()
-                .trim()
-                .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, (char) => {
-                    const mapa = {
-                        'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-                        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-                        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-                        'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-                        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-                        'ç': 'c'
-                    };
-                    return mapa[char] || char;
-                });
-            duracoes[servicoNormalizado] = item.duracao_minuto;
-        });
-
-        // Salva em cache
-        salvarDuracoesEmCache(duracoes);
-
-        console.log('Durações de serviços carregadas do Supabase e cacheadas');
-        return duracoes;
-
-    } catch (err) {
-        console.error('Erro ao buscar durações de serviços:', err);
-
-        // Se falhar, tenta retornar do cache mesmo que expirado
-        const duracoesCache = obterDuracoesDoCache();
-        if (duracoesCache) {
-            console.log('Retornando durações do cache (expirado) devido a erro');
-            return duracoesCache;
-        }
-
-        return {};
-    }
+// Invalida o cache de durações de serviços (usado quando for necessário forçar um novo fetch imediato)
+function invalidarCacheDuracoesServicos() {
+    localStorage.removeItem(SERVICOS_DURACAO_CACHE_KEY);
+    console.log('[Cache] Durações de serviços invalidadas');
 }
 
-// Obtém a duração de um serviço específico
-async function obterDuracaoServico(nomeServico) {
-    const duracoes = await carregarDuracoesServicos();
-
-    // Normaliza o nome do serviço
-    const servicoNormalizado = nomeServico
+// função auxiliar para normalizar nome de serviço (remove acentos, espaços e coloca em minúsculas)
+function normalizarServicoNome(nome) {
+    return nome
         .toLowerCase()
         .trim()
         .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, (char) => {
@@ -144,7 +84,80 @@ async function obterDuracaoServico(nomeServico) {
             };
             return mapa[char] || char;
         });
+}
 
+// Carrega as durações dos serviços do Supabase com cache
+// Retorna um objeto: { "canal": 60, "limpeza": 30, ... }
+async function carregarDuracoesServicos() {
+    try {
+        // Verifica se o cache é válido
+        if (isDuracoesCacheValido()) {
+            console.log('Durações de serviços carregadas do cache');
+            const cached = obterDuracoesDoCache();
+            // atualizar referência global para uso imediato
+            window.duracoesServicosCache = cached || {};
+            return cached;
+        }
+
+        // Se cache inválido, faz o fetch
+        const { data, error } = await _supabase
+            .from('servicos_tempo')
+            .select('servico, duracao_minuto');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            console.warn('Nenhum serviço com duração encontrado na tabela');
+            window.duracoesServicosCache = {};
+            return {};
+        }
+
+        // Cria um objeto normalizado { "servico": duracao }
+        const duracoes = {};
+        data.forEach(item => {
+            const servicoNormalizado = normalizarServicoNome(item.servico);
+            duracoes[servicoNormalizado] = item.duracao_minuto;
+        });
+
+        // Salva em cache
+        salvarDuracoesEmCache(duracoes);
+        // guarda também na variável global para acesso rápido
+        window.duracoesServicosCache = duracoes;
+
+        console.log('Durações de serviços carregadas do Supabase e cacheadas');
+        return duracoes;
+
+    } catch (err) {
+        console.error('Erro ao buscar durações de serviços:', err);
+
+        // Se falhar, tenta retornar do cache mesmo que expirado
+        const duracoesCache = obterDuracoesDoCache();
+        if (duracoesCache) {
+            console.log('Retornando durações do cache (expirado) devido a erro');
+            window.duracoesServicosCache = duracoesCache;
+            return duracoesCache;
+        }
+
+        window.duracoesServicosCache = {};
+        return {};
+    }
+}
+
+// Obtém a duração de um serviço específico
+// Antes de disparar qualquer fetch, tenta usar a tabela pré-carregada em
+// `window.duracoesServicosCache` (populada por carregarDuracoesServicos
+// quando a página inicializa). Isso evita um segundo request quando o
+// usuário só está selecionando coisas na UI.
+async function obterDuracaoServico(nomeServico) {
+    // procura no cache global se existir
+    if (window.duracoesServicosCache) {
+        const chave = normalizarServicoNome(nomeServico);
+        return window.duracoesServicosCache[chave] || 0;
+    }
+
+    // fallback: carrega via Supabase (pode acionar fetch ou cache)
+    const duracoes = await carregarDuracoesServicos();
+    const servicoNormalizado = normalizarServicoNome(nomeServico);
     return duracoes[servicoNormalizado] || 0;
 }
 
