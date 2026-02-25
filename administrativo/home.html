@@ -69,19 +69,111 @@
             font-size: 14px;
         }
 
-        button:hover {
-            background-color: #b71c1c;
-        }
-
         button:active {
             transform: translateY(0);
         }
 
         .filtros {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
+        }
+
+        .inputs-row {
+            display: flex;
+            gap: 10px;
             flex-wrap: wrap;
+        }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .dropdown-toggle {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            user-select: none;
+        }
+
+        .dropdown-toggle:hover {
+            border-color: #255996;
+            box-shadow: 0 0 8px rgba(37, 89, 150, 0.1);
+        }
+
+        .dropdown-toggle.active {
+            border-color: #255996;
+            box-shadow: 0 0 8px rgba(37, 89, 150, 0.2);
+        }
+
+        .dropdown-arrow {
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .dropdown-toggle.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+            max-height: 300px;
+        }
+
+        .dropdown-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: #333;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-option:last-child {
+            border-bottom: none;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .dropdown-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dropdown-option.selected {
+            background-color: #e8f1ff;
+            color: #255996;
+            font-weight: 600;
         }
 
         input[type="search"] {
@@ -213,12 +305,12 @@
             color: #c0392b;
         }
 
-        .card-actions .btn-editar {
-            color: #2ecc71;
+        .card-actions .btn-contatar {
+            color: #25d366;
         }
 
-        .card-actions .btn-editar:hover {
-            color: #27ae60;
+        .card-actions .btn-contatar:hover {
+            color: #20ba58;
         }
 
         .card-servico {
@@ -373,7 +465,8 @@
         }
 
         .modal-close:hover {
-            color: #eeeeee;
+            background-color: #e74c3c;
+            color: white;
         }
 
         .modal-detalhe {
@@ -439,6 +532,10 @@
                 min-width: 250px;
             }
 
+            .custom-dropdown {
+                max-width: 200px;
+            }
+
             .cards-container {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 20px;
@@ -496,6 +593,8 @@
                     src="../recursos/imgs/cadastrar.png" alt="add"
                     style="width: 25px; vertical-align: middle; margin-right: 10px;">Cadastrar</button>
         </div>
+        <p style="text-align: right; font-size: 12px; margin-bottom: 10px;">Última atualização: <br><span
+                id="ultimaAtualizacao">--</span></p>
         <!-- loader minimalista -->
         <div id="loaderOverlay"
             style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.8); z-index:1001; align-items:center; justify-content:center; flex-direction:column;">
@@ -517,8 +616,26 @@
             }
         </style>
         <div class="filtros">
-            <input type="search" id="filtroNome" placeholder="Buscar por nome..." />
-            <input type="search" id="filtroServico" placeholder="Buscar por serviço..." />
+            <!-- row containing only the text inputs -->
+            <div class="inputs-row">
+                <input type="search" id="filtroNome" placeholder="Buscar por nome..." />
+                <input type="search" id="filtroServico" placeholder="Buscar por serviço..." />
+            </div>
+            <p>Linha do tempo:</p>
+            <!-- Custom dropdown para período -->
+            <div class="custom-dropdown">
+                <button class="dropdown-toggle" id="dropdownBtn" type="button">
+                    <span id="dropdownLabel">Qualquer</span>
+                    <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="dropdown-option selected" data-value="">Qualquer</div>
+                    <div class="dropdown-option" data-value="passado">Passado</div>
+                    <div class="dropdown-option" data-value="hoje">Presente (Hoje)</div>
+                    <div class="dropdown-option" data-value="futuro">Futuro</div>
+                </div>
+            </div>
+            <input type="hidden" id="filtroPeriodo" value="" />
         </div>
 
         <div id="containerCards" class="cards-container">
@@ -561,6 +678,7 @@
             carregarAgendamentos();
             atualizarDataAtual();
             configurarFiltros();
+            atualizarTimestampUltimaAtualizacao();
         });
 
         async function carregarAgendamentos() {
@@ -599,22 +717,46 @@
                 }
             }
 
-            // Exibir agendamentos em cards
-            exibirAgendamentos(agendamentosGlobais);
+            // Exibir agendamentos em cards com filtro padrão "hoje"
+            exibirAgendamentos(agendamentosGlobais, 'hoje');
+
+            // Definir filtro padrão como "hoje" para melhor UX
+            document.getElementById('filtroNome').value = '';
+            document.getElementById('filtroServico').value = '';
+            document.getElementById('filtroPeriodo').value = 'hoje';
+            document.getElementById('dropdownLabel').textContent = 'Presente (Hoje)';
+            const dropdownOptions = document.querySelectorAll('.dropdown-option');
+            dropdownOptions.forEach(opt => opt.classList.remove('selected'));
+            dropdownOptions[2].classList.add('selected'); // índice 2 é "Presente (Hoje)"
+
+            // Executar filtros após definir valores padrão
+            executarFiltros();
 
             // aguardar o mínimo e então esconder loader
             await minimo;
             hideLoader();
             document.getElementById('botaoAtualizar').disabled = false;
+            atualizarTimestampUltimaAtualizacao();
             // mover o usuário para o topo da página após atualizar
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function exibirAgendamentos(agendamentos) {
+        function obterLabelPeriodo(periodo) {
+            const labels = {
+                '': 'Qualquer',
+                'passado': 'Passado',
+                'hoje': 'Presente (Hoje)',
+                'futuro': 'Futuro'
+            };
+            return labels[periodo] || 'Qualquer';
+        }
+
+        function exibirAgendamentos(agendamentos, periodo = '') {
             const containerCards = document.getElementById('containerCards');
 
             if (!agendamentos || agendamentos.length === 0) {
-                containerCards.innerHTML = '<div class="sem-dados">Nenhum agendamento registrado</div>';
+                const labelPeriodo = obterLabelPeriodo(periodo);
+                containerCards.innerHTML = `<div class="sem-dados">Sem agendamentos para '${labelPeriodo}'</div>`;
                 return;
             }
 
@@ -643,14 +785,14 @@
                 const actions = document.createElement('div');
                 actions.className = 'card-actions';
                 actions.innerHTML = `
-                    <button class="btn-editar" title="Editar"><a style="text-decoration: none; font-weight: 400; color: #007bff;">Editar</a></button>
-                    <button class="btn-excluir" title="Excluir"><a>Excluir</a></button>
+                    <button class="btn-contatar" title="Contatar"><a style="text-decoration: underline; font-weight: 400; color: blue;"><img src="../recursos/imgs/phone1.png" alt="Contatar" style="width: 16px; height: 16px;"> Contatar</a></button>
+                    <button class="btn-excluir" title="Excluir"><a>Cancelar</a></button>
                 `;
 
                 // stop event propagation so clicking the buttons doesn't open the modal
-                actions.querySelector('.btn-editar').addEventListener('click', (e) => {
+                actions.querySelector('.btn-contatar').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    editarAgendamento(agendamento);
+                    contatarAgendamento(agendamento);
                 });
                 actions.querySelector('.btn-excluir').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -679,6 +821,19 @@
             document.getElementById('dataAtual').textContent = `Hoje: ${dataFormatada}`;
         }
 
+        function atualizarTimestampUltimaAtualizacao() {
+            const agora = new Date();
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const ano = agora.getFullYear();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+
+            const timestamp = `${dia}/${mes}/${ano} às ${horas}H${minutos}min${segundos}seg`;
+            document.getElementById('ultimaAtualizacao').textContent = timestamp;
+        }
+
         // ---------------------------------------------------
         // Controle simples de loader
         // ---------------------------------------------------
@@ -695,6 +850,47 @@
         function configurarFiltros() {
             const filtroNome = document.getElementById('filtroNome');
             const filtroServico = document.getElementById('filtroServico');
+            const dropdownBtn = document.getElementById('dropdownBtn');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const dropdownOptions = document.querySelectorAll('.dropdown-option');
+            const filtroPeriodo = document.getElementById('filtroPeriodo');
+            const dropdownLabel = document.getElementById('dropdownLabel');
+
+            // Toggle dropdown
+            dropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+                dropdownBtn.classList.toggle('active');
+            });
+
+            // Fechar dropdown ao clicar fora
+            document.addEventListener('click', () => {
+                dropdownMenu.classList.remove('active');
+                dropdownBtn.classList.remove('active');
+            });
+
+            // Selecionar opção
+            dropdownOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const label = option.textContent;
+
+                    // Atualizar valor e label
+                    filtroPeriodo.value = value;
+                    dropdownLabel.textContent = label;
+
+                    // Atualizar styling de seleção
+                    dropdownOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+
+                    // Fechar dropdown
+                    dropdownMenu.classList.remove('active');
+                    dropdownBtn.classList.remove('active');
+
+                    // Executar filtros
+                    executarFiltros();
+                });
+            });
 
             filtroNome.addEventListener('input', executarFiltros);
             filtroServico.addEventListener('input', executarFiltros);
@@ -705,13 +901,28 @@
             const filtroServico = document.getElementById('filtroServico').value.toLowerCase();
 
             // Filtrar agendamentos
+            const periodo = document.getElementById('filtroPeriodo').value;
+
+            // Get today's date without timezone issues
+            const hoje = new Date();
+            const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+
             const agendamentosFiltrados = agendamentosGlobais.filter((agendamento) => {
                 const nomeMatch = agendamento.nome.toLowerCase().includes(filtroNome);
                 const servicoMatch = agendamento.servico.toLowerCase().includes(filtroServico);
-                return nomeMatch && servicoMatch;
+                if (!nomeMatch || !servicoMatch) return false;
+
+                if (periodo && agendamento.data) {
+                    // Compare dates as strings in YYYY-MM-DD format to avoid timezone issues
+                    if (periodo === 'passado' && agendamento.data >= dataHoje) return false;
+                    if (periodo === 'hoje' && agendamento.data !== dataHoje) return false;
+                    if (periodo === 'futuro' && agendamento.data <= dataHoje) return false;
+                }
+
+                return true;
             });
 
-            exibirAgendamentos(agendamentosFiltrados);
+            exibirAgendamentos(agendamentosFiltrados, periodo);
         }
 
         // ===================================================
@@ -792,106 +1003,17 @@
         }
 
         // ----------------------------------------------------------------
-        // operações para editar/excluir (simples - para demonstração)
+        // operações para contatar/excluir
         // ----------------------------------------------------------------
-        function editarAgendamento(agendamento) {
-            // monta formulário para edição (ID não editável)
-            const header = document.querySelector('#modalOverlay .modal-header h2');
-            if (header) {
-                header.textContent = 'Editar Agendamento';
-            }
+        function contatarAgendamento(agendamento) {
+            // Extrair apenas números do telefone
+            const numeroLimpo = agendamento.telefone.replace(/\D/g, '');
 
-            // preparar valor do telefone: extrair somente os 8 dígitos após prefixo
-            let phoneValue = '';
-            if (agendamento.telefone) {
-                const digits = agendamento.telefone.replace(/\D/g, '');
-                // remove prefix 819
-                if (digits.length > 3) {
-                    phoneValue = digits.slice(3);
-                    if (phoneValue.length > 4) {
-                        phoneValue = phoneValue.slice(0, 4) + '-' + phoneValue.slice(4);
-                    }
-                }
-            }
+            // Montar URL do WhatsApp com código do Brasil (55)
+            const urlWhatsApp = `https://wa.me/55${numeroLimpo}`;
 
-            const html = `
-                <form id="formEditar">
-                    <div class="modal-detalhe">
-                        <label>ID</label>
-                        <input type="text" value="${agendamento.id}" disabled />
-                    </div>
-
-                    <div class="modal-detalhe">
-                        <label>Nome Completo</label>
-                        <input type="text" id="editNome" value="${agendamento.nome}" required />
-                    </div>
-
-                    <div class="modal-detalhe">
-                        <label>Telefone</label>
-                        <div class="telefone-input">
-                            <span class="prefix">(81)9</span>
-                            <input type="text" id="editTelefone" maxlength="9" placeholder="1234-5678" value="${phoneValue}" />
-                        </div>
-                    </div>
-
-                    <div class="modal-detalhe">
-                        <label>Serviço</label>
-                        <input type="text" id="editServico" value="${agendamento.servico}" required />
-                    </div>
-
-                    <div class="modal-detalhe">
-                        <label>Data do Agendamento</label>
-                        <input type="date" id="editData" value="${agendamento.data}" required />
-                    </div>
-
-                    <div class="modal-detalhe">
-                        <label>Horário</label>
-                        <input type="time" id="editHorario" value="${agendamento.horario}" required />
-                    </div>
-
-                    <div style="text-align:right; margin-top:20px;">
-                        <button type="button" onclick="fecharModal()">Cancelar</button>
-                        <button type="submit" style="font-weight: 400; background-color: #255996; color: white; padding: 10px 20px; border: none; border-radius: 4px;">Salvar</button>
-                    </div>
-                </form>
-            `;
-
-            document.getElementById('modalConteudo').innerHTML = html;
-            document.getElementById('modalOverlay').classList.add('ativo');
-            document.body.style.overflow = 'hidden';
-
-            const form = document.getElementById('formEditar');
-
-            // mask input for phone field
-            const telInput = document.getElementById('editTelefone');
-            telInput.addEventListener('input', () => {
-                let v = telInput.value.replace(/\D/g, '').slice(0, 8);
-                if (v.length > 4) {
-                    v = v.slice(0, 4) + '-' + v.slice(4);
-                }
-                telInput.value = v;
-            });
-
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                agendamento.nome = document.getElementById('editNome').value;
-                // format phone with prefix
-                let raw = document.getElementById('editTelefone').value.replace(/\D/g, '');
-                if (raw.length >= 8) {
-                    agendamento.telefone = `(81)9${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
-                } else {
-                    agendamento.telefone = `(81)9${raw}`;
-                }
-                agendamento.servico = document.getElementById('editServico').value;
-                agendamento.data = document.getElementById('editData').value;
-                agendamento.horario = document.getElementById('editHorario').value;
-
-                // atualizar cache e interface
-                sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
-                exibirAgendamentos(agendamentosGlobais);
-                fecharModal();
-                alert('Agendamento atualizado com sucesso!');
-            });
+            // Abrir em nova aba
+            window.open(urlWhatsApp, '_blank');
         }
 
         // confirmação customizada para evitar bloqueio do thread
@@ -942,8 +1064,19 @@
                 if (resultado.sucesso) {
                     agendamentosGlobais = agendamentosGlobais.filter(a => a.id !== agendamento.id);
                     sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
-                    exibirAgendamentos(agendamentosGlobais);
                     alert('Agendamento excluído com sucesso.');
+
+                    // Resetar filtros para padrão
+                    document.getElementById('filtroNome').value = '';
+                    document.getElementById('filtroServico').value = '';
+                    document.getElementById('filtroPeriodo').value = 'hoje';
+                    document.getElementById('dropdownLabel').textContent = 'Presente (Hoje)';
+                    const dropdownOpts = document.querySelectorAll('.dropdown-option');
+                    dropdownOpts.forEach(opt => opt.classList.remove('selected'));
+                    dropdownOpts[2].classList.add('selected');
+
+                    // Executar filtros para aplicar o padrão
+                    executarFiltros();
                 } else {
                     alert('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'));
                 }

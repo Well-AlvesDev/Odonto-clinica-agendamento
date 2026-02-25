@@ -273,6 +273,17 @@
             position: relative;
         }
 
+        /* Mensagem exibida quando todos os horários da data estão indisponíveis */
+        .horarios-indisponiveis {
+            grid-column: 1/-1;
+            text-align: center;
+            background: #fff9c4;
+            /* amarelo suave */
+            color: #666;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
         .horario-badge.ocupado::after {
             content: '';
             position: absolute;
@@ -809,6 +820,63 @@
             letter-spacing: 0.5px;
         }
 
+        /* Modal de Termos de Uso */
+        .modal-termos {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            /* padding moved to body so header sits flush */
+            padding: 0;
+            max-width: 90%;
+            width: 480px;
+            max-height: 60vh;
+            /* Limitar altura e permitir rolagem */
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+        }
+
+        .modal-termos-body {
+            padding: 20px;
+        }
+
+        .modal-termos.active {
+            display: block;
+        }
+
+        .modal-termos-content {
+            position: relative;
+        }
+
+        .modal-termos .modal-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        /* Header fixo dentro do modal */
+        .modal-termos-header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding-top: 20px;
+            padding-bottom: 10px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
         #formularioAgendamento {
             display: block;
             transition: opacity 0.3s ease;
@@ -885,6 +953,13 @@
 
     <button type="button" id="verAgendamentos"><i class="ri-eye-line"></i> Ver meus agendamentos</button>
 
+    <!-- botão fixo de WhatsApp -->
+    <a href="#" class="btn-whatsapp" target="_blank" rel="noopener noreferrer"
+        style=" color: #1b870f; font-size: 12px; ">
+
+        <i class="ri-whatsapp-line"></i>
+        Precisa de ajuda? Fale conosco!
+    </a>
     <!-- Overlay para modal -->
     <div id="overlay" class="modal-overlay"></div>
 
@@ -1005,11 +1080,100 @@
             <input type="hidden" id="horarioAgendamento" name="horarioAgendamento" required>
         </div>
 
+        <!-- Aviso de termos -->
+        <p style="font-size: 11px; color: #555; margin-bottom: 12px;">
+            <i class="ri-information-2-line"></i> Ao clicar em 'Agendar' você concorda com os <a href="#"
+                id="linkTermos">Termos de Uso</a> e a nossa <a href="#" id="linkPrivacidade">Política de
+                Privacidade</a>.
+        </p>
+
         <button type="submit" id="btnAgendar">
             <span class="spinner-loader"></span>
             <span class="btn-text">AGENDAR</span>
         </button>
     </form>
+
+    <!-- Modal de Termos de Uso -->
+    <div id="termosModal" class="modal-termos">
+        <div class="modal-termos-content">
+            <div class="modal-termos-header">
+                <button type="button" class="modal-close" onclick="fecharTermosModal()">&times;</button>
+                <h2 style="margin-left: 20px; font-size: 14px;">Termos de Uso e Política de Privacidade</h2>
+            </div>
+            <div class="modal-termos-body">
+                <img src="../recursos/imgs/lgpd-logo.webp" alt=""
+                    style="width: 200px; display: block; margin: 5px auto;">
+                <p style="font-size: 13px; margin-top: -30px;">
+                    <br>
+                    <br>
+                    <a style="color: #1b4275;"> Termos de Uso e Política de Privacidade – Odonto Clínica <br>
+                        Ao utilizar este sistema de agendamento, você concorda com as condições de serviço e o
+                        tratamento de
+                        dados descritos abaixo:</a>
+                    <br>
+                    <br>
+                    <strong>1. Regras de Agendamento e Cancelamento</strong>
+                    <br>
+                    <a style="text-decoration: underline;">Serviços:</a> Este formulário destina-se exclusivamente à
+                    reserva de horários para procedimentos na
+                    Odonto Clínica.
+                    <br>
+                    <a style="text-decoration: underline;">Cancelamento:</a> O usuário pode cancelar ou reagendar seu
+                    horário com, no mínimo, 4 horas de
+                    antecedência.
+                    <br>
+                    <a style="text-decoration: underline;"> Uso Indevido:</a> <a style="color: #e74c3c;">Agendamentos e
+                        cancelamentos sucessivos ou
+                        em massa são monitorados. Para evitar
+                        fraudes ou sobrecarga do sistema, o indivíduo poderá ser suspenso ou banido temporariamente
+                        em caso de abuso comprovado.</a>
+                    <br>
+                    <strong>2. Pagamento</strong>
+                    <br>
+                    <a style="text-decoration: underline;"> Local do Pagamento:</a> Não solicitamos dados de cartão ou
+                    pagamentos antecipados via site.
+                    <br>
+                    <a style="text-decoration: underline;"> Finalização:</a> O pagamento referente ao serviço agendado
+                    será realizado presencialmente na Odonto
+                    Clínica, após o devido atendimento.
+                    <br>
+                    <strong>3. Segurança e Integridade</strong>
+                    <br>
+                    <mark> Qualquer tentativa de ataque, invasão ou manipulação de dados contra este sistema resultará
+                        em
+                        banimento imediato e poderá sofrer sanções legais conforme a legislação vigente de crimes
+                        cibernéticos.</mark>
+                    <br>
+                    <strong> 4. Política de Privacidade e Proteção de Dados </strong>
+                    <a style="color: #a5550f;"> Em conformidade com a Lei Geral de Proteção de Dados (LGPD), informamos:
+                    </a>
+                    <br>
+                    <a style="text-decoration: underline;"> Finalidade:</a> Os dados coletados (Nome, Telefone, Serviço
+                    e Horário) servem exclusivamente para a
+                    identificação do paciente e organização da agenda da clínica.
+                    <br>
+                    <a style="text-decoration: underline;"> Operação Técnica:</a> O responsável pela manutenção do
+                    sistema atua como Operador de Dados, acessando as
+                    informações estritamente para garantir o funcionamento do banco de dados e suporte técnico, sob
+                    protocolos de confidencialidade.
+                    <br>
+                    <a style="text-decoration: underline;"> Segurança:</a> Utilizamos a infraestrutura do Supabase, que
+                    provê armazenamento criptografado e camadas
+                    de segurança contra acessos não autorizados.
+                    <br>
+                    <a style="text-decoration: underline;"> Retenção:</a> Os dados serão mantidos apenas pelo período
+                    necessário para a prestação do serviço ou
+                    conforme obrigações legais de prontuário odontológico.
+                    <br>
+                    <a style="text-decoration: underline;"> Direitos do Usuário:</a> O paciente pode, a qualquer
+                    momento, solicitar a retificação ou exclusão de
+                    seus dados de contato da base de agendamento online, entrando em contato direto com a clínica.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Política de Privacidade removido; conteúdo agora unificado em termosModal -->
 
     <!-- Container de Confirmação de Agendamento -->
     <div id="confirmacaoContainer" class="confirmacao-container">
@@ -1044,7 +1208,9 @@
 
         <button type="button" class="confirmacao-botao" id="btnNovoAgendamento">Fazer novo agendamento</button>
     </div>
-
+    <div class="securetext" style="font-size: 12px; margin-top: 10px; color: #1b4275; text-align: center;">
+        <p>Protegemos suas informações <br> com o mais alto nível de segurança digital. <i class="ri-lock-line"></i></p>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../recursos/js/supabase.js"></script>
 
@@ -1370,6 +1536,18 @@
 
                     this.scrollContainer.appendChild(badge);
                 });
+
+                // depois de criar os badges, verificar se todos estão ocupados
+                const todosOcupados = Array.from(this.scrollContainer.querySelectorAll('.horario-badge'))
+                    .every(b => b.disabled || b.classList.contains('ocupado'));
+
+                if (todosOcupados) {
+                    // substituir conteúdo por mensagem de indisponibilidade
+                    this.scrollContainer.innerHTML = '<p class="horarios-indisponiveis">Todos os horários para esta data já foram ocupados.</p>';
+                    this.horarioSelecionado = null;
+                    this.hiddenInput.value = '';
+                    return;
+                }
 
                 // Desmarca qualquer horário anterior e limpa o valor
                 this.horarioSelecionado = null;
@@ -1867,11 +2045,26 @@
             carregarMeusAgendamentos(conteudoLista);
         }
 
-        // Fecha modal
+        // Fecha modal (lista ou termos)
         function fecharModal() {
             divLista.classList.remove('active');
             overlay.classList.remove('active');
+            const termosModal = document.getElementById('termosModal');
+            if (termosModal) {
+                termosModal.classList.remove('active');
+            }
         }
+
+        // Fecha apenas o modal de termos (pode ser chamado pelo botão X dentro dele)
+        function fecharTermosModal() {
+            const termosModal = document.getElementById('termosModal');
+            if (termosModal) {
+                termosModal.classList.remove('active');
+            }
+            overlay.classList.remove('active');
+        }
+
+        // [função removida] o modal de privacidade foi unificado com os termos de uso
 
         // Evento do botão de ver agendamentos
         btnVer.addEventListener('click', () => {
@@ -1887,6 +2080,32 @@
 
         // Fechar ao clicar no botão X
         document.getElementById('btnFecharModal').addEventListener('click', fecharModal);
+
+        // Link de termos de uso abre modal de termos
+        const linkTermos = document.getElementById('linkTermos');
+        if (linkTermos) {
+            linkTermos.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.classList.add('active');
+                const termosModal = document.getElementById('termosModal');
+                if (termosModal) {
+                    termosModal.classList.add('active');
+                }
+            });
+        }
+
+        // Link de política de privacidade abre o mesmo modal de termos (conteúdo unificado)
+        const linkPrivacidade = document.getElementById('linkPrivacidade');
+        if (linkPrivacidade) {
+            linkPrivacidade.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.classList.add('active');
+                const termosModal = document.getElementById('termosModal');
+                if (termosModal) {
+                    termosModal.classList.add('active');
+                }
+            });
+        }
 
         // Formatação de telefone
         telefonInput.addEventListener('input', (e) => {
@@ -2165,6 +2384,8 @@
         })();
 
     </script>
+
+
 </body>
 
 </html>
