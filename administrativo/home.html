@@ -274,6 +274,32 @@
             word-break: break-word;
         }
 
+        .card-status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 5px;
+            margin-bottom: 8px;
+        }
+
+        .card-status-badge.pendente {
+            background-color: #ffd966;
+            color: #8b6914;
+        }
+
+        .card-status-badge.confirmado {
+            background-color: #70ad47;
+            color: white;
+        }
+
+        .card-status-badge.agora {
+            background-color: #d32f2f;
+            color: white;
+        }
+
         /* action buttons shown on each card */
         .card-actions {
             position: absolute;
@@ -501,6 +527,32 @@
             box-shadow: 0 2px 8px rgba(37, 89, 150, 0.2);
         }
 
+        .modal-status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 0 auto 20px;
+            width: fit-content;
+        }
+
+        .modal-status-badge.pendente {
+            background-color: #ffd966;
+            color: #8b6914;
+        }
+
+        .modal-status-badge.confirmado {
+            background-color: #70ad47;
+            color: white;
+        }
+
+        .modal-status-badge.agora {
+            background-color: #d32f2f;
+            color: white;
+        }
+
         footer {
             text-align: center;
             padding: 20px;
@@ -570,6 +622,47 @@
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 30px 0 10px 0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            background-color: #255a9600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: #255996;
+            transition: background-color 0.3s, opacity 0.3s;
+            text-decoration: underline;
+        }
+
+        .pagination-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #333;
+            font-weight: 400;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .pagination-container.hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -637,9 +730,22 @@
             </div>
             <input type="hidden" id="filtroPeriodo" value="" />
         </div>
-
+        <div class="explicacao">
+            <p style="margin-bottom: 20px; font-size: 12px; color: #666666;">Cada agendamento segue seu fluxo
+                automáticamente: <strong>Agendado → Confirmado → Concluído ou Cancelado.</strong> Para que o fluxo de um
+                agendamento seja interrompido, o administrador deve clicar em <a style="color: #d32f2f;">'Cancelar'</a>
+                o agendamento. Obs: Após um agendamento ser <a style="color: #40a724;">Concluído</a>, ele não pode ser
+                mais cancelado, apenas <a style="color: #d32f2f;">'Apagado'</a> do registro do sistema.</p>
+        </div>
         <div id="containerCards" class="cards-container">
             <div class="sem-dados">Carregando agendamentos...</div>
+        </div>
+
+        <!-- Controles de Paginação -->
+        <div id="paginationContainer" class="pagination-container hidden">
+            <button id="btnVoltar" class="pagination-btn" onclick="irPaginaAnterior()">← Voltar</button>
+            <span id="paginationInfo" class="pagination-info">1 de 1</span>
+            <button id="btnProximo" class="pagination-btn" onclick="irProximaPagina()">Próximo →</button>
         </div>
 
         <footer>
@@ -672,6 +778,14 @@
         // não re-declara `agendamentosGlobais` para evitar erro de sintaxe
 
         // ===================================================
+        // VARIÁVEIS DE PAGINAÇÃO
+        // ===================================================
+        const ITENS_POR_PAGINA = 5;
+        let paginaAtual = 1;
+        let totalPaginas = 1;
+        let agendamentosFiltradosGlobal = [];
+
+        // ===================================================
         // CARREGAR AGENDAMENTOS
         // ===================================================
         document.addEventListener('DOMContentLoaded', function () {
@@ -688,6 +802,13 @@
 
             // para cumprir requisito de 2 segundos mínimo
             const minimo = new Promise(r => setTimeout(r, 2000));
+
+            // Carregar duração dos serviços do Supabase
+            try {
+                await carregarDuracaoServicos();
+            } catch (erro) {
+                console.error('Falha ao carregar duração dos serviços:', erro);
+            }
 
             // Verificar se usuário está logado e tem credenciais em cache
             const usuarioLogado = sessionStorage.getItem('usuarioLogado');
@@ -751,8 +872,102 @@
             return labels[periodo] || 'Qualquer';
         }
 
-        function exibirAgendamentos(agendamentos, periodo = '') {
+        // ===================================================
+        // FUNÇÃO PARA DETERMINAR STATUS DO AGENDAMENTO
+        // ===================================================
+        function determinarStatusAgendamento(agendamento) {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+
+            const horas = String(hoje.getHours()).padStart(2, '0');
+            const minutos = String(hoje.getMinutes()).padStart(2, '0');
+            const horaAtual = `${horas}:${minutos}`;
+
+            console.log('Debug - Data/Hora atual:', { dataHoje, horaAtual });
+            console.log('Debug - Agendamento:', { data: agendamento.data, horario: agendamento.horario, servico: agendamento.servico });
+
+            // Se a data do agendamento é diferente de hoje, usar lógica antiga
+            if (agendamento.data !== dataHoje) {
+                const isPassado = agendamento.data < dataHoje;
+                console.log('Debug - Data diferente de hoje, isPassado:', isPassado);
+                return {
+                    status: isPassado ? 'confirmado' : 'pendente',
+                    statusLabel: isPassado ? 'Concluído' : 'Pendente'
+                };
+            }
+
+            // Se é hoje, verificar se está dentro do intervalo de horário
+            const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
+            console.log('Debug - Durações carregadas:', duracaoServicos);
+
+            // Garantir que a duração é um número
+            const durationRaw = duracaoServicos[agendamento.servico];
+            const duracao = Number.isInteger(durationRaw) ? durationRaw : parseInt(durationRaw, 10) || 0;
+            console.log('Debug - Duração para serviço "' + agendamento.servico + '":', duracao);
+
+            // Converter horário inicial para minutos desde 00:00
+            const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
+            const horaInicio = parseInt(horaInicioStr, 10);
+            const minInicio = parseInt(minInitStr, 10);
+            const minutosInicio = horaInicio * 60 + minInicio;
+
+            // Horário final = horário inicial + duração
+            const minutosFim = minutosInicio + duracao;
+
+            // Hora atual em minutos
+            const horaAtualNum = parseInt(horas, 10);
+            const minAtualNum = parseInt(minutos, 10);
+            const minutosAtual = horaAtualNum * 60 + minAtualNum;
+
+            console.log('Debug - Cálculo em minutos:', {
+                minutosInicio,
+                minutosFim,
+                minutosAtual,
+                estaAposOFinal: minutosAtual > minutosFim,
+                estaDentroIntervalo: minutosAtual >= minutosInicio && minutosAtual < minutosFim
+            });
+
+            // Verificação 1: Se ainda não começou
+            if (minutosAtual < minutosInicio) {
+                console.log('Debug - Status: PENDENTE (ainda não começou)');
+                return {
+                    status: 'pendente',
+                    statusLabel: 'Pendente'
+                };
+            }
+
+            // Verificação 2: Se está dentro do intervalo
+            if (minutosAtual >= minutosInicio && minutosAtual < minutosFim) {
+                console.log('Debug - Status: AGORA (dentro do intervalo)');
+                return {
+                    status: 'agora',
+                    statusLabel: 'Agora'
+                };
+            }
+
+            // Verificação 3: Se passou do intervalo
+            if (minutosAtual >= minutosFim) {
+                console.log('Debug - Status: CONCLUÍDO (passou do final)');
+                return {
+                    status: 'confirmado',
+                    statusLabel: 'Concluído'
+                };
+            }
+
+            // Fallback (não deveria chegar aqui)
+            console.log('Debug - Status: PENDENTE (fallback)');
+            return {
+                status: 'pendente',
+                statusLabel: 'Pendente'
+            };
+        }
+
+        function exibirAgendamentos(agendamentos, periodo = '', pagina = 1) {
             const containerCards = document.getElementById('containerCards');
+            const paginationContainer = document.getElementById('paginationContainer');
 
             if (!agendamentos || agendamentos.length === 0) {
                 const labelPeriodo = obterLabelPeriodo(periodo);
@@ -760,13 +975,27 @@
                 return;
             }
 
+            // Armazenar agendamentos filtrados globalmente
+            agendamentosFiltradosGlobal = agendamentos;
+
+            // Calcular paginação
+            totalPaginas = Math.ceil(agendamentos.length / ITENS_POR_PAGINA);
+            paginaAtual = Math.max(1, Math.min(pagina, totalPaginas));
+
+            const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+            const fim = inicio + ITENS_POR_PAGINA;
+            const agendamentosPagina = agendamentos.slice(inicio, fim);
+
             // Limpar container
             containerCards.innerHTML = '';
 
             // Adicionar cards
-            agendamentos.forEach((agendamento, indice) => {
+            agendamentosPagina.forEach((agendamento, indice) => {
                 const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
                 const corIndex = (indice % 6) + 1;
+
+                // Determinar status baseado na data e hora
+                const { status, statusLabel } = determinarStatusAgendamento(agendamento);
 
                 const card = document.createElement('div');
                 card.className = `card card-${corIndex}`;
@@ -776,6 +1005,7 @@
                     <div class="card-avatar">${primeiraLetra}</div>
                     <div class="card-content">
                         <div class="card-nome">${agendamento.nome}</div>
+                        <div class="card-status-badge ${status}">${statusLabel}</div>
                         <div class="card-servico">${agendamento.servico}</div>
                         <div class="card-data-horario">${formatarData(agendamento.data)} às ${agendamento.horario}</div>
                     </div>
@@ -784,9 +1014,12 @@
                 // create action buttons container
                 const actions = document.createElement('div');
                 actions.className = 'card-actions';
+                // Determinar texto do botão baseado se passou (Apagar) ou não (Cancelar)
+                // Se status é 'confirmado' significa que já passou
+                const botaoExcluirTexto = status === 'confirmado' ? 'Apagar' : 'Cancelar';
                 actions.innerHTML = `
                     <button class="btn-contatar" title="Contatar"><a style="text-decoration: underline; font-weight: 400; color: blue;"><img src="../recursos/imgs/phone1.png" alt="Contatar" style="width: 16px; height: 16px;"> Contatar</a></button>
-                    <button class="btn-excluir" title="Excluir"><a>Cancelar</a></button>
+                    <button class="btn-excluir" title="Excluir"><a>${botaoExcluirTexto}</a></button>
                 `;
 
                 // stop event propagation so clicking the buttons doesn't open the modal
@@ -802,6 +1035,9 @@
                 card.appendChild(actions);
                 containerCards.appendChild(card);
             });
+
+            // Atualizar controles de paginação
+            atualizarControlesPaginacao();
         }
 
         function formatarData(data) {
@@ -896,6 +1132,46 @@
             filtroServico.addEventListener('input', executarFiltros);
         }
 
+        // ===================================================
+        // FUNÇÃO PARA ORDENAR AGENDAMENTOS COM INTELIGÊNCIA
+        // ===================================================
+        function ordenarAgendamentos(agendamentos) {
+            return agendamentos.sort((a, b) => {
+                const statusA = determinarStatusAgendamento(a).status;
+                const statusB = determinarStatusAgendamento(b).status;
+
+                // Prioridade: 'agora' vem primeiro
+                if (statusA === 'agora' && statusB !== 'agora') return -1;
+                if (statusA !== 'agora' && statusB === 'agora') return 1;
+
+                // Entre agendamentos 'agora', manter ordem
+                if (statusA === 'agora' && statusB === 'agora') {
+                    if (a.data !== b.data) return a.data.localeCompare(b.data);
+                    return a.horario.localeCompare(b.horario);
+                }
+
+                // Entre agendamentos 'pendente', ordenar por data/hora crescente (mais próximo primeiro)
+                if (statusA === 'pendente' && statusB === 'pendente') {
+                    if (a.data !== b.data) return a.data.localeCompare(b.data);
+                    return a.horario.localeCompare(b.horario);
+                }
+
+                // Entre agendamentos 'confirmado', ordenar por data/hora decrescente (mais recente primeiro)
+                if (statusA === 'confirmado' && statusB === 'confirmado') {
+                    if (a.data !== b.data) return b.data.localeCompare(a.data);
+                    return b.horario.localeCompare(a.horario);
+                }
+
+                // Ordem de prioridade entre status diferentes:
+                // 1. 'agora' (já feito acima)
+                // 2. 'pendente' vem antes de 'confirmado'
+                if (statusA === 'pendente' && statusB === 'confirmado') return -1;
+                if (statusA === 'confirmado' && statusB === 'pendente') return 1;
+
+                return 0;
+            });
+        }
+
         function executarFiltros() {
             const filtroNome = document.getElementById('filtroNome').value.toLowerCase();
             const filtroServico = document.getElementById('filtroServico').value.toLowerCase();
@@ -922,12 +1198,49 @@
                 return true;
             });
 
-            exibirAgendamentos(agendamentosFiltrados, periodo);
+            // Ordenar agendamentos filtrados com lógica de UX
+            const agendamentosOrdenados = ordenarAgendamentos(agendamentosFiltrados);
+
+            // Resetar para primeira página ao filtrar
+            paginaAtual = 1;
+            exibirAgendamentos(agendamentosOrdenados, periodo);
         }
 
         // ===================================================
         // FUNÇÕES DO MODAL
         // ===================================================
+        function atualizarControlesPaginacao() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const btnVoltar = document.getElementById('btnVoltar');
+            const btnProximo = document.getElementById('btnProximo');
+
+            paginationContainer.classList.remove('hidden');
+            paginationInfo.textContent = `${paginaAtual} de ${totalPaginas}`;
+
+            // Desabilitar botão "Voltar" se estamos na primeira página
+            btnVoltar.disabled = paginaAtual === 1;
+
+            // Desabilitar botão "Próximo" se estamos na última página
+            btnProximo.disabled = paginaAtual === totalPaginas;
+        }
+
+        function irProximaPagina() {
+            if (paginaAtual < totalPaginas) {
+                paginaAtual++;
+                exibirAgendamentos(agendamentosFiltradosGlobal, '', paginaAtual);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function irPaginaAnterior() {
+            if (paginaAtual > 1) {
+                paginaAtual--;
+                exibirAgendamentos(agendamentosFiltradosGlobal, '', paginaAtual);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
         function abrirModal(agendamento) {
             // guarantee header reads "Detalhes do Agendamento"
             const header = document.querySelector('#modalOverlay .modal-header h2');
@@ -937,8 +1250,12 @@
 
             const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
 
+            // Determinar status baseado na data e hora
+            const { status, statusLabel } = determinarStatusAgendamento(agendamento);
+
             const conteudo = `
                 <div class="modal-avatar">${primeiraLetra}</div>
+                <div class="modal-status-badge ${status}" style="text-align: center;">${statusLabel}</div>
                 
                 <div class="modal-detalhe">
                     <div class="modal-detalhe-label">ID</div>

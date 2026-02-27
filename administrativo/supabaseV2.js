@@ -211,3 +211,50 @@ async function excluirAgendamentoNoServidor(id, nomeUsuario, senhaUsuario) {
 // tornar disponíveis na janela diretamente
 window.buscarAgendamentosDoServidor = buscarAgendamentosDoServidor;
 window.excluirAgendamentoNoServidor = excluirAgendamentoNoServidor;
+
+// ---------------------------------------------------
+// Função para buscar durações dos serviços do Supabase
+// e armazenar em cache de sessão
+// ---------------------------------------------------
+async function buscarDuracaoServicosDoServidor() {
+    const { data, error } = await _supabase
+        .from('servicos_tempo')
+        .select('servico, duracao_minuto');
+
+    if (error) {
+        console.error('Erro ao buscar duração dos serviços:', error);
+        throw error;
+    }
+
+    // Converter array em objeto para acesso rápido por nome de serviço
+    const duracaoMap = {};
+    if (data && Array.isArray(data)) {
+        data.forEach(item => {
+            duracaoMap[item.servico] = item.duracao_minuto;
+        });
+    }
+
+    console.log('Durações dos serviços carregadas:', duracaoMap);
+    return duracaoMap;
+}
+
+// ---------------------------------------------------
+// Função wrapper para carregar e cachear durações
+// ---------------------------------------------------
+async function carregarDuracaoServicos() {
+    try {
+        const duracoes = await buscarDuracaoServicosDoServidor();
+        sessionStorage.setItem('duracaoServicos', JSON.stringify(duracoes));
+        return duracoes;
+    } catch (erro) {
+        console.error('Falha ao carregar durações dos serviços:', erro);
+        // Tentar carregar do cache se tiver
+        const cached = sessionStorage.getItem('duracaoServicos');
+        if (cached) {
+            return JSON.parse(cached);
+        }
+        throw erro;
+    }
+}
+
+window.carregarDuracaoServicos = carregarDuracaoServicos;
