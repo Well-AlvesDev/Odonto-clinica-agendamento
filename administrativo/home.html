@@ -39,7 +39,7 @@
 
         h1 {
             color: #131313;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 400;
         }
 
@@ -54,7 +54,7 @@
         .user-info span {
             font-weight: 400;
             color: #6198e5;
-            font-size: 15px;
+            font-size: 13px;
         }
 
         button {
@@ -571,7 +571,7 @@
             }
 
             h1 {
-                font-size: 28px;
+                font-size: 26px;
             }
 
 
@@ -663,13 +663,64 @@
         .pagination-container.hidden {
             display: none;
         }
+
+        /* Responsivo para botões de ação */
+        @media (max-width: 768px) {
+
+            #botaoAtualizar,
+            #botaoCadastrar,
+            #botaoAnalise {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+            }
+
+            #botaoAtualizar img,
+            #botaoCadastrar img,
+            #botaoAnalise img {
+                width: 20px !important;
+                margin-right: 6px !important;
+            }
+
+            #filtroNome,
+            #filtroServico {
+                padding: 8px !important;
+                font-size: 12px !important;
+                min-width: 120px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            #botaoAtualizar,
+            #botaoCadastrar,
+            #botaoAnalise {
+                padding: 5px 10px !important;
+                font-size: 11px !important;
+                margin-left: 5px !important;
+            }
+
+            #botaoAtualizar img,
+            #botaoCadastrar img,
+            #botaoAnalise img {
+                width: 18px !important;
+                margin-right: 4px !important;
+            }
+
+            #filtroNome,
+            #filtroServico {
+                padding: 6px !important;
+                font-size: 11px !important;
+                min-width: 100px !important;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <header>
-            <h1>Agendamentos</h1>
+
+            <h1>SISTEMA DE GERENCIAMENTO E CONTROLE</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Usuário</span>
                 <button onclick="fazerLogout()" style="font-weight: 400;">Sair</button>
@@ -682,9 +733,13 @@
                     src="../recursos/imgs/updatelist.png" alt="update data"
                     style="width: 25px; vertical-align: middle; margin-right: 10px;">Atualizar</button>
             <button id="botaoCadastrar"
-                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px;"><img
+                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
                     src="../recursos/imgs/cadastrar.png" alt="add"
-                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Cadastrar</button>
+                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Geral</button>
+            <button id="botaoAnalise"
+                style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
+                    src="../recursos/imgs/graph.png" alt=""
+                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Análise</button>
         </div>
         <p style="text-align: right; font-size: 12px; margin-bottom: 10px;">Última atualização: <br><span
                 id="ultimaAtualizacao">--</span></p>
@@ -730,13 +785,7 @@
             </div>
             <input type="hidden" id="filtroPeriodo" value="" />
         </div>
-        <div class="explicacao">
-            <p style="margin-bottom: 20px; font-size: 12px; color: #666666;">Cada agendamento segue seu fluxo
-                automáticamente: <strong>Agendado → Confirmado → Concluído ou Cancelado.</strong> Para que o fluxo de um
-                agendamento seja interrompido, o administrador deve clicar em <a style="color: #d32f2f;">'Cancelar'</a>
-                o agendamento. Obs: Após um agendamento ser <a style="color: #40a724;">Concluído</a>, ele não pode ser
-                mais cancelado, apenas <a style="color: #d32f2f;">'Apagado'</a> do registro do sistema.</p>
-        </div>
+
         <div id="containerCards" class="cards-container">
             <div class="sem-dados">Carregando agendamentos...</div>
         </div>
@@ -764,7 +813,9 @@
             <div id="modalConteudo">
                 <!-- Conteúdo será preenchido pelo JavaScript -->
             </div>
+
         </div>
+
     </div>
 
     <!-- carregar biblioteca Supabase e código comum para operações -->
@@ -780,7 +831,7 @@
         // ===================================================
         // VARIÁVEIS DE PAGINAÇÃO
         // ===================================================
-        const ITENS_POR_PAGINA = 5;
+        const ITENS_POR_PAGINA = 10;
         let paginaAtual = 1;
         let totalPaginas = 1;
         let agendamentosFiltradosGlobal = [];
@@ -819,7 +870,7 @@
             }
 
             // Exibir nome do usuário
-            document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px;">/ ${usuarioLogado}`;
+            document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px; width: 25px;">/ ${usuarioLogado}`;
 
             // Tentar buscar os agendamentos atualizados no servidor
             try {
