@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
     <title>Agendamentos - Área Administrativa</title>
     <style>
         * {
@@ -58,7 +59,7 @@
         }
 
         button {
-            padding: 10px 20px;
+            padding: 6px 10px;
             background-color: #d32f2f;
             color: white;
             border: none;
@@ -66,7 +67,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: background-color 0.3s, transform 0.2s;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         button:active {
@@ -674,12 +675,6 @@
                 font-size: 12px !important;
             }
 
-            #botaoAtualizar img,
-            #botaoCadastrar img,
-            #botaoAnalise img {
-                width: 20px !important;
-                margin-right: 6px !important;
-            }
 
             #filtroNome,
             #filtroServico {
@@ -699,12 +694,6 @@
                 margin-left: 5px !important;
             }
 
-            #botaoAtualizar img,
-            #botaoCadastrar img,
-            #botaoAnalise img {
-                width: 18px !important;
-                margin-right: 4px !important;
-            }
 
             #filtroNome,
             #filtroServico {
@@ -720,29 +709,31 @@
     <div class="container">
         <header>
 
-            <h1>SISTEMA DE GERENCIAMENTO E CONTROLE</h1>
+            <h1>GERENCIAMENTO E CONTROLE</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Usuário</span>
-                <button onclick="fazerLogout()" style="font-weight: 400;">Sair</button>
             </div>
         </header>
+
+        <div style="text-align: left; margin-bottom: 10px; margin-top: -20px;">
+            <button onclick="fazerLogout()" style="font-weight: 400; ">Fechar Sessão <i
+                    class="ri-shut-down-line"></i></button>
+        </div>
 
         <div style="text-align: right; margin-bottom: 10px;">
             <button id="botaoAtualizar" onclick="carregarAgendamentos()"
                 style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><img
                     src="../recursos/imgs/updatelist.png" alt="update data"
-                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Atualizar</button>
-            <button id="botaoCadastrar"
+                    style="width: 20px; vertical-align: middle; margin-right: 10px;">Atualizar</button>
+            <button id="botaoCadastrar" onclick="window.location.href='geral.html'"
                 style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
                     src="../recursos/imgs/cadastrar.png" alt="add"
-                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Geral</button>
-            <button id="botaoAnalise"
+                    style="width: 23px; vertical-align: middle; margin-right: 10px;">Geral</button>
+            <button id="botaoAnalise" onclick="window.location.href='graphl.html'"
                 style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
                     src="../recursos/imgs/graph.png" alt=""
-                    style="width: 25px; vertical-align: middle; margin-right: 10px;">Análise</button>
+                    style="width: 30px; vertical-align: middle; margin-right: 10px;">Análise</button>
         </div>
-        <p style="text-align: right; font-size: 12px; margin-bottom: 10px;">Última atualização: <br><span
-                id="ultimaAtualizacao">--</span></p>
         <!-- loader minimalista -->
         <div id="loaderOverlay"
             style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.8); z-index:1001; align-items:center; justify-content:center; flex-direction:column;">
@@ -800,6 +791,7 @@
         <footer>
             <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
             <p id="dataAtual"></p>
+            <p style="margin-top: 15px; font-size: 12px;">Última atualização: <span id="ultimaAtualizacao">--</span></p>
         </footer>
     </div>
 
@@ -839,11 +831,41 @@
         // ===================================================
         // CARREGAR AGENDAMENTOS
         // ===================================================
+        // ===================================================
+        // FUNÇÃO PARA ATUALIZAR AGENDAMENTOS AUTOMATICAMENTE
+        // ===================================================
+        async function atualizarAgendamentosAuto() {
+            try {
+                // Verificar se usuário está logado
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaCache = sessionStorage.getItem('senhaUsuario');
+                if (!usuarioLogado || !senhaCache) {
+                    return;
+                }
+
+                // Buscar agendamentos atualizados do servidor (silenciosamente, sem loader)
+                const dados = await buscarAgendamentosDoServidor(usuarioLogado, senhaCache);
+                agendamentosGlobais = dados;
+                sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+
+                // Executar filtros atuais para atualizar a exibição
+                executarFiltros();
+
+                // Atualizar timestamp
+                atualizarTimestampUltimaAtualizacao();
+            } catch (erro) {
+                // Erro silencioso na atualização automática
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             carregarAgendamentos();
             atualizarDataAtual();
             configurarFiltros();
             atualizarTimestampUltimaAtualizacao();
+
+            // Configurar atualização automática a cada 1 minuto (60000 ms)
+            setInterval(atualizarAgendamentosAuto, 60000);
         });
 
         async function carregarAgendamentos() {
@@ -852,13 +874,13 @@
             document.getElementById('botaoAtualizar').disabled = true;
 
             // para cumprir requisito de 2 segundos mínimo
-            const minimo = new Promise(r => setTimeout(r, 2000));
+            const minimo = new Promise(r => setTimeout(r, 100));
 
             // Carregar duração dos serviços do Supabase
             try {
                 await carregarDuracaoServicos();
             } catch (erro) {
-                console.error('Falha ao carregar duração dos serviços:', erro);
+                // Erro ao carregar durações - usar cache ou padrão
             }
 
             // Verificar se usuário está logado e tem credenciais em cache
@@ -877,9 +899,7 @@
                 const dados = await buscarAgendamentosDoServidor(usuarioLogado, senhaCache);
                 agendamentosGlobais = dados;
                 sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
-                console.log('Agendamentos atualizados:', agendamentosGlobais);
             } catch (erro) {
-                console.error('Falha ao buscar agendamentos:', erro);
                 // caso dê problema, carregar do cache
                 const agendamentosJson = sessionStorage.getItem('agendamentos');
                 if (agendamentosJson) {
@@ -937,13 +957,9 @@
             const minutos = String(hoje.getMinutes()).padStart(2, '0');
             const horaAtual = `${horas}:${minutos}`;
 
-            console.log('Debug - Data/Hora atual:', { dataHoje, horaAtual });
-            console.log('Debug - Agendamento:', { data: agendamento.data, horario: agendamento.horario, servico: agendamento.servico });
-
             // Se a data do agendamento é diferente de hoje, usar lógica antiga
             if (agendamento.data !== dataHoje) {
                 const isPassado = agendamento.data < dataHoje;
-                console.log('Debug - Data diferente de hoje, isPassado:', isPassado);
                 return {
                     status: isPassado ? 'confirmado' : 'pendente',
                     statusLabel: isPassado ? 'Concluído' : 'Pendente'
@@ -952,12 +968,10 @@
 
             // Se é hoje, verificar se está dentro do intervalo de horário
             const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
-            console.log('Debug - Durações carregadas:', duracaoServicos);
 
             // Garantir que a duração é um número
             const durationRaw = duracaoServicos[agendamento.servico];
             const duracao = Number.isInteger(durationRaw) ? durationRaw : parseInt(durationRaw, 10) || 0;
-            console.log('Debug - Duração para serviço "' + agendamento.servico + '":', duracao);
 
             // Converter horário inicial para minutos desde 00:00
             const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
@@ -973,17 +987,8 @@
             const minAtualNum = parseInt(minutos, 10);
             const minutosAtual = horaAtualNum * 60 + minAtualNum;
 
-            console.log('Debug - Cálculo em minutos:', {
-                minutosInicio,
-                minutosFim,
-                minutosAtual,
-                estaAposOFinal: minutosAtual > minutosFim,
-                estaDentroIntervalo: minutosAtual >= minutosInicio && minutosAtual < minutosFim
-            });
-
             // Verificação 1: Se ainda não começou
             if (minutosAtual < minutosInicio) {
-                console.log('Debug - Status: PENDENTE (ainda não começou)');
                 return {
                     status: 'pendente',
                     statusLabel: 'Pendente'
@@ -992,7 +997,6 @@
 
             // Verificação 2: Se está dentro do intervalo
             if (minutosAtual >= minutosInicio && minutosAtual < minutosFim) {
-                console.log('Debug - Status: AGORA (dentro do intervalo)');
                 return {
                     status: 'agora',
                     statusLabel: 'Agora'
@@ -1001,7 +1005,6 @@
 
             // Verificação 3: Se passou do intervalo
             if (minutosAtual >= minutosFim) {
-                console.log('Debug - Status: CONCLUÍDO (passou do final)');
                 return {
                     status: 'confirmado',
                     statusLabel: 'Concluído'
@@ -1009,7 +1012,6 @@
             }
 
             // Fallback (não deveria chegar aqui)
-            console.log('Debug - Status: PENDENTE (fallback)');
             return {
                 status: 'pendente',
                 statusLabel: 'Pendente'
@@ -1424,7 +1426,6 @@
             // credenciais em cache
             const nomeUsuario = sessionStorage.getItem('usuarioLogado');
             const senhaCache = sessionStorage.getItem('senhaUsuario');
-            console.log('Credenciais cache', { nomeUsuario, senhaCache });
 
             try {
                 const resultado = await excluirAgendamentoNoServidor(agendamento.id, nomeUsuario, senhaCache);
@@ -1449,7 +1450,6 @@
                     alert('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'));
                 }
             } catch (erro) {
-                console.error('Falha ao excluir agendamento:', erro);
                 // se for Error, mostre a mensagem
                 const msg = erro && erro.message ? erro.message : 'Erro ao excluir agendamento. Verifique sua conexão e tente novamente.';
                 alert(msg);

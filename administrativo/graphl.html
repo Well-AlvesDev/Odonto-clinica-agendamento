@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Dados - Área Administrativa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
+    <script src="./supabaseV2.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: #333;
+            font-family: sans-serif;
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #131313;
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .user-info span {
+            font-weight: 400;
+            color: #6198e5;
+            font-size: 13px;
+        }
+
+        button {
+            padding: 8px 10px;
+            background-color: #d32f2f;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-weight: 400;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 11px;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-home {
+            background-color: #2195f300;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: rgb(71, 106, 202);
+            margin-left: auto;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #2196F3;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card-info.agora {
+            border-left-color: #FF9800;
+        }
+
+        .card-info.futuro {
+            border-left-color: #2196F3;
+        }
+
+        .card-info.concluido {
+            border-left-color: #4CAF50;
+        }
+
+        .card-info.pendente {
+            border-left-color: #FFC107;
+        }
+
+        .card-info.total {
+            border-left-color: #9C27B0;
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .card-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-details {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Agora Card Special Style */
+        .agora-appointment {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF3E0;
+            border-radius: 6px;
+            border-left: 3px solid #FF6F00;
+        }
+
+        .agora-appointment-name {
+            font-weight: bold;
+            color: #E65100;
+        }
+
+        .agora-appointment-service {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Future Appointments List */
+        .future-appointments {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .future-appointments h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .date-group {
+            margin-bottom: 15px;
+        }
+
+        .date-header {
+            background-color: #E3F2FD;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+
+        .appointment-item {
+            padding: 10px;
+            background-color: #F5F5F5;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #2196F3;
+        }
+
+        .appointment-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .appointment-item-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .appointment-item-service {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .appointment-item-time {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        /* Loader */
+        #loaderOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            visibility: hidden;
+        }
+
+        #loaderOverlay.active {
+            visibility: visible;
+        }
+
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes piscar {
+
+            0%,
+            49% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0.3;
+            }
+        }
+
+        .circulo-piscante {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            animation: piscar 1s infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .sem-dados {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .card-number {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loaderOverlay">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>📊 Análise de Dados - Agendamentos</h1>
+            <div class="user-info">
+                <span id="usuarioLogado">Carregando...</span>
+            </div>
+        </header>
+
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button class="btn-home" onclick="window.location.href='home.html'">← Voltar</button>
+            <button onclick="fazerLogout()">Fechar Sessão <i class="ri-shut-down-line"></i></button>
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div class="dashboard-grid">
+            <div class="card-info agora">
+                <div class="card-label"><span class="circulo-piscante"></span>ACONTECENDO AGORA</div>
+                <div id="cardAgora" class="card-number">-</div>
+            </div>
+
+            <div class="card-info futuro">
+                <div class="card-label">📅 Agendamentos Futuros</div>
+                <div id="cardFuturo" class="card-number">0</div>
+                <div id="cardFuturoDetalhes" class="card-details">-</div>
+            </div>
+
+            <div class="card-info concluido">
+                <div class="card-label">✅ Concluídos Hoje</div>
+                <div id="cardConcluido" class="card-number">0</div>
+            </div>
+
+            <div class="card-info pendente">
+                <div class="card-label">⏳ Pendentes Para Hoje</div>
+                <div id="cardPendente" class="card-number">0</div>
+            </div>
+
+            <div class="card-info total">
+                <div class="card-label">📈 TAMNH. BANCO 2026</div>
+                <div id="cardTotal" class="card-number">0</div>
+                <div id="cardTotalDetalhes" class="card-details">-</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">📊 Agendamentos por Dia (Últimos 30 dias)</div>
+                <div class="chart-wrapper">
+                    <canvas id="chartDia"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">📈 Agendamentos por Mês (Últimos 12 meses)</div>
+                <div class="chart-wrapper">
+                    <canvas id="chartMes"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Future Appointments Section -->
+        <div class="future-appointments">
+            <h3>📋 Próximos Agendamentos</h3>
+            <div id="futureAppointmentsList" class="sem-dados">Carregando agendamentos futuros...</div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
+        <p>Última atualização: <span id="ultimaAtualizacao">--</span></p>
+    </footer>
+
+    <script>
+        // Variáveis globais
+        let chartDia = null;
+        let chartMes = null;
+
+        // ===================================================
+        // FUNÇÃO PARA DETERMINAR STATUS DO AGENDAMENTO
+        // ===================================================
+        function determinarStatusAgendamento(agendamento) {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+
+            const horas = String(hoje.getHours()).padStart(2, '0');
+            const minutos = String(hoje.getMinutes()).padStart(2, '0');
+            const horaAtual = `${horas}:${minutos}`;
+
+            // Se a data do agendamento é diferente de hoje
+            if (agendamento.data !== dataHoje) {
+                const isPassado = agendamento.data < dataHoje;
+                return {
+                    status: isPassado ? 'confirmado' : 'pendente',
+                    statusLabel: isPassado ? 'Concluído' : 'Pendente'
+                };
+            }
+
+            // Se é hoje, verificar se está dentro do intervalo de horário
+            const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
+            const durationRaw = duracaoServicos[agendamento.servico];
+            const duracao = Number.isInteger(durationRaw) ? durationRaw : parseInt(durationRaw, 10) || 0;
+
+            const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
+            const horaInicio = parseInt(horaInicioStr, 10);
+            const minInicio = parseInt(minInitStr, 10);
+            const minutosInicio = horaInicio * 60 + minInicio;
+            const minutosFim = minutosInicio + duracao;
+
+            const horaAtualNum = parseInt(horas, 10);
+            const minAtualNum = parseInt(minutos, 10);
+            const minutosAtual = horaAtualNum * 60 + minAtualNum;
+
+            if (minutosAtual < minutosInicio) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
+
+            if (minutosAtual >= minutosInicio && minutosAtual < minutosFim) {
+                return { status: 'agora', statusLabel: 'Agora' };
+            }
+
+            return { status: 'confirmado', statusLabel: 'Concluído' };
+        }
+
+        // ===================================================
+        // CALCULAR ESTATÍSTICAS
+        // ===================================================
+        function calcularEstatisticas() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+
+            let agendamentoAgora = null;
+            let agendamentosFuturos = [];
+            let concuidosHoje = 0;
+            let pendentesHoje = 0;
+            let totalAgendamentos = agendamentosGlobais.length;
+
+            agendamentosGlobais.forEach(agendamento => {
+                const status = determinarStatusAgendamento(agendamento);
+
+                if (status.status === 'agora') {
+                    agendamentoAgora = agendamento;
+                }
+
+                if (agendamento.data === dataHoje) {
+                    if (status.status === 'confirmado') {
+                        concuidosHoje++;
+                    } else if (status.status === 'pendente') {
+                        pendentesHoje++;
+                    }
+                }
+
+                if (agendamento.data > dataHoje) {
+                    agendamentosFuturos.push(agendamento);
+                }
+            });
+
+            return {
+                agendamentoAgora,
+                agendamentosFuturos,
+                concuidosHoje,
+                pendentesHoje,
+                totalAgendamentos
+            };
+        }
+
+        // ===================================================
+        // ATUALIZAR CARDS DE INFORMAÇÃO
+        // ===================================================
+        function atualizarCards() {
+            const stats = calcularEstatisticas();
+
+            // Agendamento agora
+            const cardAgora = document.getElementById('cardAgora');
+            if (stats.agendamentoAgora) {
+                cardAgora.innerHTML = `
+                    <div>1</div>
+                    <div class="agora-appointment">
+                        <div class="agora-appointment-name">${stats.agendamentoAgora.nome}</div>
+                        <div class="agora-appointment-service">${stats.agendamentoAgora.servico} às ${stats.agendamentoAgora.horario}</div>
+                    </div>
+                `;
+            } else {
+                cardAgora.textContent = '-';
+            }
+
+            // Agendamentos futuros
+            document.getElementById('cardFuturo').textContent = stats.agendamentosFuturos.length;
+            const futuroDetalhes = document.getElementById('cardFuturoDetalhes');
+            if (stats.agendamentosFuturos.length > 0) {
+                const dataProximo = stats.agendamentosFuturos[0].data;
+                futuroDetalhes.textContent = `Próximo: ${formatarData(dataProximo)}`;
+            } else {
+                futuroDetalhes.textContent = 'Nenhum agendamento futuro';
+            }
+
+            // Concluídos hoje
+            document.getElementById('cardConcluido').textContent = stats.concuidosHoje;
+
+            // Pendentes hoje
+            document.getElementById('cardPendente').textContent = stats.pendentesHoje;
+
+            // Total
+            document.getElementById('cardTotal').textContent = stats.totalAgendamentos;
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+            const agendadosHoje = agendamentosGlobais.filter(a => a.data === dataHoje).length;
+            document.getElementById('cardTotalDetalhes').textContent = `${agendadosHoje} agendamentos foram feitos hoje`;
+        }
+
+        // ===================================================
+        // EXIBIR PRÓXIMOS AGENDAMENTOS
+        // ===================================================
+        function exibirProximosAgendamentos() {
+            const stats = calcularEstatisticas();
+            const container = document.getElementById('futureAppointmentsList');
+
+            if (stats.agendamentosFuturos.length === 0) {
+                container.innerHTML = '<div class="sem-dados">Nenhum agendamento futuro</div>';
+                return;
+            }
+
+            // Agrupar por data
+            const agrupoPorData = {};
+            stats.agendamentosFuturos.forEach(agendamento => {
+                if (!agrupoPorData[agendamento.data]) {
+                    agrupoPorData[agendamento.data] = [];
+                }
+                agrupoPorData[agendamento.data].push(agendamento);
+            });
+
+            // Ordenar datas
+            const datasSortidas = Object.keys(agrupoPorData).sort();
+
+            // Construir HTML
+            let html = '';
+            datasSortidas.forEach(data => {
+                html += `<div class="date-group">
+                    <div class="date-header">${formatarData(data)}</div>
+                    ${agrupoPorData[data].map(agendamento => `
+                        <div class="appointment-item">
+                            <div class="appointment-item-info">
+                                <div class="appointment-item-name">${agendamento.nome}</div>
+                                <div class="appointment-item-service">${agendamento.servico}</div>
+                            </div>
+                            <div class="appointment-item-time">${agendamento.horario}</div>
+                        </div>
+                    `).join('')}
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ===================================================
+        // CRIAR GRÁFICOS
+        // ===================================================
+        function criarGraficos() {
+            criarGraficoDia();
+            criarGraficoMes();
+        }
+
+        function criarGraficoDia() {
+            const hoje = new Date();
+            const dias = [];
+            const dados = [];
+
+            // Últimos 30 dias
+            for (let i = 29; i >= 0; i--) {
+                const data = new Date(hoje);
+                data.setDate(data.getDate() - i);
+                const ano = data.getFullYear();
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+                const dia = String(data.getDate()).padStart(2, '0');
+                const dataStr = `${ano}-${mes}-${dia}`;
+
+                const quantidade = agendamentosGlobais.filter(a => a.data === dataStr).length;
+                dias.push(`${dia}/${mes}`);
+                dados.push(quantidade);
+            }
+
+            const ctx = document.getElementById('chartDia');
+            if (chartDia) chartDia.destroy();
+
+            chartDia = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dias,
+                    datasets: [{
+                        label: 'Agendamentos',
+                        data: dados,
+                        backgroundColor: '#2196F3',
+                        borderColor: '#1976D2',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function criarGraficoMes() {
+            const hoje = new Date();
+            const meses = [];
+            const dados = [];
+
+            // Últimos 12 meses
+            for (let i = 11; i >= 0; i--) {
+                const data = new Date(hoje);
+                data.setMonth(data.getMonth() - i);
+                const ano = data.getFullYear();
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+
+                const quantidade = agendamentosGlobais.filter(a => {
+                    return a.data.startsWith(`${ano}-${mes}`);
+                }).length;
+
+                meses.push(`${mes}/${ano}`);
+                dados.push(quantidade);
+            }
+
+            const ctx = document.getElementById('chartMes');
+            if (chartMes) chartMes.destroy();
+
+            chartMes = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Agendamentos',
+                        data: dados,
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#FF9800',
+                        pointBorderColor: '#F57C00',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===================================================
+        // FORMATAR DATA
+        // ===================================================
+        function formatarData(data) {
+            if (!data) return '-';
+            const partes = data.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+            return data;
+        }
+
+        // ===================================================
+        // ATUALIZAR TIMESTAMP
+        // ===================================================
+        function atualizarTimestamp() {
+            const agora = new Date();
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const ano = agora.getFullYear();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+
+            const timestamp = `${dia}/${mes}/${ano} às ${horas}H${minutos}min${segundos}seg`;
+            document.getElementById('ultimaAtualizacao').textContent = timestamp;
+        }
+
+        // ===================================================
+        // LOGOUT
+        // ===================================================
+        async function fazerLogout() {
+            // Limpar sessionStorage
+            sessionStorage.removeItem('usuarioLogado');
+            sessionStorage.removeItem('senhaUsuario');
+            sessionStorage.removeItem('agendamentos');
+            sessionStorage.removeItem('duracaoServicos');
+
+            // Redirecionar para login
+            window.location.href = './login.html';
+        }
+
+        // ===================================================
+        // CARREGAR DADOS INICIAIS
+        // ===================================================
+        async function carregarDadosIniciais() {
+            const loader = document.getElementById('loaderOverlay');
+            loader.classList.add('active');
+
+            try {
+                // Verificar se usuário está logado
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaCache = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaCache) {
+                    window.location.href = './login.html';
+                    return;
+                }
+
+                // Exibir nome do usuário
+                document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px; width: 25px;">/ ${usuarioLogado}`;
+
+                // Carregar duração dos serviços
+                try {
+                    await carregarDuracaoServicos();
+                } catch (erro) {
+                    console.error('Erro ao carregar durações:', erro);
+                }
+
+                // Carregar agendamentos
+                try {
+                    const dados = await buscarAgendamentosDoServidor(usuarioLogado, senhaCache);
+                    agendamentosGlobais = dados || [];
+                } catch (erro) {
+                    console.error('Erro ao buscar agendamentos:', erro);
+                    const agendamentosJson = sessionStorage.getItem('agendamentos');
+                    if (agendamentosJson) {
+                        agendamentosGlobais = JSON.parse(agendamentosJson);
+                    }
+                }
+
+                // Atualizar interface
+                atualizarCards();
+                exibirProximosAgendamentos();
+                criarGraficos();
+                atualizarTimestamp();
+
+            } catch (erro) {
+                console.error('Erro ao carregar dados:', erro);
+            } finally {
+                loader.classList.remove('active');
+            }
+        }
+
+        // ===================================================
+        // ATUALIZAR DADOS SILENCIOSAMENTE A CADA 30 SEGUNDOS
+        // ===================================================
+        async function atualizarDadosSilenciosamente() {
+            try {
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaCache = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaCache) {
+                    return;
+                }
+
+                // Carregar agendamentos atualizados
+                const dados = await buscarAgendamentosDoServidor(usuarioLogado, senhaCache);
+                agendamentosGlobais = dados || [];
+
+                // Atualizar interface sem mostrar loader
+                atualizarCards();
+                exibirProximosAgendamentos();
+                criarGraficos();
+                atualizarTimestamp();
+
+            } catch (erro) {
+                console.error('Erro ao atualizar dados:', erro);
+            }
+        }
+
+        // ===================================================
+        // INICIALIZAÇÃO
+        // ===================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carregar dados iniciais
+            carregarDadosIniciais();
+
+            // Atualizar dados a cada 30 segundos silenciosamente
+            setInterval(atualizarDadosSilenciosamente, 30000);
+        });
+    </script>
+</body>
+
+</html>
