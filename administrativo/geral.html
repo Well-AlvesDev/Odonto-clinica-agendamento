@@ -1,11 +1,827 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geral - Área Administrativa</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
+    <title>Registro de Horários - Área Administrativa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: #333;
+            font-family: sans-serif;
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #131313;
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .user-info span {
+            font-weight: 400;
+            color: #6198e5;
+            font-size: 13px;
+        }
+
+        button {
+            padding: 6px 10px;
+            background-color: #255996;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background-color: #1e4573;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.btn-logout {
+            background-color: #d32f2f;
+        }
+
+        button.btn-logout:hover {
+            background-color: #b71c1c;
+        }
+
+        button.btn-novo {
+            background-color: #2ecc71;
+        }
+
+        button.btn-novo:hover {
+            background-color: #27ae60;
+        }
+
+        .top-actions {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .top-actions button {
+            margin-right: 10px;
+        }
+
+        .form-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .form-section h2 {
+            color: #255996;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        input[type="date"],
+        input[type="time"],
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: sans-serif;
+        }
+
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #255996;
+            box-shadow: 0 0 8px rgba(37, 89, 150, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        .form-actions button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .btn-cancelar {
+            background-color: #999;
+        }
+
+        .btn-cancelar:hover {
+            background-color: #777;
+        }
+
+        .btn-salvar {
+            background-color: #255996;
+        }
+
+        .btn-salvar:hover {
+            background-color: #1e4573;
+        }
+
+        .horarios-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .horario-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #255996;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .horario-card:hover {
+            box-shadow: 0 4px 16px rgba(37, 89, 150, 0.2);
+        }
+
+        .horario-info {
+            flex: 1;
+        }
+
+        .horario-data {
+            font-size: 16px;
+            font-weight: 700;
+            color: #255996;
+            margin-bottom: 8px;
+        }
+
+        .horario-detalhes {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .horario-servico {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .horario-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background-color: #70ad47;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .horario-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .horario-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-editar {
+            background-color: #2196f3;
+        }
+
+        .btn-editar:hover {
+            background-color: #1976d2;
+        }
+
+        .btn-excluir {
+            background-color: #d32f2f;
+        }
+
+        .btn-excluir:hover {
+            background-color: #b71c1c;
+        }
+
+        .sem-dados {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+            font-size: 16px;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.ativo {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-container {
+            background-color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            color: #255996;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+
+            .form-row,
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .horario-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .horario-actions {
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .horario-actions button {
+                flex: 1;
+            }
+
+            .top-actions {
+                text-align: center;
+            }
+
+            .top-actions button {
+                margin: 5px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    
+    <div class="container">
+        <header>
+            <h1>REGISTROS E EDIÇÕES GERAIS</h1>
+            <div class="user-info">
+                <span id="usuarioLogado"><i class="ri-user-line"></i> Usuário</span>
+                <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i
+                        class="ri-logout-box-line"></i></button>
+            </div>
+        </header>
+
+        <div class="top-actions">
+            <button class="btn-novo" onclick="abrirModalNovoHorario()"><i class="ri-add-line"></i> Novo Horário</button>
+            <button onclick="window.location.href='home.html'"><i class="ri-arrow-left-line"></i> Voltar aos
+                Agendamentos</button>
+        </div>
+
+        <!-- Formulário para Adicionar Novo Horário -->
+        <div class="form-section" id="formSection" style="display: none;">
+            <h2>Registrar Novo Horário</h2>
+            <form id="formNovoHorario">
+                <div class="form-group">
+                    <label for="inputData">Data *</label>
+                    <input type="date" id="inputData" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inputHoraInicio">Hora Início *</label>
+                        <input type="time" id="inputHoraInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputHoraFim">Hora Fim *</label>
+                        <input type="time" id="inputHoraFim" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputServico">Tipo de Serviço</label>
+                    <input type="text" id="inputServico" placeholder="Ex: Limpeza, Restauração...">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Horário</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Horários Registrados -->
+        <div class="form-section">
+            <h2>Horários Registrados</h2>
+            <div id="horariosContainer" class="horarios-container">
+                <div class="sem-dados">Nenhum horário registrado ainda.</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
+            <p id="dataAtual"></p>
+        </footer>
+    </div>
+
+    <!-- Modal para Editar Horário -->
+    <div id="modalOverlay" class="modal-overlay" onclick="fecharModalEdicao()">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Editar Horário</h2>
+                <button class="modal-close" onclick="fecharModalEdicao()"><i class="ri-close-line"></i></button>
+            </div>
+            <form id="formEdicaoHorario" class="modal-form">
+                <div class="form-group">
+                    <label for="editData">Data *</label>
+                    <input type="date" id="editData" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editHoraInicio">Hora Início *</label>
+                        <input type="time" id="editHoraInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHoraFim">Hora Fim *</label>
+                        <input type="time" id="editHoraFim" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editServico">Tipo de Serviço</label>
+                    <input type="text" id="editServico" placeholder="Ex: Limpeza, Restauração...">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalEdicao()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Atualizar Horário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================
+        // VARIÁVEIS GLOBAIS
+        // ===================================================
+        let horariosGlobais = JSON.parse(localStorage.getItem('horarios')) || [];
+        let horariosEmEdicao = null;
+
+        // ===================================================
+        // INICIALIZAÇÃO
+        // ===================================================
+        document.addEventListener('DOMContentLoaded', function () {
+            carregarNomeUsuario();
+            carregarDataAtual();
+            exibirHorarios();
+            configurarFormulario();
+        });
+
+        // ===================================================
+        // CARREGAR NOME DO USUÁRIO
+        // ===================================================
+        function carregarNomeUsuario() {
+            const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+            if (usuarioLogado) {
+                document.getElementById('usuarioLogado').innerHTML = `<i class="ri-user-line"></i> ${usuarioLogado}`;
+            }
+        }
+
+        // ===================================================
+        // CARREGAR DATA ATUAL
+        // ===================================================
+        function carregarDataAtual() {
+            const hoje = new Date();
+            const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dataFormatada = hoje.toLocaleDateString('pt-BR', opcoes);
+            document.getElementById('dataAtual').textContent = `Hoje: ${dataFormatada}`;
+
+            // Definir data mínima do input como hoje
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataMinima = `${ano}-${mes}-${dia}`;
+            document.getElementById('inputData').min = dataMinima;
+            document.getElementById('editData').min = dataMinima;
+        }
+
+        // ===================================================
+        // CONFIGURAR FORMULÁRIO
+        // ===================================================
+        function configurarFormulario() {
+            const form = document.getElementById('formNovoHorario');
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                salvarNovoHorario();
+            });
+
+            const formEdicao = document.getElementById('formEdicaoHorario');
+            formEdicao.addEventListener('submit', function (e) {
+                e.preventDefault();
+                atualizarHorario();
+            });
+        }
+
+        // ===================================================
+        // ABRIR/FECHAR FORMULÁRIO
+        // ===================================================
+        function abrirModalNovoHorario() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('inputData').focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function fecharFormulario() {
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('formNovoHorario').reset();
+        }
+
+        function fecharModalEdicao() {
+            document.getElementById('modalOverlay').classList.remove('ativo');
+            document.getElementById('formEdicaoHorario').reset();
+            horariosEmEdicao = null;
+        }
+
+        // ===================================================
+        // SALVAR NOVO HORÁRIO
+        // ===================================================
+        function salvarNovoHorario() {
+            const data = document.getElementById('inputData').value;
+            const horaInicio = document.getElementById('inputHoraInicio').value;
+            const horaFim = document.getElementById('inputHoraFim').value;
+            const servico = document.getElementById('inputServico').value || 'Geral';
+
+            // Validações
+            if (!data || !horaInicio || !horaFim) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            if (horaInicio >= horaFim) {
+                alert('A hora de início deve ser menor que a hora de fim!');
+                return;
+            }
+
+            // Criar novo horário
+            const novoHorario = {
+                id: Date.now(),
+                data: data,
+                horaInicio: horaInicio,
+                horaFim: horaFim,
+                servico: servico,
+                dataCriacao: new Date().toISOString()
+            };
+
+            horariosGlobais.push(novoHorario);
+            salvarNoLocalStorage();
+            exibirHorarios();
+            fecharFormulario();
+            alert('Horário registrado com sucesso!');
+        }
+
+        // ===================================================
+        // EXIBIR HORÁRIOS
+        // ===================================================
+        function exibirHorarios() {
+            const container = document.getElementById('horariosContainer');
+
+            if (horariosGlobais.length === 0) {
+                container.innerHTML = '<div class="sem-dados">Nenhum horário registrado ainda.</div>';
+                return;
+            }
+
+            // Ordenar por data e hora
+            const horariosOrdenados = horariosGlobais.sort((a, b) => {
+                const dataA = new Date(a.data + ' ' + a.horaInicio);
+                const dataB = new Date(b.data + ' ' + b.horaInicio);
+                return dataA - dataB;
+            });
+
+            container.innerHTML = '';
+
+            horariosOrdenados.forEach(horario => {
+                const card = document.createElement('div');
+                card.className = 'horario-card';
+
+                const dataFormatada = formatarData(horario.data);
+                const status = verificarStatusHorario(horario);
+
+                card.innerHTML = `
+                    <div class="horario-info">
+                        <div class="horario-data">${dataFormatada}</div>
+                        <div class="horario-detalhes">
+                            <strong>${horario.horaInicio}</strong> às <strong>${horario.horaFim}</strong>
+                        </div>
+                        <div class="horario-servico">
+                            Serviço: ${horario.servico}
+                        </div>
+                        <span class="horario-status">${status}</span>
+                    </div>
+                    <div class="horario-actions">
+                        <button class="btn-editar" onclick="abrirModalEdicao(${horario.id})">
+                            <i class="ri-edit-line"></i> Editar
+                        </button>
+                        <button class="btn-excluir" onclick="excluirHorario(${horario.id})">
+                            <i class="ri-delete-bin-line"></i> Excluir
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // ===================================================
+        // VERIFICAR STATUS HORÁRIO
+        // ===================================================
+        function verificarStatusHorario(horario) {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+
+            if (horario.data < dataHoje) {
+                return 'Expirado';
+            } else if (horario.data === dataHoje) {
+                return 'Hoje';
+            } else {
+                return 'Ativo';
+            }
+        }
+
+        // ===================================================
+        // FORMATAR DATA
+        // ===================================================
+        function formatarData(data) {
+            if (!data) return '-';
+            const partes = data.split('-');
+            if (partes.length === 3) {
+                const d = new Date(partes[0], partes[1] - 1, partes[2]);
+                return d.toLocaleDateString('pt-BR', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            return data;
+        }
+
+        // ===================================================
+        // ABRIR MODAL EDIÇÃO
+        // ===================================================
+        function abrirModalEdicao(id) {
+            const horario = horariosGlobais.find(h => h.id === id);
+
+            if (!horario) {
+                alert('Horário não encontrado!');
+                return;
+            }
+
+            horariosEmEdicao = horario;
+
+            document.getElementById('editData').value = horario.data;
+            document.getElementById('editHoraInicio').value = horario.horaInicio;
+            document.getElementById('editHoraFim').value = horario.horaFim;
+            document.getElementById('editServico').value = horario.servico;
+
+            document.getElementById('modalOverlay').classList.add('ativo');
+        }
+
+        // ===================================================
+        // ATUALIZAR HORÁRIO
+        // ===================================================
+        function atualizarHorario() {
+            if (!horariosEmEdicao) {
+                alert('Erro ao atualizar horário!');
+                return;
+            }
+
+            const data = document.getElementById('editData').value;
+            const horaInicio = document.getElementById('editHoraInicio').value;
+            const horaFim = document.getElementById('editHoraFim').value;
+            const servico = document.getElementById('editServico').value || 'Geral';
+
+            // Validações
+            if (!data || !horaInicio || !horaFim) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            if (horaInicio >= horaFim) {
+                alert('A hora de início deve ser menor que a hora de fim!');
+                return;
+            }
+
+            // Atualizar horário
+            const index = horariosGlobais.findIndex(h => h.id === horariosEmEdicao.id);
+            if (index !== -1) {
+                horariosGlobais[index] = {
+                    ...horariosGlobais[index],
+                    data: data,
+                    horaInicio: horaInicio,
+                    horaFim: horaFim,
+                    servico: servico
+                };
+            }
+
+            salvarNoLocalStorage();
+            exibirHorarios();
+            fecharModalEdicao();
+            alert('Horário atualizado com sucesso!');
+        }
+
+        // ===================================================
+        // EXCLUIR HORÁRIO
+        // ===================================================
+        function excluirHorario(id) {
+            if (confirm('Tem certeza que deseja excluir este horário?')) {
+                horariosGlobais = horariosGlobais.filter(h => h.id !== id);
+                salvarNoLocalStorage();
+                exibirHorarios();
+                alert('Horário excluído com sucesso!');
+            }
+        }
+
+        // ===================================================
+        // SALVAR NO LOCALSTORAGE
+        // ===================================================
+        function salvarNoLocalStorage() {
+            localStorage.setItem('horarios', JSON.stringify(horariosGlobais));
+        }
+
+        // ===================================================
+        // LOGOUT
+        // ===================================================
+        function fazerLogout() {
+            if (confirm('Deseja sair da sessão?')) {
+                sessionStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Fechar modal ao pressionar ESC
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                fecharModalEdicao();
+            }
+        });
+    </script>
 </body>
+
 </html>

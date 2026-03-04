@@ -783,9 +783,9 @@
 
         <!-- Controles de Paginação -->
         <div id="paginationContainer" class="pagination-container hidden">
-            <button id="btnVoltar" class="pagination-btn" onclick="irPaginaAnterior()">← Voltar</button>
+            <button id="btnVoltar" class="pagination-btn" onclick="irPaginaAnterior()">Anterior</button>
             <span id="paginationInfo" class="pagination-info">1 de 1</span>
-            <button id="btnProximo" class="pagination-btn" onclick="irProximaPagina()">Próximo →</button>
+            <button id="btnProximo" class="pagination-btn" onclick="irProximaPagina()">Próximo</button>
         </div>
 
         <footer>
@@ -823,7 +823,7 @@
         // ===================================================
         // VARIÁVEIS DE PAGINAÇÃO
         // ===================================================
-        const ITENS_POR_PAGINA = 10;
+        const ITENS_POR_PAGINA = 12;
         let paginaAtual = 1;
         let totalPaginas = 1;
         let agendamentosFiltradosGlobal = [];
@@ -892,7 +892,7 @@
             }
 
             // Exibir nome do usuário
-            document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px; width: 25px;">/ ${usuarioLogado}`;
+            document.getElementById('usuarioLogado').innerHTML = `<i class="ri-user-line"></i> ${usuarioLogado}`;
 
             // Tentar buscar os agendamentos atualizados no servidor
             try {

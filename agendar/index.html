@@ -1718,8 +1718,11 @@
 
                 let badgesGeradas = 0;
 
+                // Ordena as datas cronologicamente
+                const datasOrdenadas = this.ordenarDatasCronologicamente(datasDisponiveis);
+
                 // Cria badges para cada data disponível
-                datasDisponiveis.forEach((dataStr, index) => {
+                datasOrdenadas.forEach((dataStr, index) => {
                     try {
                         // Remove espaços extras
                         dataStr = dataStr.trim();
@@ -1806,6 +1809,41 @@
 
                 // Comparação de string funciona para datas em YYYY-MM-DD
                 return dataFormatada < hojeFormatada;
+            }
+
+            ordenarDatasCronologicamente(datasDisponiveis) {
+                // Converte todas as datas para o formato YYYY-MM-DD para ordenação uniforma
+                const datasConvertidas = datasDisponiveis.map(dataStr => {
+                    dataStr = dataStr.trim();
+
+                    if (dataStr.includes('/')) {
+                        // Formato DD/MM/YYYY
+                        const dataParts = dataStr.split('/');
+                        if (dataParts.length === 3) {
+                            const dia = dataParts[0];
+                            const mes = dataParts[1];
+                            const ano = dataParts[2];
+                            return {
+                                original: dataStr,
+                                formatado: `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
+                            };
+                        }
+                    } else if (dataStr.includes('-')) {
+                        // Formato YYYY-MM-DD
+                        return {
+                            original: dataStr,
+                            formatado: dataStr
+                        };
+                    }
+
+                    return null;
+                }).filter(item => item !== null);
+
+                // Ordena pelo formato YYYY-MM-DD (ordenação lexicográfica funciona para este formato)
+                datasConvertidas.sort((a, b) => a.formatado.localeCompare(b.formatado));
+
+                // Retorna apenas as datas originais, agora ordenadas
+                return datasConvertidas.map(item => item.original);
             }
 
             gerarBadgesDatas() {

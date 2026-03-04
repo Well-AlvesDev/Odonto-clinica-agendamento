@@ -143,6 +143,16 @@
             margin-top: 5px;
         }
 
+        .card-description {
+            font-size: 12px;
+            color: #777;
+            line-height: 1.4;
+            margin: 10px 0 5px 0;
+            font-weight: 400;
+            border-left: 2px solid #E0E0E0;
+            padding-left: 8px;
+        }
+
         /* Agora Card Special Style */
         .agora-appointment {
             margin-top: 10px;
@@ -189,6 +199,32 @@
             height: 300px;
         }
 
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #F9F9F9;
+            border-radius: 6px;
+            border: 1px solid #E0E0E0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
         /* Future Appointments List */
         .future-appointments {
             background: white;
@@ -213,7 +249,7 @@
             background-color: #E3F2FD;
             padding: 10px;
             border-radius: 6px;
-            font-weight: 600;
+            font-weight: 400;
             color: #1976D2;
             margin-bottom: 8px;
         }
@@ -236,7 +272,7 @@
         }
 
         .appointment-item-name {
-            font-weight: 600;
+            font-weight: 400;
             color: #333;
         }
 
@@ -355,7 +391,7 @@
 
     <div class="container">
         <header>
-            <h1>📊 Análise de Dados - Agendamentos</h1>
+            <h1>ANÁLISE DE DADOS</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Carregando...</span>
             </div>
@@ -366,56 +402,135 @@
             <button onclick="fazerLogout()">Fechar Sessão <i class="ri-shut-down-line"></i></button>
         </div>
 
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title"><img src="../recursos/imgs/graph2.webp" alt=""
+                        style="width: 30px; vertical-align: middle;"> Agendamentos (Últimos 30 dias)</div>
+                <div class="chart-wrapper">
+                    <canvas id="chartDia"></canvas>
+                </div>
+                <div class="chart-legend" id="chartDiaLegend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #81C784;"></span>
+                        <span><strong id="verdeDiaCount">Verde(0):</strong> Aumentou em relação ao dia anterior</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #FFB74D;"></span>
+                        <span><strong id="laranjaDiaCount">Laranja(0):</strong> Manteve o mesmo valor</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #EF5350;"></span>
+                        <span><strong id="vermelhoDiaCount">Vermelho(0):</strong> Diminuiu em relação ao dia
+                            anterior</span>
+                    </div>
+                    <div class="legend-item" style="border-top: 1px solid #DDD; padding-top: 8px; margin-top: 8px;">
+                        <span><strong id="totalDiaCount">Total: 0</strong> agendamentos nos últimos 30 dias</span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="mediacountDiaCount">Média: 0</strong> agendamentos por dia</span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="melhorDiaCount">Melhor dia: -</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="piorDiaCount">Pior dia: -</strong></span>
+                    </div>
+                    <div class="legend-item" style="border-top: 1px solid #DDD; padding-top: 8px; margin-top: 8px;">
+                        <span style="color: #555; font-weight: 600;">Agendamentos por Serviço:</span>
+                    </div>
+                    <div id="agendamentosPorServicoLegend" style="padding-left: 20px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><img src="../recursos/imgs/graph2.webp" alt=""
+                        style="width: 30px; vertical-align: middle;"> Agendamentos (Últimos 12 meses)</div>
+                <div class="chart-wrapper">
+                    <canvas id="chartMes"></canvas>
+                </div>
+                <div class="chart-legend" id="chartMesLegend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #81C784;"></span>
+                        <span><strong id="verdeCount">Verde(0):</strong> Aumentou em relação ao mês anterior</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #FFB74D;"></span>
+                        <span><strong id="laranjaCount">Laranja(0):</strong> Manteve o mesmo valor</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background-color: #EF5350;"></span>
+                        <span><strong id="vermelhoCount">Vermelho(0):</strong> Diminuiu em relação ao mês
+                            anterior</span>
+                    </div>
+                    <div class="legend-item" style="border-top: 1px solid #DDD; padding-top: 8px; margin-top: 8px;">
+                        <span><strong id="totalCount">Total: 0</strong> agendamentos nos últimos 12 meses</span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="mediaCount">Média: 0</strong> agendamentos por mês</span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="melhorMesCount">Melhor mês: -</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <span><strong id="piorMesCount">Pior mês: -</strong></span>
+                    </div>
+                    <div class="legend-item" style="border-top: 1px solid #DDD; padding-top: 8px; margin-top: 8px;">
+                        <span style="color: #555; font-weight: 600;">Agendamentos por Serviço:</span>
+                    </div>
+                    <div id="agendamentosPorServicoLegendMes" style="padding-left: 20px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Dashboard Cards -->
         <div class="dashboard-grid">
             <div class="card-info agora">
                 <div class="card-label"><span class="circulo-piscante"></span>ACONTECENDO AGORA</div>
+                <div class="card-description">Mostra o agendamento que está sendo atendido no momento, com os detalhes
+                    do paciente e serviço em execução.</div>
                 <div id="cardAgora" class="card-number">-</div>
             </div>
 
-            <div class="card-info futuro">
-                <div class="card-label">📅 Agendamentos Futuros</div>
-                <div id="cardFuturo" class="card-number">0</div>
-                <div id="cardFuturoDetalhes" class="card-details">-</div>
-            </div>
-
             <div class="card-info concluido">
-                <div class="card-label">✅ Concluídos Hoje</div>
+                <div class="card-label"><img src="../recursos/imgs/checkicon.webp" alt=""
+                        style="width: 40px; vertical-align: middle;"> Concluídos Hoje</div>
+                <div class="card-description">Total de agendamentos que foram finalizados com sucesso até o momento de
+                    hoje.</div>
                 <div id="cardConcluido" class="card-number">0</div>
             </div>
 
             <div class="card-info pendente">
-                <div class="card-label">⏳ Pendentes Para Hoje</div>
+                <div class="card-label"><img src="../recursos/imgs/listicon.webp" alt=""
+                        style="width: 40px; vertical-align: middle;"> Pendentes Para Hoje</div>
+                <div class="card-description">Quantidade de agendamentos marcados para hoje até o momento que ainda não
+                    foram iniciados ou concluídos.</div>
                 <div id="cardPendente" class="card-number">0</div>
             </div>
-
+            <div class="card-info futuro">
+                <div class="card-label"><img src="../recursos/imgs/calendaricon.webp" alt=""
+                        style="width: 30px; vertical-align: middle; margin-right: 10px;"> Agendamentos Futuros</div>
+                <div class="card-description">Total de agendamentos agendados para os próximos dias, indicando a demanda
+                    futura da clínica.</div>
+                <div id="cardFuturo" class="card-number">0</div>
+                <div id="cardFuturoDetalhes" class="card-details">-</div>
+            </div>
             <div class="card-info total">
-                <div class="card-label">📈 TAMNH. BANCO 2026</div>
+                <div class="card-label"><img src="../recursos/imgs/graph2.webp" alt=""
+                        style="width: 30px; vertical-align: middle;"> TMH. DO BANCO 2026</div>
+                <div class="card-description">Número total de agendamentos armazenados no sistema, representando o
+                    volume geral de trabalho da clínica.</div>
                 <div id="cardTotal" class="card-number">0</div>
                 <div id="cardTotalDetalhes" class="card-details">-</div>
             </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="charts-section">
-            <div class="chart-container">
-                <div class="chart-title">📊 Agendamentos por Dia (Últimos 30 dias)</div>
-                <div class="chart-wrapper">
-                    <canvas id="chartDia"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">📈 Agendamentos por Mês (Últimos 12 meses)</div>
-                <div class="chart-wrapper">
-                    <canvas id="chartMes"></canvas>
-                </div>
-            </div>
-        </div>
-
         <!-- Future Appointments Section -->
         <div class="future-appointments">
-            <h3>📋 Próximos Agendamentos</h3>
+            <h3><img src="../recursos/imgs/listicon.webp" alt="" style="width: 40px; vertical-align: middle;"> Próximos
+                Agendamentos</h3>
             <div id="futureAppointmentsList" class="sem-dados">Carregando agendamentos futuros...</div>
         </div>
     </div>
@@ -568,7 +683,7 @@
             const dia = String(hoje.getDate()).padStart(2, '0');
             const dataHoje = `${ano}-${mes}-${dia}`;
             const agendadosHoje = agendamentosGlobais.filter(a => a.data === dataHoje).length;
-            document.getElementById('cardTotalDetalhes').textContent = `${agendadosHoje} agendamentos foram feitos hoje`;
+            document.getElementById('cardTotalDetalhes').textContent = `${agendadosHoje} agendamento(s) foi/foram feito(s) hoje`;
         }
 
         // ===================================================
@@ -642,6 +757,94 @@
                 dados.push(quantidade);
             }
 
+            // Criar array de cores baseado em comparação com dia anterior
+            const coresBackground = [];
+            const coresBorder = [];
+            let contaVerde = 0, contaLaranja = 0, contaVermelho = 0;
+
+            dados.forEach((value, index) => {
+                if (index === 0) {
+                    coresBackground.push('#f5f5f5');
+                    coresBorder.push('gray');
+                    contaVerde++;
+                } else {
+                    const anterior = dados[index - 1];
+                    if (value < anterior) {
+                        coresBackground.push('#EF5350'); // Vermelho para queda
+                        coresBorder.push('#E53935');
+                        contaVermelho++;
+                    } else if (value === anterior) {
+                        coresBackground.push('#FFB74D'); // Laranja para manutenção
+                        coresBorder.push('#FFA726');
+                        contaLaranja++;
+                    } else {
+                        coresBackground.push('#81C784'); // Verde para aumento
+                        coresBorder.push('#66BB6A');
+                        contaVerde++;
+                    }
+                }
+            });
+
+            // Atualizar legenda com contagens
+            document.getElementById('verdeDiaCount').textContent = `Verde(${contaVerde}):`;
+            document.getElementById('laranjaDiaCount').textContent = `Laranja(${contaLaranja}):`;
+            document.getElementById('vermelhoDiaCount').textContent = `Vermelho(${contaVermelho}):`;
+
+            // Calcular total de agendamentos
+            const totalAgendamentos = dados.reduce((sum, value) => sum + value, 0);
+            document.getElementById('totalDiaCount').textContent = `Total: ${totalAgendamentos}`;
+
+            // Calcular média de agendamentos
+            const mediaAgendamentos = (totalAgendamentos / dados.length).toFixed(2);
+            document.getElementById('mediacountDiaCount').textContent = `Média: ${mediaAgendamentos}`;
+
+            // Encontrar o melhor dia
+            const maxAgendamentos = Math.max(...dados);
+            const indiceMelhorDia = dados.indexOf(maxAgendamentos);
+            const melhorDia = dias[indiceMelhorDia];
+            document.getElementById('melhorDiaCount').textContent = `Melhor dia: ${melhorDia} (${maxAgendamentos} agendamentos)`;
+
+            // Encontrar o pior dia
+            const minAgendamentos = Math.min(...dados);
+            const indicePiorDia = dados.indexOf(minAgendamentos);
+            const piorDia = dias[indicePiorDia];
+            document.getElementById('piorDiaCount').textContent = `Pior dia: ${piorDia} (${minAgendamentos} agendamentos)`;
+
+            // Calcular agendamentos por serviço nos últimos 30 dias
+            const dataInicio30 = new Date(hoje);
+            dataInicio30.setDate(dataInicio30.getDate() - 29);
+            const agendamentosPorServico = {};
+
+            agendamentosGlobais.forEach(agendamento => {
+                const dataAgendamento = new Date(agendamento.data + 'T00:00:00');
+                if (dataAgendamento >= dataInicio30 && dataAgendamento <= hoje) {
+                    if (!agendamentosPorServico[agendamento.servico]) {
+                        agendamentosPorServico[agendamento.servico] = 0;
+                    }
+                    agendamentosPorServico[agendamento.servico]++;
+                }
+            });
+
+            // Renderizar legenda de serviços
+            const legendaServicosContainer = document.getElementById('agendamentosPorServicoLegend');
+            legendaServicosContainer.innerHTML = '';
+
+            const servicosOrdenados = Object.entries(agendamentosPorServico).sort((a, b) => b[1] - a[1]);
+
+            if (servicosOrdenados.length === 0) {
+                legendaServicosContainer.innerHTML = '<div class="legend-item"><span style="color: #999;">Nenhum agendamento nos últimos 30 dias</span></div>';
+            } else {
+                servicosOrdenados.forEach(([servico, quantidade], index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'legend-item';
+                    itemDiv.style.fontSize = '12px';
+                    itemDiv.style.paddingBottom = '4px';
+                    const posicao = index + 1;
+                    itemDiv.innerHTML = `<span>${posicao}º - ${servico}: <strong>${quantidade}</strong></span>`;
+                    legendaServicosContainer.appendChild(itemDiv);
+                });
+            }
+
             const ctx = document.getElementById('chartDia');
             if (chartDia) chartDia.destroy();
 
@@ -652,8 +855,8 @@
                     datasets: [{
                         label: 'Agendamentos',
                         data: dados,
-                        backgroundColor: '#2196F3',
-                        borderColor: '#1976D2',
+                        backgroundColor: coresBackground,
+                        borderColor: coresBorder,
                         borderWidth: 1,
                         borderRadius: 4
                     }]
@@ -664,6 +867,7 @@
                     plugins: {
                         legend: {
                             display: true,
+                            onClick: null,
                             labels: {
                                 font: {
                                     size: 12
@@ -679,7 +883,42 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        const dataset = chart.data.datasets[0];
+                        const yScale = chart.scales.y;
+                        const xScale = chart.scales.x;
+
+                        dataset.data.forEach((value, index) => {
+                            if (value === null || value === undefined) return;
+
+                            const x = xScale.getPixelForValue(index);
+                            const y = yScale.getPixelForValue(value);
+
+                            // Determinar cor do texto baseado em queda/manutenção/aumento
+                            let corTexto = '#81C784';
+                            if (index > 0) {
+                                const anterior = dataset.data[index - 1];
+                                if (value < anterior) {
+                                    corTexto = '#EF5350';
+                                } else if (value === anterior) {
+                                    corTexto = '#FFB74D';
+                                }
+                            }
+
+                            // Desenha o número acima da barra
+                            ctx.save();
+                            ctx.fillStyle = corTexto;
+                            ctx.font = 'bold 12px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(value, x, y - 5);
+                            ctx.restore();
+                        });
+                    }
+                }]
             });
         }
 
@@ -703,6 +942,95 @@
                 dados.push(quantidade);
             }
 
+            // Criar array de cores baseado em quedas
+            const coresPontos = [];
+            const coresBorda = [];
+            let contaVerde = 0, contaLaranja = 0, contaVermelho = 0;
+
+            dados.forEach((value, index) => {
+                if (index === 0) {
+                    coresPontos.push('#81C784');
+                    coresBorda.push('#66BB6A');
+                    contaVerde++;
+                } else {
+                    const anterior = dados[index - 1];
+                    if (value < anterior) {
+                        coresPontos.push('#EF5350'); // Vermelho para queda
+                        coresBorda.push('#E53935');
+                        contaVermelho++;
+                    } else if (value === anterior) {
+                        coresPontos.push('#FFB74D'); // Laranja para manutenção
+                        coresBorda.push('#FFA726');
+                        contaLaranja++;
+                    } else {
+                        coresPontos.push('#81C784'); // Verde para aumento
+                        coresBorda.push('#66BB6A');
+                        contaVerde++;
+                    }
+                }
+            });
+
+            // Atualizar legenda com contagens
+            document.getElementById('verdeCount').textContent = `Verde(${contaVerde}):`;
+            document.getElementById('laranjaCount').textContent = `Laranja(${contaLaranja}):`;
+            document.getElementById('vermelhoCount').textContent = `Vermelho(${contaVermelho}):`;
+
+            // Calcular total de agendamentos
+            const totalAgendamentos = dados.reduce((sum, value) => sum + value, 0);
+            document.getElementById('totalCount').textContent = `Total: ${totalAgendamentos}`;
+
+            // Calcular média de agendamentos
+            const mediaAgendamentos = (totalAgendamentos / dados.length).toFixed(2);
+            document.getElementById('mediaCount').textContent = `Média: ${mediaAgendamentos}`;
+
+            // Encontrar o melhor mês
+            const maxAgendamentos = Math.max(...dados);
+            const indiceMelhorMes = dados.indexOf(maxAgendamentos);
+            const melhorMes = meses[indiceMelhorMes];
+            document.getElementById('melhorMesCount').textContent = `Melhor mês: ${melhorMes} (${maxAgendamentos} agendamentos)`;
+
+            // Encontrar o pior mês
+            const minAgendamentos = Math.min(...dados);
+            const indicePiorMes = dados.indexOf(minAgendamentos);
+            const piorMes = meses[indicePiorMes];
+            document.getElementById('piorMesCount').textContent = `Pior mês: ${piorMes} (${minAgendamentos} agendamentos)`;
+
+            // Calcular agendamentos por serviço nos últimos 12 meses
+            const dataInicio12 = new Date(hoje);
+            dataInicio12.setMonth(dataInicio12.getMonth() - 11);
+            dataInicio12.setDate(1);
+            const agendamentosPorServicoMes = {};
+
+            agendamentosGlobais.forEach(agendamento => {
+                const dataAgendamento = new Date(agendamento.data + 'T00:00:00');
+                if (dataAgendamento >= dataInicio12 && dataAgendamento <= hoje) {
+                    if (!agendamentosPorServicoMes[agendamento.servico]) {
+                        agendamentosPorServicoMes[agendamento.servico] = 0;
+                    }
+                    agendamentosPorServicoMes[agendamento.servico]++;
+                }
+            });
+
+            // Renderizar legenda de serviços
+            const legendaServicosContainerMes = document.getElementById('agendamentosPorServicoLegendMes');
+            legendaServicosContainerMes.innerHTML = '';
+
+            const servicosOrdenadosMes = Object.entries(agendamentosPorServicoMes).sort((a, b) => b[1] - a[1]);
+
+            if (servicosOrdenadosMes.length === 0) {
+                legendaServicosContainerMes.innerHTML = '<div class="legend-item"><span style="color: #999;">Nenhum agendamento nos últimos 12 meses</span></div>';
+            } else {
+                servicosOrdenadosMes.forEach(([servico, quantidade], index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'legend-item';
+                    itemDiv.style.fontSize = '12px';
+                    itemDiv.style.paddingBottom = '4px';
+                    const posicao = index + 1;
+                    itemDiv.innerHTML = `<span>${posicao}º - ${servico}: <strong>${quantidade}</strong></span>`;
+                    legendaServicosContainerMes.appendChild(itemDiv);
+                });
+            }
+
             const ctx = document.getElementById('chartMes');
             if (chartMes) chartMes.destroy();
 
@@ -713,13 +1041,13 @@
                     datasets: [{
                         label: 'Agendamentos',
                         data: dados,
-                        borderColor: '#FF9800',
-                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        borderColor: '#7D9DC7',
+                        backgroundColor: 'rgba(168, 194, 255, 0.25)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#FF9800',
-                        pointBorderColor: '#F57C00',
+                        pointBackgroundColor: coresPontos,
+                        pointBorderColor: coresBorda,
                         pointRadius: 5,
                         pointHoverRadius: 7
                     }]
@@ -730,11 +1058,15 @@
                     plugins: {
                         legend: {
                             display: true,
+                            onClick: null,
                             labels: {
                                 font: {
                                     size: 12
                                 }
                             }
+                        },
+                        datalabels: {
+                            display: true
                         }
                     },
                     scales: {
@@ -745,7 +1077,42 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        const dataset = chart.data.datasets[0];
+                        const yScale = chart.scales.y;
+                        const xScale = chart.scales.x;
+
+                        dataset.data.forEach((value, index) => {
+                            if (value === null || value === undefined) return;
+
+                            const x = xScale.getPixelForValue(index);
+                            const y = yScale.getPixelForValue(value);
+
+                            // Determinar cor do texto baseado em queda/manutenção/aumento
+                            let corTexto = '#81C784';
+                            if (index > 0) {
+                                const anterior = dataset.data[index - 1];
+                                if (value < anterior) {
+                                    corTexto = '#EF5350';
+                                } else if (value === anterior) {
+                                    corTexto = '#FFB74D';
+                                }
+                            }
+
+                            // Desenha o número acima do ponto
+                            ctx.save();
+                            ctx.fillStyle = corTexto;
+                            ctx.font = 'bold 12px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(value, x, y - 15);
+                            ctx.restore();
+                        });
+                    }
+                }]
             });
         }
 
@@ -809,7 +1176,7 @@
                 }
 
                 // Exibir nome do usuário
-                document.getElementById('usuarioLogado').innerHTML = `<img src="../recursos/imgs/usuariologado.png" alt="Ícone de Usuário" style="vertical-align: middle; margin-right: 10px; width: 25px;">/ ${usuarioLogado}`;
+                document.getElementById('usuarioLogado').innerHTML = `<i class="ri-user-line"></i> ${usuarioLogado}`;
 
                 // Carregar duração dos serviços
                 try {
