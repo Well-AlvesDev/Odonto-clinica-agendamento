@@ -65,7 +65,7 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 400;
             transition: background-color 0.3s, transform 0.2s;
             font-size: 12px;
         }
@@ -80,6 +80,9 @@
 
         button.btn-logout {
             background-color: #d32f2f;
+            padding: 6px 10px;
+            font-weight: 400;
+            font-size: 12px;
         }
 
         button.btn-logout:hover {
@@ -94,13 +97,32 @@
             background-color: #27ae60;
         }
 
+        .btn-home {
+            background-color: #2195f300;
+            border: 1px solid #2196F3;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: rgb(71, 106, 202);
+            margin-left: auto;
+        }
+
+        .btn-home:hover {
+            background-color: #2195f300;
+            border: 1px solid #2196F3;
+            color: rgb(71, 106, 202);
+        }
+
         .top-actions {
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
+            margin-top: 10px;
+            gap: 10px;
         }
 
         .top-actions button {
-            margin-right: 10px;
+            margin-right: 0;
         }
 
         .form-section {
@@ -426,14 +448,13 @@
             <div class="user-info">
                 <span id="usuarioLogado"><i class="ri-user-line"></i> Usuário</span>
                 <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i
-                        class="ri-logout-box-line"></i></button>
+                        class="ri-shut-down-line"></i></button>
             </div>
         </header>
 
         <div class="top-actions">
             <button class="btn-novo" onclick="abrirModalNovoHorario()"><i class="ri-add-line"></i> Novo Horário</button>
-            <button onclick="window.location.href='home.html'"><i class="ri-arrow-left-line"></i> Voltar aos
-                Agendamentos</button>
+            <button class="btn-home" onclick="window.location.href='home.html'">← Voltar</button>
         </div>
 
         <!-- Formulário para Adicionar Novo Horário -->

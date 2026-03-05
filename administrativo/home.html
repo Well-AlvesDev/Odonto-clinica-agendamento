@@ -65,13 +65,21 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 400;
             transition: background-color 0.3s, transform 0.2s;
             font-size: 12px;
         }
 
         button:active {
             transform: translateY(0);
+        }
+
+        button.btn-logout {
+            background-color: #d32f2f;
+        }
+
+        button.btn-logout:hover {
+            background-color: #b71c1c;
         }
 
         .filtros {
@@ -716,8 +724,7 @@
         </header>
 
         <div style="text-align: left; margin-bottom: 10px; margin-top: -20px;">
-            <button onclick="fazerLogout()" style="font-weight: 400; ">Fechar Sessão <i
-                    class="ri-shut-down-line"></i></button>
+            <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i class="ri-shut-down-line"></i></button>
         </div>
 
         <div style="text-align: right; margin-bottom: 10px;">
@@ -827,6 +834,7 @@
         let paginaAtual = 1;
         let totalPaginas = 1;
         let agendamentosFiltradosGlobal = [];
+        let periodoAtual = 'hoje'; // Armazenar período atual para preservar ao navegar entre páginas
 
         // ===================================================
         // CARREGAR AGENDAMENTOS
@@ -1022,9 +1030,19 @@
             const containerCards = document.getElementById('containerCards');
             const paginationContainer = document.getElementById('paginationContainer');
 
+            // Armazenar período atual
+            if (periodo) {
+                periodoAtual = periodo;
+            }
+
             if (!agendamentos || agendamentos.length === 0) {
                 const labelPeriodo = obterLabelPeriodo(periodo);
                 containerCards.innerHTML = `<div class="sem-dados">Sem agendamentos para '${labelPeriodo}'</div>`;
+                // Resetar paginação quando não há agendamentos
+                totalPaginas = 0;
+                paginaAtual = 1;
+                // Esconder controles de paginação
+                paginationContainer.classList.add('hidden');
                 return;
             }
 
@@ -1281,7 +1299,7 @@
         function irProximaPagina() {
             if (paginaAtual < totalPaginas) {
                 paginaAtual++;
-                exibirAgendamentos(agendamentosFiltradosGlobal, '', paginaAtual);
+                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
@@ -1289,7 +1307,7 @@
         function irPaginaAnterior() {
             if (paginaAtual > 1) {
                 paginaAtual--;
-                exibirAgendamentos(agendamentosFiltradosGlobal, '', paginaAtual);
+                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }

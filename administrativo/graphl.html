@@ -61,7 +61,7 @@
         }
 
         button {
-            padding: 8px 10px;
+            padding: 6px 10px;
             background-color: #d32f2f;
             border: none;
             border-radius: 6px;
@@ -69,15 +69,24 @@
             color: white;
             font-weight: 400;
             transition: background-color 0.3s, transform 0.2s;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         button:active {
             transform: translateY(0);
         }
 
+        button.btn-logout {
+            background-color: #d32f2f;
+        }
+
+        button.btn-logout:hover {
+            background-color: #b71c1c;
+        }
+
         .btn-home {
             background-color: #2195f300;
+            border: 1px solid #2196F3;
             padding: 8px 16px;
             font-size: 13px;
             color: rgb(71, 106, 202);
@@ -394,12 +403,13 @@
             <h1>ANÁLISE DE DADOS</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Carregando...</span>
+                <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i
+                        class="ri-shut-down-line"></i></button>
             </div>
         </header>
 
-        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <div style="text-align: right; margin-bottom: 10px;">
             <button class="btn-home" onclick="window.location.href='home.html'">← Voltar</button>
-            <button onclick="fazerLogout()">Fechar Sessão <i class="ri-shut-down-line"></i></button>
         </div>
 
         <!-- Charts Section -->
