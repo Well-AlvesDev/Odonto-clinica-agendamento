@@ -717,29 +717,23 @@
     <div class="container">
         <header>
 
-            <h1>GERENCIAMENTO E CONTROLE</h1>
+            <h1><i class="ri-organization-chart"></i> GERENCIAMENTO E CONTROLE</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Usuário</span>
             </div>
         </header>
 
         <div style="text-align: left; margin-bottom: 10px; margin-top: -20px;">
-            <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i class="ri-shut-down-line"></i></button>
+            <button class="btn-logout" onclick="fazerLogout()">Sair <i class="ri-eye-close-line"></i></button>
         </div>
 
         <div style="text-align: right; margin-bottom: 10px;">
             <button id="botaoAtualizar" onclick="carregarAgendamentos()"
-                style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><img
-                    src="../recursos/imgs/updatelist.png" alt="update data"
-                    style="width: 20px; vertical-align: middle; margin-right: 10px;">Atualizar</button>
+                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><i class="ri-loop-left-line"></i> Atualizar</button>
             <button id="botaoCadastrar" onclick="window.location.href='geral.html'"
-                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
-                    src="../recursos/imgs/cadastrar.png" alt="add"
-                    style="width: 23px; vertical-align: middle; margin-right: 10px;">Geral</button>
+                style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i class="ri-pencil-ai-line"></i> Geral</button>
             <button id="botaoAnalise" onclick="window.location.href='graphl.html'"
-                style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><img
-                    src="../recursos/imgs/graph.png" alt=""
-                    style="width: 30px; vertical-align: middle; margin-right: 10px;">Análise</button>
+                style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i class="ri-bar-chart-line"></i> Análise</button>
         </div>
         <!-- loader minimalista -->
         <div id="loaderOverlay"
@@ -1089,7 +1083,7 @@
                 // Se status é 'confirmado' significa que já passou
                 const botaoExcluirTexto = status === 'confirmado' ? 'Apagar' : 'Cancelar';
                 actions.innerHTML = `
-                    <button class="btn-contatar" title="Contatar"><a style="text-decoration: underline; font-weight: 400; color: blue;"><img src="../recursos/imgs/phone1.png" alt="Contatar" style="width: 16px; height: 16px;"> Contatar</a></button>
+                    <button class="btn-contatar" title="Contatar"><a style="text-decoration: underline; font-weight: 400; color: blue;"><i class="ri-phone-line"></i> Contatar</a></button>
                     <button class="btn-excluir" title="Excluir"><a>${botaoExcluirTexto}</a></button>
                 `;
 

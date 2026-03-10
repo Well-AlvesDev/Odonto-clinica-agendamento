@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <title>Registro de Horários - Área Administrativa</title>
     <style>
         * {
@@ -35,7 +36,7 @@
             background-color: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px #30303064;
         }
 
         h1 {
@@ -90,12 +91,11 @@
         }
 
         button.btn-novo {
-            background-color: #2ecc71;
+            background-color: #2ecc7000;
+            border: 1px solid #27ae60;
+            color: #2e8f1d;
         }
 
-        button.btn-novo:hover {
-            background-color: #27ae60;
-        }
 
         .btn-home {
             background-color: #2195f300;
@@ -274,6 +274,18 @@
             margin-top: 8px;
         }
 
+        .horario-status.embreve {
+            background-color: #70ad47;
+        }
+
+        .horario-status.finalizado {
+            background-color: #d32f2f;
+        }
+
+        .horario-status.hoje {
+            background-color: #2196f3;
+        }
+
         .horario-actions {
             display: flex;
             gap: 8px;
@@ -291,6 +303,16 @@
 
         .btn-editar:hover {
             background-color: #1976d2;
+        }
+
+        .btn-editar:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-editar:disabled:hover {
+            background-color: #ccc;
         }
 
         .btn-excluir {
@@ -408,12 +430,408 @@
             gap: 15px;
         }
 
+        /* Time Picker Styles */
+        .time-picker-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 12px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .time-picker-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-picker-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .time-picker-wheel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .time-picker-btn {
+            background-color: #255996;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .time-picker-btn:hover {
+            background-color: #1e4573;
+        }
+
+        .time-picker-btn:active {
+            transform: scale(0.95);
+        }
+
+        .time-picker-display {
+            font-size: 28px;
+            font-weight: 700;
+            color: #255996;
+            min-width: 50px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-picker-divider {
+            font-size: 28px;
+            font-weight: 700;
+            color: #255996;
+            padding: 0 3px;
+        }
+
+        /* Hidden time inputs */
+        input[type="time"].hidden-input {
+            display: none;
+        }
+
+        /* Ajustes para form-row com time pickers */
+        .form-row .form-group:has(.time-picker-container) {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .form-row .form-group:has(.time-picker-container) label {
+            margin-bottom: 10px;
+        }
+
+        .form-row .form-group:has(.time-picker-container) .time-picker-container {
+            flex: 1;
+            padding: 12px 8px;
+        }
+
+        /* Service Badges Styles */
+        .servicos-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .servico-badge {
+            padding: 8px 14px;
+            background-color: #e8e8e8;
+            color: #333;
+            border: 2px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            user-select: none;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .servico-badge i {
+            font-size: 14px;
+        }
+
+        .servico-badge:hover {
+            background-color: #d0d0d0;
+            border-color: #999;
+        }
+
+        .servico-badge.ativo {
+            background-color: #255996;
+            color: white;
+            border-color: #1e4573;
+        }
+
+        .servico-badge.ativo:hover {
+            background-color: #1e4573;
+            border-color: #154052;
+        }
+
+        /* Badge Legend Styles */
+        .servicos-legenda {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            padding: 0 4px;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legenda-cor {
+            width: 16px;
+            height: 16px;
+            border-radius: 12px;
+            border: 2px solid;
+        }
+
+        .legenda-cor.inativo {
+            background-color: #e8e8e8;
+            border-color: #ccc;
+        }
+
+        .legenda-cor.ativo {
+            background-color: #255996;
+            border-color: #1e4573;
+        }
+
+        /* Serviços da Clínica Container */
+        .servicos-clinica-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .servico-badge-clinica {
+            padding: 10px 14px;
+            background-color: #255996;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            user-select: none;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .servico-badge-clinica:hover {
+            background-color: #1e4573;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .servico-badge-clinica i {
+            font-size: 14px;
+        }
+
+        .badge-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 4px;
+            align-items: center;
+        }
+
+        .badge-action-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s;
+            border-radius: 3px;
+        }
+
+        .badge-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .btn-adicionar-servico {
+            padding: 10px 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            background-color: #2ecc7000;
+            border: 1px solid #27ae60;
+            color: #2e8f1d;
+        }
+
+        .btn-adicionar-servico:hover {
+            background-color: #2ecc7000;
+            border: 1px solid #27ae60;
+            color: #2e8f1d;
+        }
+
+        .servicos-clinica-section {
+            margin-top: 0;
+        }
+
+        /* Modal para Gerenciar Serviço */
+        .modal-overlay-servico {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay-servico.ativo {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-container-servico {
+            background-color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        /* Date Picker Styles */
+        .date-picker-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 12px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .date-picker-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .date-picker-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .date-picker-wheel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .date-picker-btn {
+            background-color: #255996;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .date-picker-btn:hover {
+            background-color: #1e4573;
+        }
+
+        .date-picker-btn:active {
+            transform: scale(0.95);
+        }
+
+        .date-picker-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .date-picker-btn:disabled:hover {
+            background-color: #255996;
+        }
+
+        .date-picker-display {
+            font-size: 28px;
+            font-weight: 700;
+            color: #255996;
+            min-width: 50px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .date-picker-divider {
+            font-size: 28px;
+            font-weight: 700;
+            color: #255996;
+            padding: 0 3px;
+        }
+
+        .date-picker-fixed {
+            font-size: 28px;
+            font-weight: 700;
+            color: #255996;
+            min-width: 65px;
+            text-align: center;
+        }
+
+        /* Hidden date input */
+        input[type="date"].hidden-input-date {
+            display: none;
+        }
+
         /* Responsivo */
         @media (max-width: 768px) {
 
             .form-row,
             .form-row-3 {
                 grid-template-columns: 1fr;
+            }
+
+            /* Manter form-row com time pickers lado a lado */
+            .form-row:has(.time-picker-container) {
+                grid-template-columns: 1fr 1fr;
             }
 
             .horario-card {
@@ -437,6 +855,61 @@
             .top-actions button {
                 margin: 5px;
             }
+
+            /* Ajustes de tamanho para time picker em telas pequenas */
+            .time-picker-container {
+                padding: 10px 6px;
+                gap: 6px;
+            }
+
+            .time-picker-display {
+                font-size: 24px;
+                min-width: 45px;
+            }
+
+            .time-picker-divider {
+                font-size: 24px;
+            }
+
+            .time-picker-btn {
+                width: 28px;
+                height: 26px;
+                font-size: 12px;
+            }
+
+            .time-picker-label {
+                font-size: 9px;
+            }
+
+            /* Ajustes de tamanho para date picker em telas pequenas */
+            .date-picker-container {
+                padding: 10px 6px;
+                gap: 6px;
+            }
+
+            .date-picker-display {
+                font-size: 24px;
+                min-width: 40px;
+            }
+
+            .date-picker-divider {
+                font-size: 24px;
+            }
+
+            .date-picker-fixed {
+                font-size: 24px;
+                min-width: 55px;
+            }
+
+            .date-picker-btn {
+                width: 28px;
+                height: 26px;
+                font-size: 12px;
+            }
+
+            .date-picker-label {
+                font-size: 9px;
+            }
         }
     </style>
 </head>
@@ -444,49 +917,18 @@
 <body>
     <div class="container">
         <header>
-            <h1>REGISTROS E EDIÇÕES GERAIS</h1>
+            <h1><i class="ri-remote-control-line"></i> REGISTROS E EDIÇÕES GERAIS</h1>
             <div class="user-info">
                 <span id="usuarioLogado"><i class="ri-user-line"></i> Usuário</span>
-                <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i
-                        class="ri-shut-down-line"></i></button>
+                <button class="btn-logout" onclick="fazerLogout()">Sair <i class="ri-eye-close-line"></i></button>
             </div>
         </header>
 
         <div class="top-actions">
-            <button class="btn-novo" onclick="abrirModalNovoHorario()"><i class="ri-add-line"></i> Novo Horário</button>
-            <button class="btn-home" onclick="window.location.href='home.html'">← Voltar</button>
-        </div>
-
-        <!-- Formulário para Adicionar Novo Horário -->
-        <div class="form-section" id="formSection" style="display: none;">
-            <h2>Registrar Novo Horário</h2>
-            <form id="formNovoHorario">
-                <div class="form-group">
-                    <label for="inputData">Data *</label>
-                    <input type="date" id="inputData" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="inputHoraInicio">Hora Início *</label>
-                        <input type="time" id="inputHoraInicio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="inputHoraFim">Hora Fim *</label>
-                        <input type="time" id="inputHoraFim" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="inputServico">Tipo de Serviço</label>
-                    <input type="text" id="inputServico" placeholder="Ex: Limpeza, Restauração...">
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
-                    <button type="submit" class="btn-salvar">Salvar Horário</button>
-                </div>
-            </form>
+            <button class="btn-novo" onclick="abrirModalNovoHorario()"><i class="ri-add-circle-line"></i> Novo
+                Horário</button>
+            <button class="btn-home" onclick="window.location.href='home.html'"><i class="ri-arrow-go-back-line"></i>
+                Voltar</button>
         </div>
 
         <!-- Lista de Horários Registrados -->
@@ -497,10 +939,285 @@
             </div>
         </div>
 
+        <!-- Gerenciamento de Serviços da Clínica -->
+        <div class="form-section servicos-clinica-section">
+            <h2>Serviços da Clínica</h2>
+            <button class="btn-adicionar-servico" onclick="abrirModalNovoServico()">
+                <img src="../recursos/imgs/package.svg" alt="" style="width: 20px; vertical-align: middle;"> Novo
+                Serviço
+            </button>
+            <div style="margin-bottom: 15px; margin-top: 15px;">
+                <p style="color: #666; font-size: 13px; margin: 0;">Clique no ícone de lápis para editar ou no X para
+                    remover</p>
+            </div>
+            <div id="servicosClinicaContainer" class="servicos-clinica-container">
+                <div class="sem-dados" style="width: 100%; text-align: center; padding: 30px;">
+                    Nenhum serviço cadastrado ainda.
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
             <p id="dataAtual"></p>
         </footer>
+    </div>
+
+    <!-- Modal para Detalhes do Serviço -->
+    <div id="modalOverlayDetalhesServico" class="modal-overlay-servico" onclick="fecharModalDetalhesServico()">
+        <div class="modal-container-servico" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalDetalhesServicoTitulo">Detalhes do Serviço</h2>
+                <button class="modal-close" onclick="fecharModalDetalhesServico()"><i
+                        class="ri-close-line"></i></button>
+            </div>
+            <div id="detalhesServico" class="modal-form" style="gap: 20px;">
+                <div class="form-group">
+                    <label>Nome do Serviço</label>
+                    <div
+                        style="padding: 12px; background-color: #f9f9f9; border-radius: 6px; border: 1px solid #ddd; color: #333; font-weight: 500;">
+                        <span id="detalhesNomeServico">-</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Duração do Serviço</label>
+                    <div
+                        style="padding: 12px; background-color: #f9f9f9; border-radius: 6px; border: 1px solid #ddd; color: #333; font-weight: 500;">
+                        <span id="detalhesDuracaoServico">-</span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalDetalhesServico()">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar/Adicionar Serviço -->
+    <div id="modalOverlayServico" class="modal-overlay-servico" onclick="fecharModalServico()">
+        <div class="modal-container-servico" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalServicoTitulo">Adicionar Novo Serviço</h2>
+                <button class="modal-close" onclick="fecharModalServico()"><i class="ri-close-line"></i></button>
+            </div>
+            <form id="formServico" class="modal-form">
+                <div class="form-group">
+                    <label for="inputNomeServico">Nome do Serviço *</label>
+                    <input type="text" id="inputNomeServico" placeholder="Ex: Limpeza, Extração, etc." required>
+                </div>
+                <div class="form-group">
+                    <label for="inputDuracaoServico">Duração (minutos) *</label>
+                    <input type="number" id="inputDuracaoServico" placeholder="Ex: 30" min="1" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalServico()">Cancelar</button>
+                    <button type="submit" class="btn-salvar" id="btnSalvarServico">Adicionar Serviço</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Novo Horário -->
+    <div id="modalOverlayNovoHorario" class="modal-overlay" onclick="fecharFormulario()">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Registrar Novo Horário</h2>
+                <button class="modal-close" onclick="fecharFormulario()"><i class="ri-close-line"></i></button>
+            </div>
+            <form id="formNovoHorario" class="modal-form">
+                <div class="form-group">
+                    <label for="inputData">Data *</label>
+                    <input type="date" id="inputData" class="hidden-input-date" required>
+                    <div class="date-picker-container" id="pickerDataNovo">
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Dia</span>
+                            <div class="date-picker-wheel">
+                                <button type="button" class="date-picker-btn" onclick="incrementarDiaNovo()"><i
+                                        class="ri-arrow-up-s-line"></i></button>
+                                <div class="date-picker-display" id="displayDiaNovo">01</div>
+                                <button type="button" class="date-picker-btn" id="btnDecrementarDiaNovo"
+                                    onclick="decrementarDiaNovo()"><i class="ri-arrow-down-s-line"></i></button>
+                            </div>
+                        </div>
+                        <div class="date-picker-divider">/</div>
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Mês</span>
+                            <div class="date-picker-wheel">
+                                <button type="button" class="date-picker-btn" onclick="incrementarMesNovo()"><i
+                                        class="ri-arrow-up-s-line"></i></button>
+                                <div class="date-picker-display" id="displayMesNovo">01</div>
+                                <button type="button" class="date-picker-btn" id="btnDecrementarMesNovo"
+                                    onclick="decrementarMesNovo()"><i class="ri-arrow-down-s-line"></i></button>
+                            </div>
+                        </div>
+                        <div class="date-picker-divider">/</div>
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Ano</span>
+                            <div class="date-picker-fixed" id="displayAnoNovo">2026</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>1º Intervalo de Horários</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inputHoraInicio1">Início</label>
+                            <input type="time" id="inputHoraInicio1" class="hidden-input">
+                            <div class="time-picker-container" id="pickerInicio1Novo">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHoraNovo('inicio1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraInicio1Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHoraNovo('inicio1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinutoNovo('inicio1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoInicio1Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinutoNovo('inicio1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputHoraFim1">Fim</label>
+                            <input type="time" id="inputHoraFim1" class="hidden-input">
+                            <div class="time-picker-container" id="pickerFim1Novo">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHoraNovo('fim1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraFim1Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHoraNovo('fim1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinutoNovo('fim1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoFim1Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinutoNovo('fim1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>2º Intervalo de Horários</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inputHoraInicio2">Início</label>
+                            <input type="time" id="inputHoraInicio2" class="hidden-input">
+                            <div class="time-picker-container" id="pickerInicio2Novo">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHoraNovo('inicio2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraInicio2Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHoraNovo('inicio2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinutoNovo('inicio2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoInicio2Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinutoNovo('inicio2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputHoraFim2">Fim</label>
+                            <input type="time" id="inputHoraFim2" class="hidden-input">
+                            <div class="time-picker-container" id="pickerFim2Novo">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHoraNovo('fim2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraFim2Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHoraNovo('fim2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinutoNovo('fim2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoFim2Novo">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinutoNovo('fim2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Serviço</label>
+                    <div class="servicos-container" id="servicosNovoContainer">
+                        <!-- Badges de serviços serão preenchidos dinamicamente -->
+                    </div>
+                    <div class="servicos-legenda">
+                        <div class="legenda-item">
+                            <div class="legenda-cor inativo"></div>
+                            <span>Não selecionado</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-cor ativo"></div>
+                            <span>Selecionado</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="inputServico" value="">
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Horário</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Modal para Editar Horário -->
@@ -513,24 +1230,191 @@
             <form id="formEdicaoHorario" class="modal-form">
                 <div class="form-group">
                     <label for="editData">Data *</label>
-                    <input type="date" id="editData" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editHoraInicio">Hora Início *</label>
-                        <input type="time" id="editHoraInicio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editHoraFim">Hora Fim *</label>
-                        <input type="time" id="editHoraFim" required>
+                    <input type="date" id="editData" class="hidden-input-date" required>
+                    <div class="date-picker-container" id="pickerData">
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Dia</span>
+                            <div class="date-picker-wheel">
+                                <button type="button" class="date-picker-btn" onclick="incrementarDia()"><i
+                                        class="ri-arrow-up-s-line"></i></button>
+                                <div class="date-picker-display" id="displayDia">01</div>
+                                <button type="button" class="date-picker-btn" id="btnDecrementarDia"
+                                    onclick="decrementarDia()"><i class="ri-arrow-down-s-line"></i></button>
+                            </div>
+                        </div>
+                        <div class="date-picker-divider">/</div>
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Mês</span>
+                            <div class="date-picker-wheel">
+                                <button type="button" class="date-picker-btn" onclick="incrementarMes()"><i
+                                        class="ri-arrow-up-s-line"></i></button>
+                                <div class="date-picker-display" id="displayMes">01</div>
+                                <button type="button" class="date-picker-btn" id="btnDecrementarMes"
+                                    onclick="decrementarMes()"><i class="ri-arrow-down-s-line"></i></button>
+                            </div>
+                        </div>
+                        <div class="date-picker-divider">/</div>
+                        <div class="date-picker-column">
+                            <span class="date-picker-label">Ano</span>
+                            <div class="date-picker-fixed" id="displayAno">2026</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="editServico">Tipo de Serviço</label>
-                    <input type="text" id="editServico" placeholder="Ex: Limpeza, Restauração...">
+                    <label>1º Intervalo de Horários</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editHoraInicio1">Início</label>
+                            <input type="time" id="editHoraInicio1" class="hidden-input">
+                            <div class="time-picker-container" id="pickerInicio1">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHora('inicio1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraInicio1">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHora('inicio1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinuto('inicio1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoInicio1">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinuto('inicio1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editHoraFim1">Fim</label>
+                            <input type="time" id="editHoraFim1" class="hidden-input">
+                            <div class="time-picker-container" id="pickerFim1">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHora('fim1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraFim1">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHora('fim1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinuto('fim1')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoFim1">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinuto('fim1')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="form-group">
+                    <label>2º Intervalo de Horários</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editHoraInicio2">Início</label>
+                            <input type="time" id="editHoraInicio2" class="hidden-input">
+                            <div class="time-picker-container" id="pickerInicio2">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHora('inicio2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraInicio2">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHora('inicio2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinuto('inicio2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoInicio2">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinuto('inicio2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editHoraFim2">Fim</label>
+                            <input type="time" id="editHoraFim2" class="hidden-input">
+                            <div class="time-picker-container" id="pickerFim2">
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Hora</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarHora('fim2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayHoraFim2">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarHora('fim2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                                <div class="time-picker-divider">:</div>
+                                <div class="time-picker-column">
+                                    <span class="time-picker-label">Minuto</span>
+                                    <div class="time-picker-wheel">
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="incrementarMinuto('fim2')"><i
+                                                class="ri-arrow-up-s-line"></i></button>
+                                        <div class="time-picker-display" id="displayMinutoFim2">00</div>
+                                        <button type="button" class="time-picker-btn"
+                                            onclick="decrementarMinuto('fim2')"><i
+                                                class="ri-arrow-down-s-line"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Serviço</label>
+                    <div class="servicos-container" id="servicosEditContainer">
+                        <!-- Badges de serviços serão preenchidos dinamicamente -->
+                    </div>
+                    <div class="servicos-legenda">
+                        <div class="legenda-item">
+                            <div class="legenda-cor inativo"></div>
+                            <span>Não selecionado</span>
+                        </div>
+                        <div class="legenda-item">
+                            <div class="legenda-cor ativo"></div>
+                            <span>Selecionado</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="editServico" value="">
+
 
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar" onclick="fecharModalEdicao()">Cancelar</button>
@@ -542,20 +1426,626 @@
 
     <script>
         // ===================================================
+        // CONFIGURAÇÃO DO SUPABASE
+        // ===================================================
+        const supabaseUrl = 'https://kqmfhrnoevcckbjafuxq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbWZocm5vZXZjY2tiamFmdXhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTI5MDUsImV4cCI6MjA4NjQ4ODkwNX0.7HP95_6KrJ954oW0MWXnewqmYCewACuCE2rOzNnY9fw';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // ===================================================
         // VARIÁVEIS GLOBAIS
         // ===================================================
-        let horariosGlobais = JSON.parse(localStorage.getItem('horarios')) || [];
+        let horariosGlobais = [];
         let horariosEmEdicao = null;
+        let datas = [];
+        let horariosServidor = [];
+
+        // Serviços disponíveis (carregados dinamicamente da tabela arch_de_contx)
+        let servicosDisponiveis = [];
+        let servicosSelecionadosNovo = [];
+        let servicosSelecionadosEdicao = [];
+
+        // State para Time Picker (Edição)
+        const timePickerState = {
+            inicio1: { hora: 0, minuto: 0 },
+            fim1: { hora: 0, minuto: 0 },
+            inicio2: { hora: 0, minuto: 0 },
+            fim2: { hora: 0, minuto: 0 }
+        };
+
+        // State para Time Picker (Novo Horário)
+        const timePickerStateNovo = {
+            inicio1: { hora: 0, minuto: 0 },
+            fim1: { hora: 0, minuto: 0 },
+            inicio2: { hora: 0, minuto: 0 },
+            fim2: { hora: 0, minuto: 0 }
+        };
+
+        // State para Date Picker (Edição)
+        const datePickerState = {
+            dia: 1,
+            mes: 1,
+            ano: new Date().getFullYear()
+        };
+
+        // State para Date Picker (Novo Horário)
+        const datePickerStateNovo = {
+            dia: 1,
+            mes: 1,
+            ano: new Date().getFullYear()
+        };
+
+        // ===================================================
+        // FUNÇÕES TIME PICKER
+        // ===================================================
+        function incrementarHora(campo) {
+            if (timePickerState[campo]) {
+                timePickerState[campo].hora = (timePickerState[campo].hora + 1) % 24;
+                atualizarPickerDisplay(campo);
+                sincronizarInputTime(campo);
+            }
+        }
+
+        function decrementarHora(campo) {
+            if (timePickerState[campo]) {
+                timePickerState[campo].hora = (timePickerState[campo].hora - 1 + 24) % 24;
+                atualizarPickerDisplay(campo);
+                sincronizarInputTime(campo);
+            }
+        }
+
+        function incrementarMinuto(campo) {
+            if (timePickerState[campo]) {
+                timePickerState[campo].minuto = (timePickerState[campo].minuto + 5) % 60;
+                atualizarPickerDisplay(campo);
+                sincronizarInputTime(campo);
+            }
+        }
+
+        function decrementarMinuto(campo) {
+            if (timePickerState[campo]) {
+                timePickerState[campo].minuto = (timePickerState[campo].minuto - 5 + 60) % 60;
+                atualizarPickerDisplay(campo);
+                sincronizarInputTime(campo);
+            }
+        }
+
+        function atualizarPickerDisplay(campo) {
+            const { hora, minuto } = timePickerState[campo];
+
+            // Mapeamento explícito de campos para IDs
+            const idMap = {
+                'inicio1': { hora: 'displayHoraInicio1', minuto: 'displayMinutoInicio1' },
+                'fim1': { hora: 'displayHoraFim1', minuto: 'displayMinutoFim1' },
+                'inicio2': { hora: 'displayHoraInicio2', minuto: 'displayMinutoInicio2' },
+                'fim2': { hora: 'displayHoraFim2', minuto: 'displayMinutoFim2' }
+            };
+
+            const ids = idMap[campo];
+            if (ids) {
+                const horaDisplay = document.getElementById(ids.hora);
+                const minutoDisplay = document.getElementById(ids.minuto);
+
+                if (horaDisplay) horaDisplay.textContent = String(hora).padStart(2, '0');
+                if (minutoDisplay) minutoDisplay.textContent = String(minuto).padStart(2, '0');
+            }
+        }
+
+        function sincronizarInputTime(campo) {
+            const { hora, minuto } = timePickerState[campo];
+            const timeString = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+
+            // Mapear campo para ID do input
+            const inputIdMap = {
+                'inicio1': 'editHoraInicio1',
+                'fim1': 'editHoraFim1',
+                'inicio2': 'editHoraInicio2',
+                'fim2': 'editHoraFim2'
+            };
+
+            const inputElement = document.getElementById(inputIdMap[campo]);
+            if (inputElement) {
+                inputElement.value = timeString;
+            }
+        }
+
+        function inicializarPickerDeInput(campo, inputId) {
+            const inputElement = document.getElementById(inputId);
+            if (inputElement && inputElement.value) {
+                const [hora, minuto] = inputElement.value.split(':').map(Number);
+                timePickerState[campo] = { hora, minuto };
+            } else {
+                timePickerState[campo] = { hora: 0, minuto: 0 };
+            }
+            atualizarPickerDisplay(campo);
+        }
+
+        // ===================================================
+        // FUNÇÕES DATE PICKER
+        // ===================================================
+        function incrementarDia() {
+            const diasNoMes = new Date(datePickerState.ano, datePickerState.mes, 0).getDate();
+            datePickerState.dia = (datePickerState.dia % diasNoMes) + 1;
+            atualizarDatePickerDisplay();
+            sincronizarInputDate();
+            atualizarEstadoBotoesDatePicker();
+        }
+
+        function decrementarDia() {
+            // Verificar se pode decrementar (data mínima)
+            if (!podeDecrementarDia()) return;
+
+            const diasNoMes = new Date(datePickerState.ano, datePickerState.mes, 0).getDate();
+            datePickerState.dia = datePickerState.dia === 1 ? diasNoMes : datePickerState.dia - 1;
+            atualizarDatePickerDisplay();
+            sincronizarInputDate();
+            atualizarEstadoBotoesDatePicker();
+        }
+
+        function incrementarMes() {
+            datePickerState.mes = (datePickerState.mes % 12) + 1;
+            // Ajustar dia se necessário (ex: 31 de janeiro para fevereiro)
+            const diasNoMes = new Date(datePickerState.ano, datePickerState.mes, 0).getDate();
+            if (datePickerState.dia > diasNoMes) {
+                datePickerState.dia = diasNoMes;
+            }
+            atualizarDatePickerDisplay();
+            sincronizarInputDate();
+            atualizarEstadoBotoesDatePicker();
+        }
+
+        function decrementarMes() {
+            // Verificar se pode decrementar (data mínima)
+            if (!podeDecrementarMes()) return;
+
+            datePickerState.mes = datePickerState.mes === 1 ? 12 : datePickerState.mes - 1;
+            // Ajustar dia se necessário
+            const diasNoMes = new Date(datePickerState.ano, datePickerState.mes, 0).getDate();
+            if (datePickerState.dia > diasNoMes) {
+                datePickerState.dia = diasNoMes;
+            }
+            atualizarDatePickerDisplay();
+            sincronizarInputDate();
+            atualizarEstadoBotoesDatePicker();
+        }
+
+        function atualizarDatePickerDisplay() {
+            document.getElementById('displayDia').textContent = String(datePickerState.dia).padStart(2, '0');
+            document.getElementById('displayMes').textContent = String(datePickerState.mes).padStart(2, '0');
+            document.getElementById('displayAno').textContent = String(datePickerState.ano);
+        }
+
+        function sincronizarInputDate() {
+            const dateString = `${String(datePickerState.ano)}-${String(datePickerState.mes).padStart(2, '0')}-${String(datePickerState.dia).padStart(2, '0')}`;
+            document.getElementById('editData').value = dateString;
+        }
+
+        function inicializarPickerDeData(dataISO) {
+            if (dataISO) {
+                const [ano, mes, dia] = dataISO.split('-').map(Number);
+                datePickerState.dia = dia;
+                datePickerState.mes = mes;
+                datePickerState.ano = ano;
+            } else {
+                const hoje = new Date();
+                datePickerState.dia = hoje.getDate();
+                datePickerState.mes = hoje.getMonth() + 1;
+                datePickerState.ano = hoje.getFullYear();
+            }
+            atualizarDatePickerDisplay();
+            atualizarEstadoBotoesDatePicker();
+        }
+
+        // Verificar se pode decrementar dia (edição)
+        function podeDecrementarDia() {
+            const hoje = new Date();
+            const dataAtual = new Date(datePickerState.ano, datePickerState.mes - 1, datePickerState.dia);
+            const dataMenosUm = new Date(dataAtual);
+            dataMenosUm.setDate(dataMenosUm.getDate() - 1);
+
+            return dataMenosUm >= new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        }
+
+        // Verificar se pode decrementar mês (edição)
+        function podeDecrementarMes() {
+            const hoje = new Date();
+            let novoMes = datePickerState.mes === 1 ? 12 : datePickerState.mes - 1;
+            let novoAno = datePickerState.mes === 1 ? datePickerState.ano - 1 : datePickerState.ano;
+
+            const dataMesAnterior = new Date(novoAno, novoMes - 1, datePickerState.dia);
+            const dataHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+
+            return dataMesAnterior >= dataHoje;
+        }
+
+        // Atualizar estado dos botões de decrementar (edição)
+        function atualizarEstadoBotoesDatePicker() {
+            const btnDecrementarDia = document.getElementById('btnDecrementarDia');
+            const btnDecrementarMes = document.getElementById('btnDecrementarMes');
+
+            if (btnDecrementarDia) {
+                if (podeDecrementarDia()) {
+                    btnDecrementarDia.disabled = false;
+                } else {
+                    btnDecrementarDia.disabled = true;
+                }
+            }
+
+            if (btnDecrementarMes) {
+                if (podeDecrementarMes()) {
+                    btnDecrementarMes.disabled = false;
+                } else {
+                    btnDecrementarMes.disabled = true;
+                }
+            }
+        }
+
+        // ===================================================
+        // FUNÇÕES DATE PICKER PARA NOVO HORÁRIO
+        // ===================================================
+        function incrementarDiaNovo() {
+            const diasNoMes = new Date(datePickerStateNovo.ano, datePickerStateNovo.mes, 0).getDate();
+            datePickerStateNovo.dia = (datePickerStateNovo.dia % diasNoMes) + 1;
+            atualizarDatePickerDisplayNovo();
+            sincronizarInputDateNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+        }
+
+        function decrementarDiaNovo() {
+            // Verificar se pode decrementar (data mínima)
+            if (!podeDecrementarDiaNovo()) return;
+
+            const diasNoMes = new Date(datePickerStateNovo.ano, datePickerStateNovo.mes, 0).getDate();
+            datePickerStateNovo.dia = datePickerStateNovo.dia === 1 ? diasNoMes : datePickerStateNovo.dia - 1;
+            atualizarDatePickerDisplayNovo();
+            sincronizarInputDateNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+        }
+
+        function incrementarMesNovo() {
+            datePickerStateNovo.mes = (datePickerStateNovo.mes % 12) + 1;
+            // Ajustar dia se necessário (ex: 31 de janeiro para fevereiro)
+            const diasNoMes = new Date(datePickerStateNovo.ano, datePickerStateNovo.mes, 0).getDate();
+            if (datePickerStateNovo.dia > diasNoMes) {
+                datePickerStateNovo.dia = diasNoMes;
+            }
+            atualizarDatePickerDisplayNovo();
+            sincronizarInputDateNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+        }
+
+        function decrementarMesNovo() {
+            // Verificar se pode decrementar (data mínima)
+            if (!podeDecrementarMesNovo()) return;
+
+            datePickerStateNovo.mes = datePickerStateNovo.mes === 1 ? 12 : datePickerStateNovo.mes - 1;
+            // Ajustar dia se necessário
+            const diasNoMes = new Date(datePickerStateNovo.ano, datePickerStateNovo.mes, 0).getDate();
+            if (datePickerStateNovo.dia > diasNoMes) {
+                datePickerStateNovo.dia = diasNoMes;
+            }
+            atualizarDatePickerDisplayNovo();
+            sincronizarInputDateNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+        }
+
+        function atualizarDatePickerDisplayNovo() {
+            document.getElementById('displayDiaNovo').textContent = String(datePickerStateNovo.dia).padStart(2, '0');
+            document.getElementById('displayMesNovo').textContent = String(datePickerStateNovo.mes).padStart(2, '0');
+            document.getElementById('displayAnoNovo').textContent = String(datePickerStateNovo.ano);
+        }
+
+        function sincronizarInputDateNovo() {
+            const dateString = `${String(datePickerStateNovo.ano)}-${String(datePickerStateNovo.mes).padStart(2, '0')}-${String(datePickerStateNovo.dia).padStart(2, '0')}`;
+            document.getElementById('inputData').value = dateString;
+        }
+
+        function inicializarPickerDeDataNovo(dataISO) {
+            if (dataISO) {
+                const [ano, mes, dia] = dataISO.split('-').map(Number);
+                datePickerStateNovo.dia = dia;
+                datePickerStateNovo.mes = mes;
+                datePickerStateNovo.ano = ano;
+            } else {
+                const hoje = new Date();
+                datePickerStateNovo.dia = hoje.getDate();
+                datePickerStateNovo.mes = hoje.getMonth() + 1;
+                datePickerStateNovo.ano = hoje.getFullYear();
+            }
+            atualizarDatePickerDisplayNovo();
+            sincronizarInputDateNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+        }
+
+        // Verificar se pode decrementar dia
+        function podeDecrementarDiaNovo() {
+            const hoje = new Date();
+            const dataAtual = new Date(datePickerStateNovo.ano, datePickerStateNovo.mes - 1, datePickerStateNovo.dia);
+            const dataMenosUm = new Date(dataAtual);
+            dataMenosUm.setDate(dataMenosUm.getDate() - 1);
+
+            return dataMenosUm >= new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        }
+
+        // Verificar se pode decrementar mês
+        function podeDecrementarMesNovo() {
+            const hoje = new Date();
+            let novoMes = datePickerStateNovo.mes === 1 ? 12 : datePickerStateNovo.mes - 1;
+            let novoAno = datePickerStateNovo.mes === 1 ? datePickerStateNovo.ano - 1 : datePickerStateNovo.ano;
+
+            const dataMesAnterior = new Date(novoAno, novoMes - 1, datePickerStateNovo.dia);
+            const dataHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+
+            return dataMesAnterior >= dataHoje;
+        }
+
+        // Atualizar estado dos botões de decrementar
+        function atualizarEstadoBotoesDatePickerNovo() {
+            const btnDecrementarDia = document.getElementById('btnDecrementarDiaNovo');
+            const btnDecrementarMes = document.getElementById('btnDecrementarMesNovo');
+
+            if (btnDecrementarDia) {
+                if (podeDecrementarDiaNovo()) {
+                    btnDecrementarDia.disabled = false;
+                } else {
+                    btnDecrementarDia.disabled = true;
+                }
+            }
+
+            if (btnDecrementarMes) {
+                if (podeDecrementarMesNovo()) {
+                    btnDecrementarMes.disabled = false;
+                } else {
+                    btnDecrementarMes.disabled = true;
+                }
+            }
+        }
+
+        // ===================================================
+        // FUNÇÕES TIME PICKER PARA NOVO HORÁRIO
+        // ===================================================
+        function incrementarHoraNovo(campo) {
+            if (timePickerStateNovo[campo]) {
+                timePickerStateNovo[campo].hora = (timePickerStateNovo[campo].hora + 1) % 24;
+                atualizarPickerDisplayNovo(campo);
+                sincronizarInputTimeNovo(campo);
+            }
+        }
+
+        function decrementarHoraNovo(campo) {
+            if (timePickerStateNovo[campo]) {
+                timePickerStateNovo[campo].hora = (timePickerStateNovo[campo].hora - 1 + 24) % 24;
+                atualizarPickerDisplayNovo(campo);
+                sincronizarInputTimeNovo(campo);
+            }
+        }
+
+        function incrementarMinutoNovo(campo) {
+            if (timePickerStateNovo[campo]) {
+                timePickerStateNovo[campo].minuto = (timePickerStateNovo[campo].minuto + 5) % 60;
+                atualizarPickerDisplayNovo(campo);
+                sincronizarInputTimeNovo(campo);
+            }
+        }
+
+        function decrementarMinutoNovo(campo) {
+            if (timePickerStateNovo[campo]) {
+                timePickerStateNovo[campo].minuto = (timePickerStateNovo[campo].minuto - 5 + 60) % 60;
+                atualizarPickerDisplayNovo(campo);
+                sincronizarInputTimeNovo(campo);
+            }
+        }
+
+        function atualizarPickerDisplayNovo(campo) {
+            const { hora, minuto } = timePickerStateNovo[campo];
+
+            // Mapeamento explícito de campos para IDs (sufixo "Novo")
+            const idMap = {
+                'inicio1': { hora: 'displayHoraInicio1Novo', minuto: 'displayMinutoInicio1Novo' },
+                'fim1': { hora: 'displayHoraFim1Novo', minuto: 'displayMinutoFim1Novo' },
+                'inicio2': { hora: 'displayHoraInicio2Novo', minuto: 'displayMinutoInicio2Novo' },
+                'fim2': { hora: 'displayHoraFim2Novo', minuto: 'displayMinutoFim2Novo' }
+            };
+
+            const ids = idMap[campo];
+            if (ids) {
+                const horaDisplay = document.getElementById(ids.hora);
+                const minutoDisplay = document.getElementById(ids.minuto);
+
+                if (horaDisplay) horaDisplay.textContent = String(hora).padStart(2, '0');
+                if (minutoDisplay) minutoDisplay.textContent = String(minuto).padStart(2, '0');
+            }
+        }
+
+        function sincronizarInputTimeNovo(campo) {
+            const { hora, minuto } = timePickerStateNovo[campo];
+            const timeString = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+
+            // Mapear campo para ID do input (sufixo "Novo")
+            const inputIdMap = {
+                'inicio1': 'inputHoraInicio1',
+                'fim1': 'inputHoraFim1',
+                'inicio2': 'inputHoraInicio2',
+                'fim2': 'inputHoraFim2'
+            };
+
+            const inputElement = document.getElementById(inputIdMap[campo]);
+            if (inputElement) {
+                inputElement.value = timeString;
+            }
+        }
+
+        function inicializarPickerDeInputNovo(campo, inputId) {
+            const inputElement = document.getElementById(inputId);
+            if (inputElement && inputElement.value) {
+                const [hora, minuto] = inputElement.value.split(':').map(Number);
+                timePickerStateNovo[campo] = { hora, minuto };
+            } else {
+                timePickerStateNovo[campo] = { hora: 0, minuto: 0 };
+            }
+            atualizarPickerDisplayNovo(campo);
+        }
+
+        // ===================================================
+        // FUNÇÕES DE GERENCIAMENTO DE SERVIÇOS (BADGES)
+        // ===================================================
+        function renderizarBadgesServicos(containerId, servicosSelecionados = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            servicosDisponiveis.forEach(servico => {
+                const badge = document.createElement('button');
+                badge.type = 'button';
+                badge.className = 'servico-badge';
+
+                const isAtivo = servicosSelecionados.includes(servico);
+
+                // Criar conteúdo com ícone check se estiver ativo
+                if (isAtivo) {
+                    badge.innerHTML = `<i class="ri-check-line"></i> ${servico}`;
+                    badge.classList.add('ativo');
+                } else {
+                    badge.textContent = servico;
+                }
+
+                badge.onclick = (e) => {
+                    e.preventDefault();
+                    alternarServico(servico, containerId);
+                };
+
+                container.appendChild(badge);
+            });
+        }
+
+        function alternarServico(servico, containerId) {
+            const isNovoForm = containerId === 'servicosNovoContainer';
+            const servicosList = isNovoForm ? servicosSelecionadosNovo : servicosSelecionadosEdicao;
+            const inputId = isNovoForm ? 'inputServico' : 'editServico';
+
+            const index = servicosList.indexOf(servico);
+            if (index > -1) {
+                servicosList.splice(index, 1);
+            } else {
+                servicosList.push(servico);
+            }
+
+            // Atualizar input hidden
+            document.getElementById(inputId).value = servicosList.join(', ');
+
+            // Renderizar novamente os badges
+            renderizarBadgesServicos(containerId, servicosList);
+        }
+
+        function obterServicosDoTexto(textoServicos) {
+            if (!textoServicos) return [];
+            return textoServicos.split(',').map(s => s.trim()).filter(s => s);
+        }
 
         // ===================================================
         // INICIALIZAÇÃO
         // ===================================================
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Verificar se o usuário está autenticado
+            const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+            if (!usuarioLogado) {
+                window.location.href = 'login.html';
+                return;
+            }
+
             carregarNomeUsuario();
             carregarDataAtual();
-            exibirHorarios();
+            await carregarDadosDoServidor();
+            await carregarServicosClinica();
             configurarFormulario();
+
+            // Renderizar badges de serviços nos formulários
+            renderizarBadgesServicos('servicosNovoContainer', servicosSelecionadosNovo);
+            renderizarBadgesServicos('servicosEditContainer', servicosSelecionadosEdicao);
         });
+
+        // ===================================================
+        // CARREGAR DADOS DO SERVIDOR SUPABASE
+        // ===================================================
+        async function carregarDadosDoServidor() {
+            try {
+                // Buscar datas e serviços da tabela 'cpxm'
+                const { data: dataCpxm, error: errorCpxm } = await _supabase
+                    .from('cpxm')
+                    .select('data, servicos');
+
+                if (errorCpxm) {
+                    console.error('Erro ao buscar cpxm:', errorCpxm);
+                    return;
+                }
+
+                datas = dataCpxm || [];
+                console.log('Datas do Supabase:', datas);
+
+                // Buscar horários e serviços da tabela 'arch_de_contx'
+                const { data: dataHorarios, error: errorHorarios } = await _supabase
+                    .from('arch_de_contx')
+                    .select('horarios, servicos');
+
+                if (errorHorarios) {
+                    console.error('Erro ao buscar dados de arch_de_contx:', errorHorarios);
+                    return;
+                }
+
+                // Carregar serviços disponíveis da coluna 'servicos' em arch_de_contx
+                if (dataHorarios && dataHorarios.length > 0 && dataHorarios[0].servicos) {
+                    const servicosTexto = dataHorarios[0].servicos;
+                    servicosDisponiveis = servicosTexto.split(',').map(s => s.trim()).filter(s => s);
+                    console.log('Serviços disponíveis carregados:', servicosDisponiveis);
+                }
+
+                // Processar horários - separados por / (um horário completo por data)
+                if (dataHorarios && dataHorarios.length > 0) {
+                    const horariosTexto = dataHorarios[0].horarios || '';
+                    horariosServidor = horariosTexto.split('/').map(h => h.trim()).filter(h => h);
+                }
+
+                // Correlacionar dados
+                horariosGlobais = datas.map((item, index) => ({
+                    id: index,
+                    data: converterDataParaISO(item.data), // Converter DD/MM/YYYY para YYYY-MM-DD
+                    horarios: horariosServidor[index] || '',
+                    servicos: item.servicos || 'Geral',
+                    dataCriacao: new Date().toISOString()
+                }));
+
+                console.log('horariosGlobais carregados:', horariosGlobais);
+                exibirHorarios();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+
+        // ===================================================
+        // CONVERTER DATA DE DD/MM/YYYY PARA YYYY-MM-DD
+        // ===================================================
+        function converterDataParaISO(data) {
+            if (!data) return '';
+
+            // Se já está em YYYY-MM-DD, retorna como está
+            if (data.includes('-')) {
+                return data;
+            }
+
+            // Converte DD/MM/YYYY para YYYY-MM-DD
+            if (data.includes('/')) {
+                const partes = data.split('/');
+                if (partes.length === 3) {
+                    const dia = partes[0];
+                    const mes = partes[1];
+                    const ano = partes[2];
+                    return `${ano}-${mes}-${dia}`;
+                }
+            }
+
+            return data;
+        }
 
         // ===================================================
         // CARREGAR NOME DO USUÁRIO
@@ -606,57 +2096,160 @@
         // ABRIR/FECHAR FORMULÁRIO
         // ===================================================
         function abrirModalNovoHorario() {
-            document.getElementById('formSection').style.display = 'block';
-            document.getElementById('inputData').focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Limpar serviços selecionados
+            servicosSelecionadosNovo = [];
+            document.getElementById('inputServico').value = '';
+            document.getElementById('formNovoHorario').reset();
+
+            // Inicializar date picker do novo horário (com data atual)
+            inicializarPickerDeDataNovo();
+            atualizarEstadoBotoesDatePickerNovo();
+
+            // Inicializar time pickers do novo horário com valores padrão
+            // 1º intervalo: 08:00-12:00
+            // 2º intervalo: 13:00-17:00
+            timePickerStateNovo.inicio1 = { hora: 8, minuto: 0 };
+            timePickerStateNovo.fim1 = { hora: 12, minuto: 0 };
+            timePickerStateNovo.inicio2 = { hora: 13, minuto: 0 };
+            timePickerStateNovo.fim2 = { hora: 17, minuto: 0 };
+
+            // Atualizar displays e inputs dos pickers
+            atualizarPickerDisplayNovo('inicio1');
+            sincronizarInputTimeNovo('inicio1');
+            atualizarPickerDisplayNovo('fim1');
+            sincronizarInputTimeNovo('fim1');
+            atualizarPickerDisplayNovo('inicio2');
+            sincronizarInputTimeNovo('inicio2');
+            atualizarPickerDisplayNovo('fim2');
+            sincronizarInputTimeNovo('fim2');
+
+            renderizarBadgesServicos('servicosNovoContainer', servicosSelecionadosNovo);
+
+            document.getElementById('modalOverlayNovoHorario').classList.add('ativo');
         }
 
         function fecharFormulario() {
-            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('modalOverlayNovoHorario').classList.remove('ativo');
             document.getElementById('formNovoHorario').reset();
+            servicosSelecionadosNovo = [];
+            document.getElementById('inputServico').value = '';
         }
 
         function fecharModalEdicao() {
             document.getElementById('modalOverlay').classList.remove('ativo');
             document.getElementById('formEdicaoHorario').reset();
+            servicosSelecionadosEdicao = [];
+            document.getElementById('editServico').value = '';
             horariosEmEdicao = null;
         }
 
         // ===================================================
         // SALVAR NOVO HORÁRIO
         // ===================================================
-        function salvarNovoHorario() {
+        async function salvarNovoHorario() {
             const data = document.getElementById('inputData').value;
-            const horaInicio = document.getElementById('inputHoraInicio').value;
-            const horaFim = document.getElementById('inputHoraFim').value;
-            const servico = document.getElementById('inputServico').value || 'Geral';
+            const horaInicio1 = document.getElementById('inputHoraInicio1').value;
+            const horaFim1 = document.getElementById('inputHoraFim1').value;
+            const horaInicio2 = document.getElementById('inputHoraInicio2').value;
+            const horaFim2 = document.getElementById('inputHoraFim2').value;
+            const servicoElement = document.getElementById('inputServico');
 
-            // Validações
-            if (!data || !horaInicio || !horaFim) {
-                alert('Preencha todos os campos obrigatórios!');
+            // Obter serviços selecionados dos badges
+            let servicosSelecionados = [];
+            const badges = document.querySelectorAll('#servicosNovoContainer .servico-badge.ativo');
+            badges.forEach(badge => {
+                const nomeServico = badge.textContent.trim().replace(/[×\s]+$/, '').trim();
+                if (nomeServico) servicosSelecionados.push(nomeServico);
+            });
+
+            // Se não houver serviços selecionados, usar o valor do input (compatibilidade)
+            const servicos = servicosSelecionados.length > 0
+                ? servicosSelecionados.join(', ')
+                : (servicoElement ? servicoElement.value : 'Geral');
+
+            // ============================================================
+            // VALIDAÇÕES
+            // ============================================================
+            if (!data) {
+                alert('Preencha a data!');
                 return;
             }
 
-            if (horaInicio >= horaFim) {
-                alert('A hora de início deve ser menor que a hora de fim!');
+            // Validar pelo menos o primeiro intervalo
+            if (!horaInicio1 || !horaFim1) {
+                alert('Preencha pelo menos o 1º intervalo de horários!');
                 return;
             }
 
-            // Criar novo horário
-            const novoHorario = {
-                id: Date.now(),
-                data: data,
-                horaInicio: horaInicio,
-                horaFim: horaFim,
-                servico: servico,
-                dataCriacao: new Date().toISOString()
-            };
+            // Validar que início < fim
+            if (horaInicio1 >= horaFim1) {
+                alert('O horário de início deve ser menor que o de fim (1º intervalo)!');
+                return;
+            }
 
-            horariosGlobais.push(novoHorario);
-            salvarNoLocalStorage();
-            exibirHorarios();
-            fecharFormulario();
-            alert('Horário registrado com sucesso!');
+            // Construir string de horários
+            let horarioString = `${horaInicio1}-${horaFim1}`;
+
+            // Adicionar segundo intervalo se preenchido
+            if (horaInicio2 && horaFim2) {
+                if (horaInicio2 >= horaFim2) {
+                    alert('O horário de início deve ser menor que o de fim (2º intervalo)!');
+                    return;
+                }
+                horarioString += `, ${horaInicio2}-${horaFim2}`;
+            }
+
+            try {
+                // ============================================================
+                // OBTER CREDENCIAIS DO sessionStorage
+                // ============================================================
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas. Por favor, faça login novamente.');
+                    return;
+                }
+
+                // ============================================================
+                // CHAMAR FUNÇÃO SQL COM SECURITY DEFINER
+                // adicionar_data_horario_por_admin
+                // ============================================================
+                const { data: resultadoSQL, error: erroSQL } = await _supabase.rpc(
+                    'adicionar_data_horario_por_admin',
+                    {
+                        p_nome_usuario: usuarioLogado,
+                        p_senha_usuario: senhaUsuario,
+                        p_data_nova: data,
+                        p_horarios_novos: horarioString,
+                        p_servicos: servicos
+                    }
+                );
+
+                if (erroSQL) {
+                    console.error('Erro ao salvar horário:', erroSQL);
+                    alert('Erro ao salvar: ' + erroSQL.message);
+                    return;
+                }
+
+                if (!resultadoSQL.sucesso) {
+                    alert('Erro: ' + resultadoSQL.mensagem);
+                    return;
+                }
+
+                // ============================================================
+                // ATUALIZAR DADOS LOCAIS
+                // ============================================================
+                // Recarregar dados do servidor para manter sincronização
+                await carregarDadosDoServidor();
+
+                exibirHorarios();
+                fecharFormulario();
+                alert('✓ ' + resultadoSQL.mensagem);
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert('Erro ao salvar: ' + erro.message);
+            }
         }
 
         // ===================================================
@@ -670,12 +2263,29 @@
                 return;
             }
 
-            // Ordenar por data e hora
-            const horariosOrdenados = horariosGlobais.sort((a, b) => {
-                const dataA = new Date(a.data + ' ' + a.horaInicio);
-                const dataB = new Date(b.data + ' ' + b.horaInicio);
-                return dataA - dataB;
-            });
+            // Primeiro, classificar cada horário
+            const horariosClassificados = horariosGlobais.map(horario => ({
+                ...horario,
+                status: verificarStatusHorario(horario)
+            }));
+
+            // Separar por status
+            const hoje = horariosClassificados.filter(h => h.status === 'Hoje');
+            const ativos = horariosClassificados.filter(h => h.status === 'Em breve');
+            const finalizados = horariosClassificados.filter(h => h.status === 'Finalizado');
+
+            // Ordenar cada grupo
+            // Hoje: ordenar por data (apenas um, mas mantém consistência)
+            hoje.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            // Em breve: do mais próximo (recente) para o mais distante (antigo)
+            ativos.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            // Finalizado: do mais recente para o mais antigo
+            finalizados.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            // Combinar na ordem desejada
+            const horariosOrdenados = [...hoje, ...ativos, ...finalizados];
 
             container.innerHTML = '';
 
@@ -684,31 +2294,54 @@
                 card.className = 'horario-card';
 
                 const dataFormatada = formatarData(horario.data);
-                const status = verificarStatusHorario(horario);
+                const horariosFormatados = formatarHorarios(horario.horarios);
+                const podeEditar = horario.status !== 'Finalizado' && horario.status !== 'Hoje';
 
                 card.innerHTML = `
                     <div class="horario-info">
                         <div class="horario-data">${dataFormatada}</div>
                         <div class="horario-detalhes">
-                            <strong>${horario.horaInicio}</strong> às <strong>${horario.horaFim}</strong>
+                            <strong>Horários:</strong> ${horariosFormatados}
                         </div>
                         <div class="horario-servico">
-                            Serviço: ${horario.servico}
+                            Serviços: ${horario.servicos}
                         </div>
-                        <span class="horario-status">${status}</span>
+                        <span class="horario-status ${horario.status.toLowerCase()}">${horario.status}</span>
                     </div>
                     <div class="horario-actions">
-                        <button class="btn-editar" onclick="abrirModalEdicao(${horario.id})">
+                        <button class="btn-editar" onclick="abrirModalEdicao(${horario.id})" ${!podeEditar ? 'disabled' : ''}>
                             <i class="ri-edit-line"></i> Editar
                         </button>
                         <button class="btn-excluir" onclick="excluirHorario(${horario.id})">
-                            <i class="ri-delete-bin-line"></i> Excluir
+                            ${horario.status === 'Finalizado' ? '<i class="ri-delete-bin-line"></i> Apagar' : '<i class="ri-alert-line"></i> Interromper'}
                         </button>
                     </div>
                 `;
 
                 container.appendChild(card);
             });
+        }
+
+        // ===================================================
+        // FORMATAR HORÁRIOS
+        // ===================================================
+        function formatarHorarios(horariosTexto) {
+            if (!horariosTexto) return '-';
+
+            // Separador é BARRA (/) para separar horários de diferentes datas
+            // Dentro de uma data, intervalos são separados por VÍRGULA (,)
+            const horariosPorData = horariosTexto.split('/').map(h => h.trim()).filter(h => h);
+
+            if (horariosPorData.length === 0) {
+                return '-';
+            }
+
+            // Para cada data, os intervalos (separados por vírgula) já estão juntos
+            return horariosPorData.map(horario => {
+                // Dentro de cada horário, pode ter múltiplos intervalos separados por vírgula
+                const intervalos = horario.split(',').map(i => i.trim()).filter(i => i);
+                return intervalos.join(' às ');
+            }).join(' / ');
         }
 
         // ===================================================
@@ -721,12 +2354,27 @@
             const dia = String(hoje.getDate()).padStart(2, '0');
             const dataHoje = `${ano}-${mes}-${dia}`;
 
-            if (horario.data < dataHoje) {
-                return 'Expirado';
-            } else if (horario.data === dataHoje) {
+            // Normalizar a data do horário para formato YYYY-MM-DD
+            let dataHorario = horario.data;
+            if (dataHorario && dataHorario.includes('T')) {
+                dataHorario = dataHorario.split('T')[0];
+            }
+
+            // Remover espaços em branco
+            dataHorario = dataHorario.trim();
+
+            // Converter para números para comparação segura
+            const dataHorarioNum = parseInt(dataHorario.replace(/-/g, ''));
+            const dataHojeNum = parseInt(dataHoje.replace(/-/g, ''));
+
+            console.log(`Comparando: ${dataHorario} (${dataHorarioNum}) vs ${dataHoje} (${dataHojeNum})`);
+
+            if (dataHorarioNum < dataHojeNum) {
+                return 'Finalizado';
+            } else if (dataHorarioNum === dataHojeNum) {
                 return 'Hoje';
             } else {
-                return 'Ativo';
+                return 'Em breve';
             }
         }
 
@@ -757,9 +2405,50 @@
             horariosEmEdicao = horario;
 
             document.getElementById('editData').value = horario.data;
-            document.getElementById('editHoraInicio').value = horario.horaInicio;
-            document.getElementById('editHoraFim').value = horario.horaFim;
-            document.getElementById('editServico').value = horario.servico;
+
+            // Inicializar o date picker com a data do registro
+            inicializarPickerDeData(horario.data);
+            atualizarEstadoBotoesDatePicker();
+
+            // Parsear horários do string
+            // Formato esperado: "HH:MM-HH:MM" para intervalo único ou "HH:MM-HH:MM, HH:MM-HH:MM" para múltiplos
+            const horarioString = horario.horarios || '';
+            const intervalos = horarioString.split(',').map(h => h.trim()).filter(h => h);
+
+            // Limpar todos os inputs e pickers
+            document.getElementById('editHoraInicio1').value = '';
+            document.getElementById('editHoraFim1').value = '';
+            document.getElementById('editHoraInicio2').value = '';
+            document.getElementById('editHoraFim2').value = '';
+
+            // Preencher os inputs com os intervalos encontrados
+            if (intervalos.length >= 1) {
+                const partes1 = intervalos[0].split('-');
+                if (partes1.length === 2) {
+                    document.getElementById('editHoraInicio1').value = partes1[0].trim();
+                    document.getElementById('editHoraFim1').value = partes1[1].trim();
+                }
+            }
+
+            if (intervalos.length >= 2) {
+                const partes2 = intervalos[1].split('-');
+                if (partes2.length === 2) {
+                    document.getElementById('editHoraInicio2').value = partes2[0].trim();
+                    document.getElementById('editHoraFim2').value = partes2[1].trim();
+                }
+            }
+
+            // Inicializar os pickers a partir dos inputs (com valores do registro)
+            inicializarPickerDeInput('inicio1', 'editHoraInicio1');
+            inicializarPickerDeInput('fim1', 'editHoraFim1');
+            inicializarPickerDeInput('inicio2', 'editHoraInicio2');
+            inicializarPickerDeInput('fim2', 'editHoraFim2');
+
+            // Carregar serviços no badge editor
+            const servicosDoRegistro = obterServicosDoTexto(horario.servicos || horario.servico || '');
+            servicosSelecionadosEdicao = servicosDoRegistro;
+            document.getElementById('editServico').value = servicosDoRegistro.join(', ');
+            renderizarBadgesServicos('servicosEditContainer', servicosSelecionadosEdicao);
 
             document.getElementById('modalOverlay').classList.add('ativo');
         }
@@ -767,63 +2456,582 @@
         // ===================================================
         // ATUALIZAR HORÁRIO
         // ===================================================
-        function atualizarHorario() {
+        async function atualizarHorario() {
             if (!horariosEmEdicao) {
                 alert('Erro ao atualizar horário!');
                 return;
             }
 
             const data = document.getElementById('editData').value;
-            const horaInicio = document.getElementById('editHoraInicio').value;
-            const horaFim = document.getElementById('editHoraFim').value;
+            const horaInicio1 = document.getElementById('editHoraInicio1').value;
+            const horaFim1 = document.getElementById('editHoraFim1').value;
+            const horaInicio2 = document.getElementById('editHoraInicio2').value;
+            const horaFim2 = document.getElementById('editHoraFim2').value;
             const servico = document.getElementById('editServico').value || 'Geral';
 
             // Validações
-            if (!data || !horaInicio || !horaFim) {
-                alert('Preencha todos os campos obrigatórios!');
+            if (!data) {
+                alert('Preencha a data!');
                 return;
             }
 
-            if (horaInicio >= horaFim) {
-                alert('A hora de início deve ser menor que a hora de fim!');
+            // Validar pelo menos o primeiro intervalo
+            if (!horaInicio1 || !horaFim1) {
+                alert('Preencha pelo menos o 1º intervalo de horários!');
                 return;
             }
 
-            // Atualizar horário
-            const index = horariosGlobais.findIndex(h => h.id === horariosEmEdicao.id);
-            if (index !== -1) {
-                horariosGlobais[index] = {
-                    ...horariosGlobais[index],
-                    data: data,
-                    horaInicio: horaInicio,
-                    horaFim: horaFim,
-                    servico: servico
-                };
+            // Validar que início < fim
+            if (horaInicio1 >= horaFim1) {
+                alert('O horário de início deve ser menor que o de fim (1º intervalo)!');
+                return;
             }
 
-            salvarNoLocalStorage();
-            exibirHorarios();
-            fecharModalEdicao();
-            alert('Horário atualizado com sucesso!');
-        }
+            // Construir string de horários
+            let horarioString = `${horaInicio1}-${horaFim1}`;
 
-        // ===================================================
-        // EXCLUIR HORÁRIO
-        // ===================================================
-        function excluirHorario(id) {
-            if (confirm('Tem certeza que deseja excluir este horário?')) {
-                horariosGlobais = horariosGlobais.filter(h => h.id !== id);
-                salvarNoLocalStorage();
+            // Adicionar segundo intervalo se preenchido
+            if (horaInicio2 && horaFim2) {
+                if (horaInicio2 >= horaFim2) {
+                    alert('O horário de início deve ser menor que o de fim (2º intervalo)!');
+                    return;
+                }
+                horarioString += `, ${horaInicio2}-${horaFim2}`;
+            }
+
+            try {
+                // Obter credenciais do sessionStorage
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                // Validar se as credenciais estão disponíveis
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+                    return;
+                }
+
+                // Chamar função SQL segura para atualizar
+                const { data: resultadoSQL, error: errorRPC } = await _supabase.rpc('atualizar_data_por_admin', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_data_antiga: horariosEmEdicao.data,
+                    p_data_nova: data,
+                    p_horarios_novos: horarioString,
+                    p_servicos_novos: servico
+                });
+
+                if (errorRPC) {
+                    console.error('Erro ao chamar RPC:', errorRPC);
+                    alert('Erro ao atualizar: ' + errorRPC.message);
+                    return;
+                }
+
+                // Verificar resposta da função SQL
+                if (!resultadoSQL.sucesso) {
+                    console.error('Erro SQL:', resultadoSQL.mensagem);
+                    alert('Erro ao atualizar: ' + resultadoSQL.mensagem);
+                    if (resultadoSQL.debug) {
+                        console.error('Debug info:', resultadoSQL.debug);
+                    }
+                    return;
+                }
+
+                // Atualizar array local
+                const index = horariosGlobais.findIndex(h => h.id === horariosEmEdicao.id);
+                if (index !== -1) {
+                    horariosGlobais[index] = {
+                        ...horariosGlobais[index],
+                        data: data,
+                        horarios: horarioString,
+                        servicos: servico
+                    };
+                }
+
                 exibirHorarios();
-                alert('Horário excluído com sucesso!');
+                fecharModalEdicao();
+                alert('✓ ' + resultadoSQL.mensagem);
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert('Erro ao atualizar: ' + erro.message);
             }
         }
 
         // ===================================================
-        // SALVAR NO LOCALSTORAGE
+        // EXCLUIR HORÁRIO (SEGURO COM SQL)
         // ===================================================
-        function salvarNoLocalStorage() {
-            localStorage.setItem('horarios', JSON.stringify(horariosGlobais));
+        async function excluirHorario(id) {
+            const horario = horariosGlobais.find(h => h.id === id);
+
+            if (!horario) {
+                alert('Horário não encontrado!');
+                return;
+            }
+
+            // Formatar data para ISO (YYYY-MM-DD)
+            const dataParaExcluir = horario.data;
+
+            // Mensagem de confirmação clara
+            const mensagemConfirm = `Tem certeza que deseja excluir a data ${formatarData(dataParaExcluir)}?\n\nEsta ação é irreversível e removerá:\n- A data registrada\n- Os horários associados\n- Os serviços cadastrados`;
+
+            if (!confirm(mensagemConfirm)) {
+                return;
+            }
+
+            try {
+                // Obter credenciais do sessionStorage
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                // Validar se as credenciais estão disponíveis
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+                    return;
+                }
+
+                // Mostrar loading (encontrar botão via DOM)
+                const botaoExcluir = document.querySelector(`.btn-excluir[onclick*="excluirHorario(${id})"]`)
+                    || event?.target?.closest('.btn-excluir');
+                const textoOriginal = botaoExcluir?.innerHTML;
+
+                if (botaoExcluir) {
+                    botaoExcluir.disabled = true;
+                    botaoExcluir.innerHTML = '<i class="ri-loader-4-line"></i> Processando...';
+                }
+
+                // Chamar função SQL segura
+                const { data, error } = await _supabase.rpc('excluir_data_por_admin', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_data_exclusao: dataParaExcluir
+                });
+
+                // Restaurar botão
+                if (botaoExcluir && textoOriginal) {
+                    botaoExcluir.disabled = false;
+                    botaoExcluir.innerHTML = textoOriginal;
+                }
+
+                // Verificar erro
+                if (error) {
+                    console.error('Erro ao excluir:', error);
+                    alert(`Erro ao excluir: ${error.message}`);
+                    return;
+                }
+
+                // Verificar resposta da função SQL
+                if (!data.sucesso) {
+                    alert(`Erro: ${data.mensagem}`);
+                    return;
+                }
+
+                // Remover do array local
+                horariosGlobais = horariosGlobais.filter(h => h.id !== id);
+
+                // Atualizar exibição
+                exibirHorarios();
+
+                // Mostrar sucesso
+                alert(`✓ ${data.mensagem}`);
+
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert(`Erro inesperado: ${erro.message}`);
+            }
+        }
+
+        // ===================================================
+        // GERENCIAR SERVIÇOS DA CLÍNICA
+        // ===================================================
+        let servicosClinica = [];
+        let servicoEmEdicao = null;
+        let duracaoServico = 0; // Nova variável para armazenar duração do serviço em edição
+
+        async function carregarServicosClinica() {
+            try {
+                const { data, error } = await _supabase
+                    .from('arch_de_contx')
+                    .select('servicos')
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('Erro ao carregar serviços:', error);
+                    servicosClinica = [];
+                } else if (data && data.servicos) {
+                    // Converter string de serviços em array
+                    servicosClinica = data.servicos
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(s => s);
+                } else {
+                    servicosClinica = [];
+                }
+
+                exibirServicosClinica();
+            } catch (erro) {
+                console.error('Erro ao carregar serviços:', erro);
+                servicosClinica = [];
+            }
+        }
+
+        function exibirServicosClinica() {
+            const container = document.getElementById('servicosClinicaContainer');
+            if (!container) return;
+
+            if (servicosClinica.length === 0) {
+                container.innerHTML = '<div class="sem-dados" style="width: 100%; text-align: center; padding: 30px;">Nenhum serviço cadastrado ainda.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            servicosClinica.forEach(servico => {
+                const badge = document.createElement('div');
+                badge.className = 'servico-badge-clinica';
+                badge.style.cursor = 'pointer';
+                badge.innerHTML = `
+                    <i class="ri-stethoscope-line"></i>
+                    <span>${servico}</span>
+                    <div class="badge-actions">
+                        <button type="button" class="badge-action-btn" onclick="removerServico('${servico.replace(/'/g, "\\'")}', event)" title="Remover serviço">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                `;
+                badge.onclick = function (e) {
+                    if (!e.target.closest('.badge-action-btn')) {
+                        abrirModalDetalhesServico(servico);
+                    }
+                };
+                container.appendChild(badge);
+            });
+        }
+
+        function abrirModalNovoServico() {
+            servicoEmEdicao = null;
+            duracaoServico = 0;
+            document.getElementById('modalServicoTitulo').textContent = 'Adicionar Novo Serviço';
+            document.getElementById('inputNomeServico').value = '';
+            document.getElementById('inputDuracaoServico').value = '';
+            document.getElementById('btnSalvarServico').textContent = 'Adicionar Serviço';
+            document.getElementById('formServico').onsubmit = function (e) {
+                e.preventDefault();
+                salvarServico();
+            };
+            document.getElementById('modalOverlayServico').classList.add('ativo');
+        }
+
+        function formatarDuracao(minutos) {
+            if (!minutos) {
+                return '-';
+            }
+
+            if (minutos < 60) {
+                return minutos === 1 ? '1 Minuto' : `${minutos} Minutos`;
+            }
+
+            const horas = Math.floor(minutos / 60);
+            const minutosRestantes = minutos % 60;
+
+            const parteHoras = horas === 1 ? '1 Hora' : `${horas} Horas`;
+
+            if (minutosRestantes === 0) {
+                return parteHoras;
+            }
+
+            const parteMinutos = minutosRestantes === 1 ? '1 Minuto' : `${minutosRestantes} Minutos`;
+            return `${parteHoras} e ${parteMinutos}`;
+        }
+
+        async function abrirModalDetalhesServico(nomeServico) {
+            document.getElementById('detalhesNomeServico').textContent = nomeServico;
+
+            // Carregar duração do serviço
+            try {
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                if (usuarioLogado && senhaUsuario) {
+                    const { data, error } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                        p_nome_usuario: usuarioLogado,
+                        p_senha_usuario: senhaUsuario,
+                        p_acao: 'obter',
+                        p_servico_nome: '',
+                        p_servico_anterior: nomeServico,
+                        p_duracao_minutos: 0
+                    });
+
+                    if (data && data.sucesso) {
+                        const duracao = data.duracao_minutos || 0;
+                        const duracaoFormatada = formatarDuracao(duracao);
+                        document.getElementById('detalhesDuracaoServico').textContent = duracaoFormatada;
+                    }
+                }
+            } catch (erro) {
+                console.error('Erro ao carregar duração:', erro);
+                document.getElementById('detalhesDuracaoServico').textContent = '-';
+            }
+
+            document.getElementById('modalOverlayDetalhesServico').classList.add('ativo');
+        }
+
+        function fecharModalDetalhesServico() {
+            document.getElementById('modalOverlayDetalhesServico').classList.remove('ativo');
+        }
+
+        function fecharModalServico() {
+            document.getElementById('modalOverlayServico').classList.remove('ativo');
+            servicoEmEdicao = null;
+        }
+
+        async function salvarServico() {
+            const nomeServico = document.getElementById('inputNomeServico').value.trim();
+            const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
+
+            if (!nomeServico) {
+                alert('Por favor, insira o nome do serviço!');
+                return;
+            }
+
+            if (!duracaoMinutos || duracaoMinutos <= 0) {
+                alert('Por favor, insira uma duração válida (maior que 0 minutos)!');
+                return;
+            }
+
+            // Verificar se o serviço já existe
+            if (servicosClinica.includes(nomeServico)) {
+                alert('Este serviço já está cadastrado!');
+                return;
+            }
+
+            try {
+                // Obter credenciais do sessionStorage
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+                    return;
+                }
+
+                // Primeira: Adicionar serviço na tabela arch_de_contx
+                const { data: dataServico, error: errorServico } = await _supabase.rpc('gerenciar_servicos_clinica', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_acao: 'adicionar',
+                    p_servico_anterior: '',
+                    p_servico_novo: nomeServico
+                });
+
+                if (errorServico) {
+                    console.error('Erro ao salvar serviço:', errorServico);
+                    alert('Erro ao salvar serviço: ' + errorServico.message);
+                    return;
+                }
+
+                if (!dataServico.sucesso) {
+                    alert('Erro: ' + dataServico.mensagem);
+                    return;
+                }
+
+                // Segunda: Adicionar duração na tabela servicos_tempo
+                const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_acao: 'adicionar',
+                    p_servico_nome: nomeServico,
+                    p_servico_anterior: '',
+                    p_duracao_minutos: duracaoMinutos
+                });
+
+                if (errorDuracao) {
+                    console.error('Erro ao salvar duração:', errorDuracao);
+                    alert('Serviço criado, mas houve erro ao salvar duração: ' + errorDuracao.message);
+                    return;
+                }
+
+                if (!dataDuracao.sucesso) {
+                    alert('Serviço criado, mas erro ao salvar duração: ' + dataDuracao.mensagem);
+                    return;
+                }
+
+                // Adicionar novo serviço à lista
+                servicosClinica.push(nomeServico);
+                servicosDisponiveis = servicosClinica;
+
+                exibirServicosClinica();
+                fecharModalServico();
+                alert('✓ Serviço e duração adicionados com sucesso!');
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert('Erro ao adicionar serviço: ' + erro.message);
+            }
+        }
+
+        async function atualizarServico() {
+            const nomeNovoServico = document.getElementById('inputNomeServico').value.trim();
+            const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
+
+            if (!nomeNovoServico) {
+                alert('Por favor, insira o nome do serviço!');
+                return;
+            }
+
+            if (!duracaoMinutos || duracaoMinutos <= 0) {
+                alert('Por favor, insira uma duração válida (maior que 0 minutos)!');
+                return;
+            }
+
+            if (servicoEmEdicao === nomeNovoServico && duracaoServico === duracaoMinutos) {
+                fecharModalServico();
+                return;
+            }
+
+            // Verificar se o novo nome já existe
+            if (servicosClinica.includes(nomeNovoServico) && nomeNovoServico !== servicoEmEdicao) {
+                alert('Este serviço já está cadastrado!');
+                return;
+            }
+
+            try {
+                // Obter credenciais do sessionStorage
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+                    return;
+                }
+
+                // Se o nome foi alterado, atualizar na tabela arch_de_contx
+                if (nomeNovoServico !== servicoEmEdicao) {
+                    const { data: dataServico, error: errorServico } = await _supabase.rpc('gerenciar_servicos_clinica', {
+                        p_nome_usuario: usuarioLogado,
+                        p_senha_usuario: senhaUsuario,
+                        p_acao: 'editar',
+                        p_servico_anterior: servicoEmEdicao,
+                        p_servico_novo: nomeNovoServico
+                    });
+
+                    if (errorServico) {
+                        console.error('Erro ao atualizar serviço:', errorServico);
+                        alert('Erro ao atualizar serviço: ' + errorServico.message);
+                        return;
+                    }
+
+                    if (!dataServico.sucesso) {
+                        alert('Erro: ' + dataServico.mensagem);
+                        return;
+                    }
+                }
+
+                // Atualizar duração na tabela servicos_tempo
+                const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_acao: 'editar',
+                    p_servico_nome: '',
+                    p_servico_anterior: nomeNovoServico !== servicoEmEdicao ? nomeNovoServico : servicoEmEdicao,
+                    p_duracao_minutos: duracaoMinutos
+                });
+
+                if (errorDuracao) {
+                    console.error('Erro ao atualizar duração:', errorDuracao);
+                    alert('Erro ao atualizar duração: ' + errorDuracao.message);
+                    return;
+                }
+
+                if (!dataDuracao.sucesso) {
+                    alert('Erro ao atualizar duração: ' + dataDuracao.mensagem);
+                    return;
+                }
+
+                // Atualizar na lista local
+                if (nomeNovoServico !== servicoEmEdicao) {
+                    const index = servicosClinica.indexOf(servicoEmEdicao);
+                    if (index !== -1) {
+                        servicosClinica[index] = nomeNovoServico;
+                    }
+                }
+
+                servicosDisponiveis = servicosClinica;
+                exibirServicosClinica();
+                fecharModalServico();
+                alert('✓ Serviço e duração atualizados com sucesso!');
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert('Erro ao atualizar serviço: ' + erro.message);
+            }
+        }
+
+        async function removerServico(nomeServico, event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!confirm(`Deseja remover o serviço "${nomeServico}"?\n\nEsta ação é irreversível.`)) {
+                return;
+            }
+
+            try {
+                // Obter credenciais do sessionStorage
+                const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+                const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+                if (!usuarioLogado || !senhaUsuario) {
+                    alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+                    return;
+                }
+
+                // Primeira: Chamar função SQL para remover serviço de arch_de_contx
+                const { data: dataServico, error: errorServico } = await _supabase.rpc('gerenciar_servicos_clinica', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_acao: 'remover',
+                    p_servico_anterior: nomeServico,
+                    p_servico_novo: ''
+                });
+
+                if (errorServico) {
+                    console.error('Erro ao remover serviço:', errorServico);
+                    alert('Erro ao remover serviço: ' + errorServico.message);
+                    return;
+                }
+
+                if (!dataServico.sucesso) {
+                    alert('Erro: ' + dataServico.mensagem);
+                    return;
+                }
+
+                // Segunda: Remover duração de servicos_tempo
+                const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                    p_nome_usuario: usuarioLogado,
+                    p_senha_usuario: senhaUsuario,
+                    p_acao: 'remover',
+                    p_servico_nome: '',
+                    p_servico_anterior: nomeServico,
+                    p_duracao_minutos: 0
+                });
+
+                // Não alertar se falhar remover duração (o serviço principal já foi removido)
+                if (errorDuracao) {
+                    console.warn('Aviso ao remover duração:', errorDuracao);
+                }
+
+                // Remover da lista
+                servicosClinica = servicosClinica.filter(s => s !== nomeServico);
+                servicosDisponiveis = servicosClinica;
+
+                exibirServicosClinica();
+                alert('✓ Serviço removido com sucesso!');
+            } catch (erro) {
+                console.error('Erro inesperado:', erro);
+                alert('Erro ao remover serviço: ' + erro.message);
+            }
+        }
+
+        async function editarServico(nomeServico, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            await abrirModalEditarServico(nomeServico);
         }
 
         // ===================================================
@@ -840,6 +3048,7 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 fecharModalEdicao();
+                fecharModalServico();
             }
         });
     </script>

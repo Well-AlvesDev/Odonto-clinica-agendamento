@@ -37,11 +37,11 @@
             background-color: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px #30303064;
         }
 
         h1 {
-            color: #131313;
+            color: #1c1c1c;
             font-size: 20px;
             font-weight: 400;
         }
@@ -390,6 +390,15 @@
                 font-size: 28px;
             }
         }
+
+        .card-info.concluido i {
+            color: #2196F3;
+        }
+
+        .card-label i {
+            font-size: 20px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 
@@ -400,23 +409,22 @@
 
     <div class="container">
         <header>
-            <h1>ANÁLISE DE DADOS</h1>
+            <h1><i class="ri-donut-chart-fill"></i> ANÁLISE DE DADOS</h1>
             <div class="user-info">
                 <span id="usuarioLogado">Carregando...</span>
-                <button class="btn-logout" onclick="fazerLogout()">Fechar Sessão <i
-                        class="ri-shut-down-line"></i></button>
+                <button class="btn-logout" onclick="fazerLogout()">Sair <i class="ri-eye-close-line"></i></button>
             </div>
         </header>
 
         <div style="text-align: right; margin-bottom: 10px;">
-            <button class="btn-home" onclick="window.location.href='home.html'">← Voltar</button>
+            <button class="btn-home" onclick="window.location.href='home.html'"><i class="ri-arrow-go-back-line"></i>
+                Voltar</button>
         </div>
 
         <!-- Charts Section -->
         <div class="charts-section">
             <div class="chart-container">
-                <div class="chart-title"><img src="../recursos/imgs/graph2.webp" alt=""
-                        style="width: 30px; vertical-align: middle;"> Agendamentos (Últimos 30 dias)</div>
+                <div class="chart-title"><i class="ri-bar-chart-fill"></i> Agendamentos (Últimos 30 dias)</div>
                 <div class="chart-wrapper">
                     <canvas id="chartDia"></canvas>
                 </div>
@@ -455,8 +463,7 @@
             </div>
 
             <div class="chart-container">
-                <div class="chart-title"><img src="../recursos/imgs/graph2.webp" alt=""
-                        style="width: 30px; vertical-align: middle;"> Agendamentos (Últimos 12 meses)</div>
+                <div class="chart-title"><i class="ri-line-chart-line"></i> Agendamentos (Últimos 12 meses)</div>
                 <div class="chart-wrapper">
                     <canvas id="chartMes"></canvas>
                 </div>
@@ -505,31 +512,27 @@
             </div>
 
             <div class="card-info concluido">
-                <div class="card-label"><img src="../recursos/imgs/checkicon.webp" alt=""
-                        style="width: 40px; vertical-align: middle;"> Concluídos Hoje</div>
+                <div class="card-label"><i class="ri-check-double-line"></i> Concluídos Hoje</div>
                 <div class="card-description">Total de agendamentos que foram finalizados com sucesso até o momento de
                     hoje.</div>
                 <div id="cardConcluido" class="card-number">0</div>
             </div>
 
             <div class="card-info pendente">
-                <div class="card-label"><img src="../recursos/imgs/listicon.webp" alt=""
-                        style="width: 40px; vertical-align: middle;"> Pendentes Para Hoje</div>
+                <div class="card-label"><i class="ri-file-list-3-line"></i> Pendentes Para Hoje</div>
                 <div class="card-description">Quantidade de agendamentos marcados para hoje até o momento que ainda não
                     foram iniciados ou concluídos.</div>
                 <div id="cardPendente" class="card-number">0</div>
             </div>
             <div class="card-info futuro">
-                <div class="card-label"><img src="../recursos/imgs/calendaricon.webp" alt=""
-                        style="width: 30px; vertical-align: middle; margin-right: 10px;"> Agendamentos Futuros</div>
+                <div class="card-label"><i class="ri-calendar-schedule-line"></i> Agendamentos Futuros</div>
                 <div class="card-description">Total de agendamentos agendados para os próximos dias, indicando a demanda
                     futura da clínica.</div>
                 <div id="cardFuturo" class="card-number">0</div>
                 <div id="cardFuturoDetalhes" class="card-details">-</div>
             </div>
             <div class="card-info total">
-                <div class="card-label"><img src="../recursos/imgs/graph2.webp" alt=""
-                        style="width: 30px; vertical-align: middle;"> TMH. DO BANCO 2026</div>
+                <div class="card-label"><i class="ri-supabase-line"></i> TMH. DO BANCO 2026</div>
                 <div class="card-description">Número total de agendamentos armazenados no sistema, representando o
                     volume geral de trabalho da clínica.</div>
                 <div id="cardTotal" class="card-number">0</div>
@@ -539,7 +542,7 @@
 
         <!-- Future Appointments Section -->
         <div class="future-appointments">
-            <h3><img src="../recursos/imgs/listicon.webp" alt="" style="width: 40px; vertical-align: middle;"> Próximos
+            <h3><i class="ri-file-list-3-line"></i> Próximos
                 Agendamentos</h3>
             <div id="futureAppointmentsList" class="sem-dados">Carregando agendamentos futuros...</div>
         </div>
