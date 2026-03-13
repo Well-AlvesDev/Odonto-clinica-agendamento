@@ -37,7 +37,7 @@
             background-color: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px #30303064;
+            box-shadow: 0 2px 8px #1c6fbd2a;
         }
 
         h1 {
@@ -399,6 +399,112 @@
             font-size: 20px;
             margin-right: 5px;
         }
+
+        /* Confirmation Modal Styles */
+        .confirmation-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .confirmation-modal-overlay.ativo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation-modal {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .confirmation-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .confirmation-modal-icon {
+            font-size: 28px;
+            color: #d32f2f;
+        }
+
+        .confirmation-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #131313;
+        }
+
+        .confirmation-modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .confirmation-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .confirmation-modal-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-modal-btn-cancelar {
+            background-color: #e8e8e8;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .confirmation-modal-btn-cancelar:hover {
+            background-color: #d8d8d8;
+        }
+
+        .confirmation-modal-btn-confirmar {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+        }
+
+        .confirmation-modal-btn-confirmar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+        }
+
+        .confirmation-modal-btn-confirmar:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 
@@ -552,6 +658,28 @@
         <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
         <p>Última atualização: <span id="ultimaAtualizacao">--</span></p>
     </footer>
+
+    <!-- Modal de Confirmação de Logout -->
+    <div id="confirmationLogoutOverlay" class="confirmation-modal-overlay" onclick="fecharModalConfirmacao()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-logout-circle-r-line confirmation-modal-icon"></i>
+                <div class="confirmation-modal-title">Fazer Logout?</div>
+            </div>
+            <div class="confirmation-modal-message">
+                Tem certeza que deseja sair da sistema? Você precisará fazer login novamente.
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalConfirmacao()">
+                    Cancelar
+                </button>
+                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarLogout()">
+                    Sair
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Variáveis globais
@@ -1160,14 +1288,21 @@
         // ===================================================
         // LOGOUT
         // ===================================================
-        async function fazerLogout() {
-            // Limpar sessionStorage
+        function fazerLogout() {
+            const overlay = document.getElementById('confirmationLogoutOverlay');
+            overlay.classList.add('ativo');
+        }
+
+        function fecharModalConfirmacao() {
+            const overlay = document.getElementById('confirmationLogoutOverlay');
+            overlay.classList.remove('ativo');
+        }
+
+        function confirmarLogout() {
             sessionStorage.removeItem('usuarioLogado');
             sessionStorage.removeItem('senhaUsuario');
             sessionStorage.removeItem('agendamentos');
             sessionStorage.removeItem('duracaoServicos');
-
-            // Redirecionar para login
             window.location.href = './login.html';
         }
 

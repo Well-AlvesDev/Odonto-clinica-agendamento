@@ -710,6 +710,295 @@
                 min-width: 100px !important;
             }
         }
+
+        /* Estilos para botões de contato no modal */
+        .btn-contato-opcao {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-decoration: none;
+        }
+
+
+
+        .btn-contato-opcao:active {
+            transform: translateY(0);
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25d366 0%, #20ba58 100%);
+        }
+
+
+
+        .btn-telefone {
+            background: linear-gradient(135deg, #255996 0%, #1e4573 100%);
+        }
+
+
+
+        .btn-contato-opcao i {
+            font-size: 24px;
+        }
+
+        .btn-contato-opcao-texto {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+        }
+
+        .btn-contato-opcao-titulo {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .btn-contato-opcao-subtitulo {
+            font-weight: 400;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .modal-contato-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #255996;
+        }
+
+        .modal-contato-info-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .modal-contato-info-valor {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Notificação Toast */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.4s ease;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .notification-toast-conteudo {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .notification-toast-mensagem {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .notification-toast-codigo {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .notification-toast.sucesso {
+            background: linear-gradient(135deg, #70ad47 0%, #5a8a3a 100%);
+            color: white;
+        }
+
+        .notification-toast.sucesso i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .notification-toast.erro {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .notification-toast.erro i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .notification-toast.exclusao {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .notification-toast.exclusao i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .notification-toast.saindo {
+            animation: slideOutRight 0.4s ease forwards;
+        }
+
+        @media (max-width: 480px) {
+            .notification-toast {
+                max-width: calc(100vw - 30px);
+                right: 15px;
+                left: 15px;
+            }
+        }
+
+        /* Modal de Confirmação */
+        .confirmation-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .confirmation-modal-overlay.ativo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation-modal {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .confirmation-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .confirmation-modal-icon {
+            font-size: 28px;
+            color: #d32f2f;
+        }
+
+        .confirmation-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #131313;
+        }
+
+        .confirmation-modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .confirmation-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .confirmation-modal-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-modal-btn-cancelar {
+            background-color: #e8e8e8;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .confirmation-modal-btn-cancelar:hover {
+            background-color: #d8d8d8;
+        }
+
+        .confirmation-modal-btn-confirmar {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+        }
+
+        .confirmation-modal-btn-confirmar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+        }
+
+        .confirmation-modal-btn-confirmar:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 
@@ -729,13 +1018,18 @@
 
         <div style="text-align: right; margin-bottom: 10px;">
             <button id="botaoAtualizar" onclick="carregarAgendamentos()"
-                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><i class="ri-loop-left-line"></i> Atualizar</button>
+                style="font-weight:400; padding:8px 16px; background:#2ecc71; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px;"><i
+                    class="ri-loop-left-line"></i> Atualizar</button>
             <button id="botaoCadastrar" onclick="window.location.href='geral.html'"
-                style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i class="ri-pencil-ai-line"></i> Geral</button>
+                style="font-weight:400; padding:8px 16px; background:#255996; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i
+                    class="ri-pencil-ai-line"></i> Geral</button>
             <button id="botaoAnalise" onclick="window.location.href='graphl.html'"
-                style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i class="ri-bar-chart-line"></i> Análise</button>
+                style="font-weight:400; padding:8px 16px; background:#f39c12; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:14px; margin-left:10px; margin-top: 10px;"><i
+                    class="ri-bar-chart-line"></i> Análise</button>
         </div>
         <!-- loader minimalista -->
+
+
         <div id="loaderOverlay"
             style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.8); z-index:1001; align-items:center; justify-content:center; flex-direction:column;">
             <div
@@ -809,6 +1103,41 @@
 
         </div>
 
+    </div>
+
+    <!-- Modal para contato com o paciente -->
+    <div id="modalContatoOverlay" class="modal-overlay" onclick="fecharModalContato()">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Entrar em Contato</h2>
+                <button class="modal-close" onclick="fecharModalContato()">✕</button>
+            </div>
+            <div id="modalContatoConteudo" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Logout -->
+    <div id="confirmationLogoutOverlay" class="confirmation-modal-overlay" onclick="fecharModalConfirmacao()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-logout-circle-r-line confirmation-modal-icon"></i>
+                <div class="confirmation-modal-title">Fazer Logout?</div>
+            </div>
+            <div class="confirmation-modal-message">
+                Tem certeza que deseja sair da sistema? Você precisará fazer login novamente.
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalConfirmacao()">
+                    Cancelar
+                </button>
+                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarLogout()">
+                    Sair
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- carregar biblioteca Supabase e código comum para operações -->
@@ -1372,30 +1701,139 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 fecharModal();
+                fecharModalContato();
+                fecharModalConfirmacao();
             }
         });
 
         function fazerLogout() {
-            if (confirm('Tem certeza que deseja fazer logout?')) {
-                sessionStorage.removeItem('usuarioLogado');
-                sessionStorage.removeItem('senhaUsuario');
-                sessionStorage.removeItem('agendamentos');
-                window.location.href = './login.html';
-            }
+            const overlay = document.getElementById('confirmationLogoutOverlay');
+            overlay.classList.add('ativo');
+        }
+
+        function fecharModalConfirmacao() {
+            const overlay = document.getElementById('confirmationLogoutOverlay');
+            overlay.classList.remove('ativo');
+        }
+
+        function confirmarLogout() {
+            sessionStorage.removeItem('usuarioLogado');
+            sessionStorage.removeItem('senhaUsuario');
+            sessionStorage.removeItem('agendamentos');
+            window.location.href = './login.html';
         }
 
         // ----------------------------------------------------------------
         // operações para contatar/excluir
         // ----------------------------------------------------------------
         function contatarAgendamento(agendamento) {
-            // Extrair apenas números do telefone
-            const numeroLimpo = agendamento.telefone.replace(/\D/g, '');
+            abrirModalContato(agendamento);
+        }
 
-            // Montar URL do WhatsApp com código do Brasil (55)
+        function abrirModalContato(agendamento) {
+            const conteudo = `
+                <div class="modal-contato-info">
+                    <div class="modal-contato-info-label">Paciente</div>
+                    <div class="modal-contato-info-valor">${agendamento.nome}</div>
+                </div>
+                <div class="modal-contato-info">
+                    <div class="modal-contato-info-label">Telefone</div>
+                    <div class="modal-contato-info-valor">${agendamento.telefone}</div>
+                </div>
+
+                <button class="btn-contato-opcao btn-whatsapp" onclick="contatarViaWhatsApp('${agendamento.telefone}')">
+                    <i class="ri-whatsapp-line"></i>
+                    <div class="btn-contato-opcao-texto">
+                        <div class="btn-contato-opcao-titulo">WhatsApp</div>
+                        <div class="btn-contato-opcao-subtitulo">Enviar mensagem</div>
+                    </div>
+                </button>
+
+                <button class="btn-contato-opcao btn-telefone" onclick="contatarViaTelefone('${agendamento.telefone}')">
+                    <i class="ri-phone-line"></i>
+                    <div class="btn-contato-opcao-texto">
+                        <div class="btn-contato-opcao-titulo">Telefone</div>
+                        <div class="btn-contato-opcao-subtitulo">Fazer chamada</div>
+                    </div>
+                </button>
+            `;
+
+            document.getElementById('modalContatoConteudo').innerHTML = conteudo;
+            document.getElementById('modalContatoOverlay').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function fecharModalContato() {
+            document.getElementById('modalContatoOverlay').classList.remove('ativo');
+            document.body.style.overflow = 'auto';
+        }
+
+        function contatarViaWhatsApp(telefone) {
+            const numeroLimpo = telefone.replace(/\D/g, '');
             const urlWhatsApp = `https://wa.me/55${numeroLimpo}`;
-
-            // Abrir em nova aba
             window.open(urlWhatsApp, '_blank');
+            fecharModalContato();
+        }
+
+        function contatarViaTelefone(telefone) {
+            const numeroLimpo = telefone.replace(/\D/g, '');
+            const urlTelefone = `tel:+55${numeroLimpo}`;
+            window.location.href = urlTelefone;
+            fecharModalContato();
+        }
+
+        // ================================================================
+        // NOTIFICAÇÃO TOAST
+        // ================================================================
+        function gerarCodigoEspecial() {
+            const agora = new Date();
+            const ano = agora.getFullYear();
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+            const aleatorio = Math.random().toString(36).substr(2, 5).toUpperCase();
+
+            return `EXC-${ano}${mes}${dia}${horas}${minutos}${segundos}${aleatorio}`;
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'sucesso', duracao = 3500, icone = null, mostrarCodigo = false) {
+            // Criar elemento da notificação
+            const notificacao = document.createElement('div');
+            notificacao.className = `notification-toast ${tipo}`;
+
+            // Ícone baseado no tipo ou customizado
+            let iconeClass = icone;
+            if (!icone) {
+                iconeClass = tipo === 'sucesso' ? 'ri-check-line' : 'ri-alert-line';
+            }
+
+            // Gerar código se solicitado
+            const codigo = mostrarCodigo ? gerarCodigoEspecial() : null;
+
+            notificacao.innerHTML = `
+                <i class="${iconeClass}"></i>
+                <div class="notification-toast-conteudo">
+                    <div class="notification-toast-mensagem">${mensagem}</div>
+                    ${codigo ? `<div class="notification-toast-codigo">${codigo}</div>` : ''}
+                </div>
+            `;
+
+            // Adicionar ao body
+            document.body.appendChild(notificacao);
+
+            // Remover após a duração especificada
+            const timeoutId = setTimeout(() => {
+                notificacao.classList.add('saindo');
+
+                // Remover elemento após animação de saída
+                notificacao.addEventListener('animationend', () => {
+                    if (document.body.contains(notificacao)) {
+                        document.body.removeChild(notificacao);
+                    }
+                }, { once: true });
+            }, duracao);
         }
 
         // confirmação customizada para evitar bloqueio do thread
@@ -1445,7 +1883,7 @@
                 if (resultado.sucesso) {
                     agendamentosGlobais = agendamentosGlobais.filter(a => a.id !== agendamento.id);
                     sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
-                    alert('Agendamento excluído com sucesso.');
+                    mostrarNotificacao('Agendamento excluído com sucesso.', 'exclusao', 4000, 'ri-delete-bin-line', true);
 
                     // Resetar filtros para padrão
                     document.getElementById('filtroNome').value = '';
@@ -1459,12 +1897,12 @@
                     // Executar filtros para aplicar o padrão
                     executarFiltros();
                 } else {
-                    alert('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'));
+                    mostrarNotificacao('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'), 'erro', 4000);
                 }
             } catch (erro) {
                 // se for Error, mostre a mensagem
                 const msg = erro && erro.message ? erro.message : 'Erro ao excluir agendamento. Verifique sua conexão e tente novamente.';
-                alert(msg);
+                mostrarNotificacao(msg, 'erro', 4000);
             } finally {
                 hideLoader();
             }
