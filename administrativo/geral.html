@@ -43,7 +43,8 @@
                 Serviço
             </button>
             <div style="margin-bottom: 15px; margin-top: 15px;">
-                <p style="color: #666; font-size: 13px; margin: 0;">Faça Visualização, Cadastro e Exclusão de Serviços.</p>
+                <p style="color: #666; font-size: 13px; margin: 0;">Faça Visualização, Cadastro e Exclusão de Serviços.
+                </p>
             </div>
             <div id="servicosClinicaContainer" class="servicos-clinica-container">
                 <div class="sem-dados" style="width: 100%; text-align: center; padding: 30px;">
@@ -121,7 +122,8 @@
             </div>
             <form id="formNovoHorario" class="modal-form">
                 <div class="form-group">
-                    <p style="font-size: 12px; margin-bottom: 10px;">Aqui você pode registrar um novo horário/data para a clínica. Insira os dados abaixo e clique em "Salvar Horário". :&#41;</p>
+                    <p style="font-size: 12px; margin-bottom: 10px;">Aqui você pode registrar um novo horário/data para
+                        a clínica. Insira os dados abaixo e clique em "Salvar Horário". :&#41;</p>
                     <label for="inputData">Data *</label>
                     <input type="date" id="inputData" class="hidden-input-date" required>
                     <div class="date-picker-container" id="pickerDataNovo">
@@ -293,7 +295,8 @@
                 <div class="form-group">
                     <label>Tipo de Serviço</label>
                     <div class="form-group">
-                        <label for="selectAllServicos" style="display: flex; align-items: center; gap: 5px; font-weight: 500; color: #333;">
+                        <label for="selectAllServicos"
+                            style="display: flex; align-items: center; gap: 5px; font-weight: 500; color: #333;">
                             <input type="checkbox" id="selectAllServicos" onclick="selecionarTodosServicos()">
                             Selecionar Todos os Serviços
                         </label>
@@ -316,7 +319,7 @@
 
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
-                    <button type="submit" class="btn-salvar">Salvar Horário</button>
+                    <button type="submit" class="btn-salvar" id="btnSalvarHorario">Salvar Horário</button>
                 </div>
             </form>
         </div>
@@ -358,8 +361,32 @@
                 <button class="confirmation-modal-btn confirmation-modal-btn-cancelar" onclick="fecharModalExclusao()">
                     Cancelar
                 </button>
-                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarExclusao()">
+                <button id="btnExcluirHorario" class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarExclusao()">
                     Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Remoção de Serviço -->
+    <div id="confirmationRemocaoServicoOverlay" class="confirmation-modal-overlay"
+        onclick="fecharModalConfirmacaoRemocaoServico()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-alert-line confirmation-modal-icon"></i>
+                <div class="confirmation-modal-title">Remover Serviço?</div>
+            </div>
+            <div class="confirmation-modal-message" id="mensagemConfirmacaoRemocaoServico">
+                Tem certeza que deseja remover este serviço?
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalConfirmacaoRemocaoServico()" id="btnCancelarRemocaoServico">
+                    Cancelar
+                </button>
+                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar"
+                    onclick="confirmarRemocaoServico()" id="btnConfirmarRemocaoServico">
+                    Remover
                 </button>
             </div>
         </div>

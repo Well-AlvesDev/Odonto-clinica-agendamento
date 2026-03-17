@@ -747,13 +747,16 @@ async function carregarDadosDoServidor() {
         }
 
         // Correlacionar dados
-        horariosGlobais = datas.map((item, index) => ({
-            id: index,
-            data: converterDataParaISO(item.data), // Converter DD/MM/YYYY para YYYY-MM-DD
-            horarios: horariosServidor[index] || '',
-            servicos: item.servicos || 'Geral',
-            dataCriacao: new Date().toISOString()
-        }));
+        horariosGlobais = datas.map((item, index) => {
+            const dataISO = converterDataParaISO(item.data); // Converter DD/MM/YYYY para YYYY-MM-DD
+            return {
+                id: dataISO, // Usar data ISO como ID único (YYYY-MM-DD)
+                data: dataISO,
+                horarios: horariosServidor[index] || '',
+                servicos: item.servicos || 'Geral',
+                dataCriacao: new Date().toISOString()
+            };
+        });
 
         console.log('horariosGlobais carregados:', horariosGlobais);
         exibirHorarios();
@@ -819,22 +822,37 @@ function carregarDataAtual() {
 // ===================================================
 function configurarFormulario() {
     const form = document.getElementById('formNovoHorario');
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        salvarNovoHorario();
-    });
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            salvarNovoHorario();
+        });
+    }
 
     const formEdicao = document.getElementById('formEdicaoHorario');
-    formEdicao.addEventListener('submit', function (e) {
-        e.preventDefault();
-        atualizarHorario();
-    });
+    if (formEdicao) {
+        formEdicao.addEventListener('submit', function (e) {
+            e.preventDefault();
+            atualizarHorario();
+        });
+    }
 }
 
 // ===================================================
 // ABRIR/FECHAR FORMULÁRIO
 // ===================================================
 function abrirModalNovoHorario() {
+    // ============================================================
+    // VERIFICAR SE EXISTEM SERVIÇOS CADASTRADOS
+    // ============================================================
+    if (servicosClinica.length === 0) {
+        mostrarErro(
+            'Nenhum serviço foi cadastrado ainda. É necessário criar pelo menos um serviço antes de registrar horários.',
+            'Serviços não cadastrados'
+        );
+        return;
+    }
+
     // Limpar serviços selecionados
     servicosSelecionadosNovo = [];
     document.getElementById('inputServico').value = '';
@@ -880,6 +898,12 @@ function fecharFormulario() {
     document.getElementById('formNovoHorario').reset();
     servicosSelecionadosNovo = [];
     document.getElementById('inputServico').value = '';
+
+    // Resetar estado do botão
+    const btnSalvar = document.getElementById('btnSalvarHorario');
+    btnSalvar.disabled = false;
+    btnSalvar.classList.remove('loading');
+
     descongelarScroll();
 }
 
@@ -892,9 +916,19 @@ function fecharModalEdicao() {
 }
 
 // ===================================================
+// FUNÇÃO AUXILIAR - CONVERTER HORÁRIO PARA MINUTOS
+// ===================================================
+function converterHorarioParaMinutos(horarioString) {
+    if (!horarioString) return null;
+    const [horas, minutos] = horarioString.split(':').map(Number);
+    return horas * 60 + minutos;
+}
+
+// ===================================================
 // SALVAR NOVO HORÁRIO
 // ===================================================
 async function salvarNovoHorario() {
+    const btnSalvar = document.getElementById('btnSalvarHorario');
     const data = document.getElementById('inputData').value;
     const horaInicio1 = document.getElementById('inputHoraInicio1').value;
     const horaFim1 = document.getElementById('inputHoraFim1').value;
@@ -910,28 +944,73 @@ async function salvarNovoHorario() {
         if (nomeServico) servicosSelecionados.push(nomeServico);
     });
 
-    // Se não houver serviços selecionados, usar o valor do input (compatibilidade)
-    const servicos = servicosSelecionados.length > 0
-        ? servicosSelecionados.join(', ')
-        : (servicoElement ? servicoElement.value : 'Geral');
+    // ============================================================
+    // VALIDAÇÃO: VERIFICAR SE ALGUM SERVIÇO FOI SELECIONADO
+    // ============================================================
+    if (servicosSelecionados.length === 0) {
+        mostrarErro('Por favor, selecione pelo menos um serviço!', 'Nenhum serviço selecionado');
+        return;
+    }
+
+    const servicos = servicosSelecionados.join(', ');
 
     // ============================================================
     // VALIDAÇÕES
     // ============================================================
     if (!data) {
-        alert('Preencha a data!');
+        mostrarErro('Por favor, preencha a data!', 'Campo obrigatório');
         return;
     }
 
     // Validar pelo menos o primeiro intervalo
     if (!horaInicio1 || !horaFim1) {
-        alert('Preencha pelo menos o 1º intervalo de horários!');
+        mostrarErro('Por favor, preencha pelo menos o 1º intervalo de horários!', 'Campo obrigatório');
         return;
     }
 
-    // Validar que início < fim
-    if (horaInicio1 >= horaFim1) {
-        alert('O horário de início deve ser menor que o de fim (1º intervalo)!');
+    // Converter horários para minutos para comparação
+    const minInicio1 = converterHorarioParaMinutos(horaInicio1);
+    const minFim1 = converterHorarioParaMinutos(horaFim1);
+    const minInicio2 = horaInicio2 ? converterHorarioParaMinutos(horaInicio2) : null;
+    const minFim2 = horaFim2 ? converterHorarioParaMinutos(horaFim2) : null;
+
+    // Validação 1: Verificar se os 4 horários são todos diferentes (quando ambos os intervalos estão preenchidos)
+    if (horaInicio2 && horaFim2) {
+        const horarios = [minInicio1, minFim1, minInicio2, minFim2];
+        if (new Set(horarios).size !== horarios.length) {
+            mostrarErro('Os 4 horários devem ser sempre diferentes entre si!', 'Erro na validação');
+            return;
+        }
+    }
+
+    // Validação 2: Validar que início1 < fim1
+    if (minInicio1 >= minFim1) {
+        mostrarErro('O horário de início deve ser menor que o de fim (1º intervalo)!', 'Horário inválido');
+        return;
+    }
+
+    // Validação 3: Se o segundo intervalo está preenchido
+    if (horaInicio2 && horaFim2) {
+        // Validar que fim1 < início2
+        if (minFim1 >= minInicio2) {
+            mostrarErro('O fim do 1º intervalo deve ser menor que o início do 2º intervalo!', 'Ordem de horários inválida');
+            return;
+        }
+
+        // Validar que início2 < fim2
+        if (minInicio2 >= minFim2) {
+            mostrarErro('O horário de início deve ser menor que o de fim (2º intervalo)!', 'Horário inválido');
+            return;
+        }
+
+        // Validação 4: Validar a ordem completa: início1 < fim1 < início2 < fim2
+        if (!(minInicio1 < minFim1 && minFim1 < minInicio2 && minInicio2 < minFim2)) {
+            mostrarErro('Os horários devem estar em ordem crescente: Início 1º < Fim 1º < Início 2º < Fim 2º', 'Ordem de horários inválida');
+            return;
+        }
+    } else if (horaInicio2 || horaFim2) {
+        // Se apenas um dos campos do 2º intervalo está preenchido
+        mostrarErro('Preencha ambos os campos do 2º intervalo de horários ou deixe em branco!', 'Campo incompleto');
         return;
     }
 
@@ -940,12 +1019,14 @@ async function salvarNovoHorario() {
 
     // Adicionar segundo intervalo se preenchido
     if (horaInicio2 && horaFim2) {
-        if (horaInicio2 >= horaFim2) {
-            alert('O horário de início deve ser menor que o de fim (2º intervalo)!');
-            return;
-        }
         horarioString += `, ${horaInicio2}-${horaFim2}`;
     }
+
+    // ============================================================
+    // DESABILITAR BOTÃO E MOSTRAR LOADER
+    // ============================================================
+    btnSalvar.disabled = true;
+    btnSalvar.classList.add('loading');
 
     try {
         // ============================================================
@@ -955,7 +1036,9 @@ async function salvarNovoHorario() {
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
         if (!usuarioLogado || !senhaUsuario) {
-            alert('Erro: Credenciais não encontradas. Por favor, faça login novamente.');
+            mostrarErro('Credenciais não encontradas. Por favor, faça login novamente.', 'Erro de autenticação');
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
             return;
         }
 
@@ -976,12 +1059,16 @@ async function salvarNovoHorario() {
 
         if (erroSQL) {
             console.error('Erro ao salvar horário:', erroSQL);
-            alert('Erro ao salvar: ' + erroSQL.message);
+            mostrarErro('Erro ao salvar: ' + erroSQL.message, 'Erro no servidor');
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
             return;
         }
 
         if (!resultadoSQL.sucesso) {
-            alert('Erro: ' + resultadoSQL.mensagem);
+            mostrarErro(resultadoSQL.mensagem, 'Erro');
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
             return;
         }
 
@@ -993,10 +1080,14 @@ async function salvarNovoHorario() {
 
         exibirHorarios();
         fecharFormulario();
-        alert('✓ ' + resultadoSQL.mensagem);
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
+        mostrarSucesso(resultadoSQL.mensagem, 'Sucesso!');
     } catch (erro) {
         console.error('Erro inesperado:', erro);
-        alert('Erro ao salvar: ' + erro.message);
+        mostrarErro('Erro ao salvar: ' + erro.message, 'Erro inesperado');
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
     }
 }
 
@@ -1043,7 +1134,6 @@ function exibirHorarios() {
 
         const dataFormatada = formatarData(horario.data);
         const horariosFormatados = formatarHorarios(horario.horarios);
-        const podeEditar = horario.status !== 'Finalizado' && horario.status !== 'Hoje';
 
         card.innerHTML = `
                     <div class="horario-info">
@@ -1057,8 +1147,8 @@ function exibirHorarios() {
                         <span class="horario-status ${horario.status.toLowerCase()}">${horario.status}</span>
                     </div>
                     <div class="horario-actions">
-                        <button class="btn-excluir" onclick="excluirHorario(${horario.id})">
-                            ${horario.status === 'Finalizado' ? '<i class="ri-delete-bin-line"></i> Apagar' : '<i class="ri-alert-line"></i> Interromper'}
+                        <button class="btn-excluir" onclick="excluirHorario('${horario.data}')">
+                            <i class="ri-delete-bin-line"></i> Excluir
                         </button>
                     </div>
                 `;
@@ -1157,7 +1247,7 @@ function formatarData(data) {
 // ===================================================
 async function atualizarHorario() {
     if (!horariosEmEdicao) {
-        alert('Erro ao atualizar horário!');
+        mostrarErro('Erro ao atualizar horário!', 'Erro desconhecido');
         return;
     }
 
@@ -1170,19 +1260,19 @@ async function atualizarHorario() {
 
     // Validações
     if (!data) {
-        alert('Preencha a data!');
+        mostrarErro('Por favor, preencha a data!', 'Campo obrigatório');
         return;
     }
 
     // Validar pelo menos o primeiro intervalo
     if (!horaInicio1 || !horaFim1) {
-        alert('Preencha pelo menos o 1º intervalo de horários!');
+        mostrarErro('Por favor, preencha pelo menos o 1º intervalo de horários!', 'Campo obrigatório');
         return;
     }
 
     // Validar que início < fim
     if (horaInicio1 >= horaFim1) {
-        alert('O horário de início deve ser menor que o de fim (1º intervalo)!');
+        mostrarErro('O horário de início deve ser menor que o de fim (1º intervalo)!', 'Horário inválido');
         return;
     }
 
@@ -1192,7 +1282,7 @@ async function atualizarHorario() {
     // Adicionar segundo intervalo se preenchido
     if (horaInicio2 && horaFim2) {
         if (horaInicio2 >= horaFim2) {
-            alert('O horário de início deve ser menor que o de fim (2º intervalo)!');
+            mostrarErro('O horário de início deve ser menor que o de fim (2º intervalo)!', 'Horário inválido');
             return;
         }
         horarioString += `, ${horaInicio2}-${horaFim2}`;
@@ -1205,7 +1295,7 @@ async function atualizarHorario() {
 
         // Validar se as credenciais estão disponíveis
         if (!usuarioLogado || !senhaUsuario) {
-            alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            mostrarErro('Credenciais não encontradas na sessão. Faça login novamente.', 'Erro de autenticação');
             return;
         }
 
@@ -1221,14 +1311,14 @@ async function atualizarHorario() {
 
         if (errorRPC) {
             console.error('Erro ao chamar RPC:', errorRPC);
-            alert('Erro ao atualizar: ' + errorRPC.message);
+            mostrarErro('Erro ao atualizar: ' + errorRPC.message, 'Erro no servidor');
             return;
         }
 
         // Verificar resposta da função SQL
         if (!resultadoSQL.sucesso) {
             console.error('Erro SQL:', resultadoSQL.mensagem);
-            alert('Erro ao atualizar: ' + resultadoSQL.mensagem);
+            mostrarErro(resultadoSQL.mensagem, 'Erro ao atualizar');
             if (resultadoSQL.debug) {
                 console.error('Debug info:', resultadoSQL.debug);
             }
@@ -1248,18 +1338,18 @@ async function atualizarHorario() {
 
         exibirHorarios();
         fecharModalEdicao();
-        alert('✓ ' + resultadoSQL.mensagem);
+        mostrarSucesso(resultadoSQL.mensagem, 'Sucesso!');
     } catch (erro) {
         console.error('Erro inesperado:', erro);
-        alert('Erro ao atualizar: ' + erro.message);
+        mostrarErro('Erro ao atualizar: ' + erro.message, 'Erro inesperado');
     }
 }
 
 // ===================================================
 // EXCLUIR HORÁRIO (SEGURO COM SQL)
 // ===================================================
-async function excluirHorario(id) {
-    abrirModalExclusao(id);
+async function excluirHorario(data) {
+    abrirModalExclusao(data);
 }
 
 // ===================================================
@@ -1268,6 +1358,7 @@ async function excluirHorario(id) {
 let servicosClinica = [];
 let servicoEmEdicao = null;
 let duracaoServico = 0; // Nova variável para armazenar duração do serviço em edição
+let servicoParaRemover = null; // Variável para armazenar o serviço que será removido
 
 async function carregarServicosClinica() {
     try {
@@ -1410,12 +1501,55 @@ function fecharModalServico() {
     descongelarScroll();
 }
 
+async function abrirModalEditarServico(nomeServico) {
+    servicoEmEdicao = nomeServico;
+    document.getElementById('modalServicoTitulo').textContent = 'Editar Serviço';
+    document.getElementById('inputNomeServico').value = nomeServico;
+    document.getElementById('btnSalvarServico').textContent = 'Atualizar Serviço';
+
+    // Carregar duração do serviço
+    try {
+        const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+        const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+        if (usuarioLogado && senhaUsuario) {
+            const { data, error } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                p_nome_usuario: usuarioLogado,
+                p_senha_usuario: senhaUsuario,
+                p_acao: 'obter',
+                p_servico_nome: '',
+                p_servico_anterior: nomeServico,
+                p_duracao_minutos: 0
+            });
+
+            if (data && data.sucesso) {
+                duracaoServico = data.duracao_minutos || 0;
+                document.getElementById('inputDuracaoServico').value = duracaoServico;
+            } else {
+                duracaoServico = 0;
+                document.getElementById('inputDuracaoServico').value = '';
+            }
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar duração:', erro);
+        duracaoServico = 0;
+        document.getElementById('inputDuracaoServico').value = '';
+    }
+
+    document.getElementById('formServico').onsubmit = function (e) {
+        e.preventDefault();
+        atualizarServico();
+    };
+    document.getElementById('modalOverlayServico').classList.add('ativo');
+    congelarScroll();
+}
+
 async function salvarServico() {
     const nomeServico = document.getElementById('inputNomeServico').value.trim();
     const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
 
     if (!nomeServico) {
-        alert('Por favor, insira o nome do serviço!');
+        mostrarErro('Por favor, insira o nome do serviço!');
         return;
     }
 
@@ -1426,8 +1560,17 @@ async function salvarServico() {
 
     // Verificar se o serviço já existe
     if (servicosClinica.includes(nomeServico)) {
-        alert('Este serviço já está cadastrado!');
+        mostrarErro('Este serviço já está cadastrado!');
         return;
+    }
+
+    // Desabilitar botão e mostrar loader
+    const btnSalvar = document.getElementById('btnSalvarServico');
+    const textoOriginal = btnSalvar?.innerHTML || 'Adicionar Serviço';
+    if (btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        btnSalvar.innerHTML = '<i class="ri-loader-4-line"></i> Adicionando...';
     }
 
     try {
@@ -1436,7 +1579,12 @@ async function salvarServico() {
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
         if (!usuarioLogado || !senhaUsuario) {
-            alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            mostrarErro('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
@@ -1451,12 +1599,22 @@ async function salvarServico() {
 
         if (errorServico) {
             console.error('Erro ao salvar serviço:', errorServico);
-            alert('Erro ao salvar serviço: ' + errorServico.message);
+            mostrarErro('Erro ao salvar serviço: ' + errorServico.message);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
         if (!dataServico.sucesso) {
-            alert('Erro: ' + dataServico.mensagem);
+            mostrarErro('Erro: ' + dataServico.mensagem);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
@@ -1472,12 +1630,22 @@ async function salvarServico() {
 
         if (errorDuracao) {
             console.error('Erro ao salvar duração:', errorDuracao);
-            alert('Serviço criado, mas houve erro ao salvar duração: ' + errorDuracao.message);
+            mostrarErro('Serviço criado, mas houve erro ao salvar duração: ' + errorDuracao.message);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
         if (!dataDuracao.sucesso) {
-            alert('Serviço criado, mas erro ao salvar duração: ' + dataDuracao.mensagem);
+            mostrarErro('Serviço criado, mas erro ao salvar duração: ' + dataDuracao.mensagem);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
@@ -1487,10 +1655,24 @@ async function salvarServico() {
 
         exibirServicosClinica();
         fecharModalServico();
-        alert('✓ Serviço e duração adicionados com sucesso!');
+        mostrarSucesso('Serviço e duração adicionados com sucesso!');
+
+        // Restaurar botão ao final (sucesso)
+        if (btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
+            btnSalvar.innerHTML = textoOriginal;
+        }
     } catch (erro) {
         console.error('Erro inesperado:', erro);
-        alert('Erro ao adicionar serviço: ' + erro.message);
+        mostrarErro('Erro ao adicionar serviço: ' + erro.message);
+
+        // Restaurar botão em caso de erro
+        if (btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
+            btnSalvar.innerHTML = textoOriginal;
+        }
     }
 }
 
@@ -1499,12 +1681,12 @@ async function atualizarServico() {
     const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
 
     if (!nomeNovoServico) {
-        alert('Por favor, insira o nome do serviço!');
+        mostrarErro('Por favor, insira o nome do serviço!');
         return;
     }
 
     if (!duracaoMinutos || duracaoMinutos <= 0) {
-        alert('Por favor, insira uma duração válida (maior que 0 minutos)!');
+        mostrarErro('Por favor, insira uma duração válida (maior que 0 minutos)!');
         return;
     }
 
@@ -1515,8 +1697,17 @@ async function atualizarServico() {
 
     // Verificar se o novo nome já existe
     if (servicosClinica.includes(nomeNovoServico) && nomeNovoServico !== servicoEmEdicao) {
-        alert('Este serviço já está cadastrado!');
+        mostrarErro('Este serviço já está cadastrado!');
         return;
+    }
+
+    // Desabilitar botão e mostrar loader
+    const btnSalvar = document.getElementById('btnSalvarServico');
+    const textoOriginal = btnSalvar?.innerHTML || 'Atualizar Serviço';
+    if (btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        btnSalvar.innerHTML = '<i class="ri-loader-4-line"></i> Atualizando...';
     }
 
     try {
@@ -1525,7 +1716,12 @@ async function atualizarServico() {
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
         if (!usuarioLogado || !senhaUsuario) {
-            alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            mostrarErro('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
@@ -1541,12 +1737,22 @@ async function atualizarServico() {
 
             if (errorServico) {
                 console.error('Erro ao atualizar serviço:', errorServico);
-                alert('Erro ao atualizar serviço: ' + errorServico.message);
+                mostrarErro('Erro ao atualizar serviço: ' + errorServico.message);
+                if (btnSalvar) {
+                    btnSalvar.disabled = false;
+                    btnSalvar.classList.remove('loading');
+                    btnSalvar.innerHTML = textoOriginal;
+                }
                 return;
             }
 
             if (!dataServico.sucesso) {
-                alert('Erro: ' + dataServico.mensagem);
+                mostrarErro('Erro: ' + dataServico.mensagem);
+                if (btnSalvar) {
+                    btnSalvar.disabled = false;
+                    btnSalvar.classList.remove('loading');
+                    btnSalvar.innerHTML = textoOriginal;
+                }
                 return;
             }
         }
@@ -1563,12 +1769,22 @@ async function atualizarServico() {
 
         if (errorDuracao) {
             console.error('Erro ao atualizar duração:', errorDuracao);
-            alert('Erro ao atualizar duração: ' + errorDuracao.message);
+            mostrarErro('Erro ao atualizar duração: ' + errorDuracao.message);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
         if (!dataDuracao.sucesso) {
-            alert('Erro ao atualizar duração: ' + dataDuracao.mensagem);
+            mostrarErro('Erro ao atualizar duração: ' + dataDuracao.mensagem);
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+                btnSalvar.innerHTML = textoOriginal;
+            }
             return;
         }
 
@@ -1583,10 +1799,24 @@ async function atualizarServico() {
         servicosDisponiveis = servicosClinica;
         exibirServicosClinica();
         fecharModalServico();
-        alert('✓ Serviço e duração atualizados com sucesso!');
+        mostrarSucesso('Serviço e duração atualizados com sucesso!');
+
+        // Restaurar botão ao final (sucesso)
+        if (btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
+            btnSalvar.innerHTML = textoOriginal;
+        }
     } catch (erro) {
         console.error('Erro inesperado:', erro);
-        alert('Erro ao atualizar serviço: ' + erro.message);
+        mostrarErro('Erro ao atualizar serviço: ' + erro.message);
+
+        // Restaurar botão em caso de erro
+        if (btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('loading');
+            btnSalvar.innerHTML = textoOriginal;
+        }
     }
 }
 
@@ -1594,9 +1824,39 @@ async function removerServico(nomeServico, event) {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!confirm(`Deseja remover o serviço "${nomeServico}"?\n\nEsta ação é irreversível.`)) {
-        return;
-    }
+    servicoParaRemover = nomeServico;
+    document.getElementById('mensagemConfirmacaoRemocaoServico').innerHTML =
+        `Tem certeza que deseja remover o serviço <strong>"${nomeServico}"</strong>?<br><br>Esta ação é irreversível.`;
+
+    document.getElementById('confirmationRemocaoServicoOverlay').classList.add('ativo');
+    congelarScroll();
+}
+
+function fecharModalConfirmacaoRemocaoServico() {
+    document.getElementById('confirmationRemocaoServicoOverlay').classList.remove('ativo');
+    servicoParaRemover = null;
+    descongelarScroll();
+}
+
+async function confirmarRemocaoServico() {
+    if (!servicoParaRemover) return;
+
+    const nomeServico = servicoParaRemover;
+
+    // Estado dos botões antes da operação
+    const btnConfirmar = document.getElementById('btnConfirmarRemocaoServico');
+    const btnCancelar = document.getElementById('btnCancelarRemocaoServico');
+    const textoOriginal = btnConfirmar.innerHTML;
+
+    // Desabilitar botões e mostrar loader
+    btnConfirmar.disabled = true;
+    btnCancelar.disabled = true;
+    btnConfirmar.innerHTML = '<i class="ri-loader-4-line"></i> Removendo...';
+
+    // Timer mínimo de 1 segundo
+    const minTimeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
+
+    let operacaoPromise = Promise.resolve();
 
     try {
         // Obter credenciais do sessionStorage
@@ -1604,54 +1864,73 @@ async function removerServico(nomeServico, event) {
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
         if (!usuarioLogado || !senhaUsuario) {
-            alert('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+            btnConfirmar.disabled = false;
+            btnCancelar.disabled = false;
+            btnConfirmar.innerHTML = textoOriginal;
+            mostrarErro('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
             return;
         }
 
         // Primeira: Chamar função SQL para remover serviço de arch_de_contx
-        const { data: dataServico, error: errorServico } = await _supabase.rpc('gerenciar_servicos_clinica', {
-            p_nome_usuario: usuarioLogado,
-            p_senha_usuario: senhaUsuario,
-            p_acao: 'remover',
-            p_servico_anterior: nomeServico,
-            p_servico_novo: ''
-        });
+        operacaoPromise = (async () => {
+            const { data: dataServico, error: errorServico } = await _supabase.rpc('gerenciar_servicos_clinica', {
+                p_nome_usuario: usuarioLogado,
+                p_senha_usuario: senhaUsuario,
+                p_acao: 'remover',
+                p_servico_anterior: nomeServico,
+                p_servico_novo: ''
+            });
 
-        if (errorServico) {
-            console.error('Erro ao remover serviço:', errorServico);
-            alert('Erro ao remover serviço: ' + errorServico.message);
-            return;
-        }
+            if (errorServico) {
+                console.error('Erro ao remover serviço:', errorServico);
+                throw new Error(errorServico.message);
+            }
 
-        if (!dataServico.sucesso) {
-            alert('Erro: ' + dataServico.mensagem);
-            return;
-        }
+            if (!dataServico.sucesso) {
+                throw new Error(dataServico.mensagem);
+            }
 
-        // Segunda: Remover duração de servicos_tempo
-        const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
-            p_nome_usuario: usuarioLogado,
-            p_senha_usuario: senhaUsuario,
-            p_acao: 'remover',
-            p_servico_nome: '',
-            p_servico_anterior: nomeServico,
-            p_duracao_minutos: 0
-        });
+            // Segunda: Remover duração de servicos_tempo
+            const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
+                p_nome_usuario: usuarioLogado,
+                p_senha_usuario: senhaUsuario,
+                p_acao: 'remover',
+                p_servico_nome: '',
+                p_servico_anterior: nomeServico,
+                p_duracao_minutos: 0
+            });
 
-        // Não alertar se falhar remover duração (o serviço principal já foi removido)
-        if (errorDuracao) {
-            console.warn('Aviso ao remover duração:', errorDuracao);
-        }
+            // Não alertar se falhar remover duração (o serviço principal já foi removido)
+            if (errorDuracao) {
+                console.warn('Aviso ao remover duração:', errorDuracao);
+            }
 
-        // Remover da lista
-        servicosClinica = servicosClinica.filter(s => s !== nomeServico);
-        servicosDisponiveis = servicosClinica;
+            // Remover da lista
+            servicosClinica = servicosClinica.filter(s => s !== nomeServico);
+            servicosDisponiveis = servicosClinica;
 
-        exibirServicosClinica();
-        alert('✓ Serviço removido com sucesso!');
+            exibirServicosClinica();
+        })();
+
+        // Aguardar no mínimo 1 segundo + conclusão da operação
+        await Promise.all([minTimeoutPromise, operacaoPromise]);
+
+        btnConfirmar.disabled = false;
+        btnCancelar.disabled = false;
+        btnConfirmar.innerHTML = textoOriginal;
+        fecharModalConfirmacaoRemocaoServico();
+        mostrarSucesso('Serviço removido com sucesso!');
     } catch (erro) {
         console.error('Erro inesperado:', erro);
-        alert('Erro ao remover serviço: ' + erro.message);
+
+        // Aguardar no mínimo 1 segundo mesmo em caso de erro
+        await minTimeoutPromise;
+
+        btnConfirmar.disabled = false;
+        btnCancelar.disabled = false;
+        btnConfirmar.innerHTML = textoOriginal;
+        fecharModalConfirmacaoRemocaoServico();
+        mostrarErro('Erro ao remover serviço: ' + erro.message);
     }
 }
 
@@ -1686,16 +1965,16 @@ function confirmarLogout() {
 // ===================================================
 // EXCLUSÃO DE HORÁRIO COM MODAL
 // ===================================================
-let idHorarioEmExclusao = null;
+let idHorarioEmExclusao = null; // Armazena a data (YYYY-MM-DD) do horário em exclusão
 
-function abrirModalExclusao(id) {
-    const horario = horariosGlobais.find(h => h.id === id);
+function abrirModalExclusao(data) {
+    const horario = horariosGlobais.find(h => h.data === data);
     if (!horario) {
         mostrarErro('Horário não encontrado!');
         return;
     }
 
-    idHorarioEmExclusao = id;
+    idHorarioEmExclusao = data;
     const dataFormatada = formatarData(horario.data);
     document.getElementById('mensagemExclusao').innerHTML =
         `Tem certeza que deseja excluir a data <strong>${dataFormatada}</strong>?<br><br>Esta ação é irreversível e removerá:<br>- A data registrada<br>- Os horários associados<br>- Os serviços cadastrados`;
@@ -1707,22 +1986,40 @@ function abrirModalExclusao(id) {
 function fecharModalExclusao() {
     document.getElementById('confirmationExclusaoOverlay').classList.remove('ativo');
     idHorarioEmExclusao = null;
+
+    // Resetar botão
+    const botaoExcluir = document.getElementById('btnExcluirHorario');
+    if (botaoExcluir) {
+        botaoExcluir.disabled = false;
+        botaoExcluir.innerHTML = 'Excluir';
+    }
+
     descongelarScroll();
 }
 
 async function confirmarExclusao() {
     if (!idHorarioEmExclusao) return;
 
-    const horario = horariosGlobais.find(h => h.id === idHorarioEmExclusao);
+    const horario = horariosGlobais.find(h => h.data === idHorarioEmExclusao);
     if (!horario) {
         mostrarErro('Horário não encontrado!');
         fecharModalExclusao();
         return;
     }
 
-    const dataParaExcluir = horario.data;
+    const dataParaExcluir = horario.data; // Já em formato YYYY-MM-DD
+
+    // Obter o botão de exclusão
+    const botaoExcluir = document.getElementById('btnExcluirHorario');
+    const textoOriginal = botaoExcluir?.innerHTML || 'Excluir';
 
     try {
+        // Desabilitar o botão e mostrar loader
+        if (botaoExcluir) {
+            botaoExcluir.disabled = true;
+            botaoExcluir.innerHTML = '<i class="ri-loader-4-line loader-spinner"></i> Processando...';
+        }
+
         // Obter credenciais do sessionStorage
         const usuarioLogado = sessionStorage.getItem('usuarioLogado');
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
@@ -1730,17 +2027,15 @@ async function confirmarExclusao() {
         // Validar se as credenciais estão disponíveis
         if (!usuarioLogado || !senhaUsuario) {
             mostrarErro('Erro: Credenciais não encontradas na sessão. Faça login novamente.');
+
+            // Restaurar botão em caso de erro
+            if (botaoExcluir) {
+                botaoExcluir.disabled = false;
+                botaoExcluir.innerHTML = textoOriginal;
+            }
+
             fecharModalExclusao();
             return;
-        }
-
-        // Mostrar loading
-        const botaoExcluir = document.querySelector(`.btn-excluir[onclick*="excluirHorario(${idHorarioEmExclusao})"]`);
-        const textoOriginal = botaoExcluir?.innerHTML;
-
-        if (botaoExcluir) {
-            botaoExcluir.disabled = true;
-            botaoExcluir.innerHTML = '<i class="ri-loader-4-line"></i> Processando...';
         }
 
         // Chamar função SQL segura
@@ -1750,16 +2045,17 @@ async function confirmarExclusao() {
             p_data_exclusao: dataParaExcluir
         });
 
-        // Restaurar botão
-        if (botaoExcluir && textoOriginal) {
-            botaoExcluir.disabled = false;
-            botaoExcluir.innerHTML = textoOriginal;
-        }
-
         // Verificar erro
         if (error) {
             console.error('Erro ao excluir:', error);
             mostrarErro(`Erro ao excluir: ${error.message}`);
+
+            // Restaurar botão em caso de erro
+            if (botaoExcluir) {
+                botaoExcluir.disabled = false;
+                botaoExcluir.innerHTML = textoOriginal;
+            }
+
             fecharModalExclusao();
             return;
         }
@@ -1767,12 +2063,19 @@ async function confirmarExclusao() {
         // Verificar resposta da função SQL
         if (!data.sucesso) {
             mostrarErro(`Erro: ${data.mensagem}`);
+
+            // Restaurar botão em caso de erro
+            if (botaoExcluir) {
+                botaoExcluir.disabled = false;
+                botaoExcluir.innerHTML = textoOriginal;
+            }
+
             fecharModalExclusao();
             return;
         }
 
         // Remover do array local
-        horariosGlobais = horariosGlobais.filter(h => h.id !== idHorarioEmExclusao);
+        horariosGlobais = horariosGlobais.filter(h => h.data !== idHorarioEmExclusao);
 
         // Atualizar exibição
         exibirHorarios();
@@ -1786,6 +2089,14 @@ async function confirmarExclusao() {
     } catch (erro) {
         console.error('Erro inesperado:', erro);
         mostrarErro(`Erro inesperado: ${erro.message}`);
+
+        // Restaurar botão em caso de erro
+        const botaoExcluir = document.getElementById('btnExcluirHorario');
+        if (botaoExcluir) {
+            botaoExcluir.disabled = false;
+            botaoExcluir.innerHTML = 'Excluir';
+        }
+
         fecharModalExclusao();
     }
 }
@@ -1824,6 +2135,7 @@ document.addEventListener('keydown', function (event) {
         fecharModalServico();
         fecharModalConfirmacao();
         fecharModalExclusao();
+        fecharModalConfirmacaoRemocaoServico();
         fecharModalSucesso();
         fecharModalErro();
     }

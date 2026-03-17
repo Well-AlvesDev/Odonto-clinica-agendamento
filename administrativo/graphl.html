@@ -129,7 +129,11 @@
         }
 
         .card-info.total {
-            border-left-color: #9C27B0;
+            border-left-color: #24BA63;
+        }
+
+        .card-info.total .card-label {
+            color: #24BA63;
         }
 
         .card-label {
@@ -246,54 +250,115 @@
         .future-appointments h3 {
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             color: #333;
         }
 
-        .date-group {
+        .future-appointments-legend {
+            background-color: #F0F7FF;
+            border-left: 3px solid #2196F3;
+            padding: 10px 12px;
+            border-radius: 4px;
             margin-bottom: 15px;
+            font-size: 12px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .future-appointments-legend strong {
+            color: #2196F3;
+            font-weight: 600;
+        }
+
+        #futureAppointmentsList {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px;
+            max-height: 400px;
+        }
+
+        #futureAppointmentsList::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #futureAppointmentsList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #futureAppointmentsList::-webkit-scrollbar-thumb {
+            background: #2196F3;
+            border-radius: 4px;
+        }
+
+        #futureAppointmentsList::-webkit-scrollbar-thumb:hover {
+            background: #1976D2;
+        }
+
+        .date-group {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #E3E3E3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .date-header {
-            background-color: #E3F2FD;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 400;
-            color: #1976D2;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+            text-align: center;
+            padding: 0;
+            margin: 0;
         }
 
         .appointment-item {
-            padding: 10px;
-            background-color: #F5F5F5;
+            padding: 8px;
+            background-color: white;
             border-radius: 6px;
-            margin-bottom: 5px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 4px;
             border-left: 3px solid #2196F3;
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .appointment-item:last-child {
+            margin-bottom: 0;
         }
 
         .appointment-item-info {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
 
         .appointment-item-name {
-            font-weight: 400;
+            font-weight: 600;
             color: #333;
+            font-size: 12px;
+            word-break: break-word;
         }
 
         .appointment-item-service {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
+            word-break: break-word;
         }
 
         .appointment-item-time {
-            font-size: 12px;
-            color: #999;
-            font-weight: 600;
+            font-size: 11px;
+            color: #2196F3;
+            font-weight: 700;
         }
 
         /* Footer */
@@ -505,6 +570,250 @@
         .confirmation-modal-btn-confirmar:active {
             transform: translateY(0);
         }
+
+        .chart-hint {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background-color: #F0F7FF;
+            border-left: 3px solid #2196F3;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-style: italic;
+        }
+
+        .chart-hint i {
+            color: #2196F3;
+            font-size: 14px;
+        }
+
+        /* Modal de Agendamentos por Data */
+        .appointments-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            animation: fadeInOverlay 0.3s ease;
+        }
+
+        .appointments-modal-overlay.ativo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .appointments-modal {
+            background-color: white;
+            border-radius: 15px;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .appointments-modal-header {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            padding: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .appointments-modal-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .appointments-modal-header-icon {
+            font-size: 28px;
+        }
+
+        .appointments-modal-header-text h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 3px 0;
+        }
+
+        .appointments-modal-header-text p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .appointments-modal-close {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .appointments-modal-close:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .appointments-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .appointments-modal-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .modal-appointment-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .modal-appointment-item {
+            padding: 15px;
+            background-color: #FAFAFA;
+            border-bottom: 1px solid #E8E8E8;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-appointment-item:hover {
+            background-color: #F5F5F5;
+        }
+
+        .modal-appointment-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-appointment-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .modal-appointment-item-name {
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .modal-appointment-item-service {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .modal-appointment-item-service i {
+            color: #2196F3;
+            font-size: 12px;
+        }
+
+        .modal-appointment-item-time {
+            background-color: #E3F2FD;
+            color: #1976D2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .appointments-modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #E8E8E8;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            background-color: #FAFAFA;
+        }
+
+        .appointments-modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .appointments-modal-btn-close {
+            background-color: #E8E8E8;
+            color: #333;
+        }
+
+        .appointments-modal-btn-close:hover {
+            background-color: #D8D8D8;
+        }
+
+        .modal-no-appointments {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Melhorias visuais para o container principal */
+        .date-group:hover {
+            box-shadow: 0 3px 8px rgba(33, 150, 243, 0.15);
+            border-color: #2196F3;
+            background-color: #F8FBFF;
+        }
     </style>
 </head>
 
@@ -531,6 +840,10 @@
         <div class="charts-section">
             <div class="chart-container">
                 <div class="chart-title"><i class="ri-bar-chart-fill"></i> Agendamentos (Últimos 30 dias)</div>
+                <div class="chart-hint">
+                    <i class="ri-information-line"></i>
+                    Passe o mouse sobre as colunas para ver detalhes
+                </div>
                 <div class="chart-wrapper">
                     <canvas id="chartDia"></canvas>
                 </div>
@@ -637,6 +950,21 @@
                 <div id="cardFuturo" class="card-number">0</div>
                 <div id="cardFuturoDetalhes" class="card-details">-</div>
             </div>
+        </div>
+
+        <!-- Future Appointments Section -->
+        <div class="future-appointments">
+            <h3><i class="ri-file-list-3-line"></i> Próximos Agendamentos</h3>
+            <div class="future-appointments-legend">
+                <strong><i class="ri-information-line"></i> Dica:</strong> Clique em qualquer data para visualizar todos
+                os agendamentos daquele dia. Use
+                a barra de rolagem para navegar entre as datas.
+            </div>
+            <div id="futureAppointmentsList" class="sem-dados">Carregando agendamentos futuros...</div>
+        </div>
+
+        <!-- TMH. DO BANCO Card -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
             <div class="card-info total">
                 <div class="card-label"><i class="ri-supabase-line"></i> TMH. DO BANCO 2026</div>
                 <div class="card-description">Número total de agendamentos armazenados no sistema, representando o
@@ -644,13 +972,6 @@
                 <div id="cardTotal" class="card-number">0</div>
                 <div id="cardTotalDetalhes" class="card-details">-</div>
             </div>
-        </div>
-
-        <!-- Future Appointments Section -->
-        <div class="future-appointments">
-            <h3><i class="ri-file-list-3-line"></i> Próximos
-                Agendamentos</h3>
-            <div id="futureAppointmentsList" class="sem-dados">Carregando agendamentos futuros...</div>
         </div>
     </div>
 
@@ -676,6 +997,34 @@
                 </button>
                 <button class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarLogout()">
                     Sair
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Agendamentos por Data -->
+    <div id="appointmentsModalOverlay" class="appointments-modal-overlay" onclick="fecharModalAgendamentos()">
+        <div class="appointments-modal" onclick="event.stopPropagation()">
+            <div class="appointments-modal-header">
+                <div class="appointments-modal-header-content">
+                    <i class="ri-calendar-event-fill appointments-modal-header-icon"></i>
+                    <div class="appointments-modal-header-text">
+                        <h2 id="modalDataTitle">--</h2>
+                        <p id="modalDataSubtitle">Agendamentos para esta data</p>
+                    </div>
+                </div>
+                <button class="appointments-modal-close" onclick="fecharModalAgendamentos()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="appointments-modal-body">
+                <div class="appointments-modal-content" id="modalAppointmentsContent">
+                    Carregando...
+                </div>
+            </div>
+            <div class="appointments-modal-footer">
+                <button class="appointments-modal-btn appointments-modal-btn-close" onclick="fecharModalAgendamentos()">
+                    Fechar
                 </button>
             </div>
         </div>
@@ -851,25 +1200,84 @@
             // Ordenar datas
             const datasSortidas = Object.keys(agrupoPorData).sort();
 
-            // Construir HTML
+            // Construir HTML com layout vertical - apenas datas
             let html = '';
             datasSortidas.forEach(data => {
-                html += `<div class="date-group">
+                const quantidade = agrupoPorData[data].length;
+                html += `<div class="date-group" onclick="abrirModalAgendamentos('${data}')">
                     <div class="date-header">${formatarData(data)}</div>
-                    ${agrupoPorData[data].map(agendamento => `
-                        <div class="appointment-item">
-                            <div class="appointment-item-info">
-                                <div class="appointment-item-name">${agendamento.nome}</div>
-                                <div class="appointment-item-service">${agendamento.servico}</div>
-                            </div>
-                            <div class="appointment-item-time">${agendamento.horario}</div>
-                        </div>
-                    `).join('')}
+                    <div style="text-align: center; color: #2196F3; font-weight: 700; font-size: 18px;">
+                        ${quantidade} ${quantidade === 1 ? 'agendamento' : 'agendamentos'}
+                    </div>
                 </div>`;
             });
 
             container.innerHTML = html;
+
+            // Mantém o layout horizontal com flex
+            container.style.display = 'flex';
+            container.style.flexDirection = 'row';
+            container.style.gap = '15px';
+            container.style.overflowX = 'auto';
+            container.style.overflowY = 'hidden';
+            container.style.paddingBottom = '10px';
         }
+
+        // ===================================================
+        // MODAL DE AGENDAMENTOS POR DATA
+        // ===================================================
+        function abrirModalAgendamentos(data) {
+            const stats = calcularEstatisticas();
+            const agendamentosDaData = stats.agendamentosFuturos.filter(a => a.data === data);
+
+            // Preencher header
+            document.getElementById('modalDataTitle').textContent = formatarData(data);
+            document.getElementById('modalDataSubtitle').textContent = `${agendamentosDaData.length} agendamento(s) para esta data`;
+
+            // Preencher conteúdo
+            const contentContainer = document.getElementById('modalAppointmentsContent');
+
+            if (agendamentosDaData.length === 0) {
+                contentContainer.innerHTML = '<div class="modal-no-appointments"><i class="ri-calendar-blank-line" style="font-size: 32px; margin-bottom: 10px; display: block; color: #ccc;"></i>Nenhum agendamento para esta data</div>';
+            } else {
+                // Ordenar agendamentos por horário
+                agendamentosDaData.sort((a, b) => a.horario.localeCompare(b.horario));
+
+                let html = '<div class="modal-appointment-group">';
+                agendamentosDaData.forEach(agendamento => {
+                    html += `
+                        <div class="modal-appointment-item">
+                            <div class="modal-appointment-item-info">
+                                <div class="modal-appointment-item-name">${agendamento.nome}</div>
+                                <div class="modal-appointment-item-service">
+                                    <i class="ri-stethoscope-line"></i>
+                                    ${agendamento.servico}
+                                </div>
+                            </div>
+                            <div class="modal-appointment-item-time">${agendamento.horario}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                contentContainer.innerHTML = html;
+            }
+
+            // Abrir modal
+            document.getElementById('appointmentsModalOverlay').classList.add('ativo');
+        }
+
+        function fecharModalAgendamentos() {
+            document.getElementById('appointmentsModalOverlay').classList.remove('ativo');
+        }
+
+        // Fechar modal ao clicar fora
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('appointmentsModalOverlay').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    fecharModalAgendamentos();
+                }
+            });
+        });
 
         // ===================================================
         // CRIAR GRÁFICOS
@@ -1052,10 +1460,10 @@
                             // Desenha o número acima da barra
                             ctx.save();
                             ctx.fillStyle = corTexto;
-                            ctx.font = 'bold 12px sans-serif';
+                            ctx.font = 'bold 10px sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
-                            ctx.fillText(value, x, y - 5);
+                            ctx.fillText(value, x, y - 2);
                             ctx.restore();
                         });
                     }
