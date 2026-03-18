@@ -202,6 +202,73 @@
             box-shadow: 0 0 8px rgba(37, 89, 150, 0.2);
         }
 
+        /* Estilos para barra de pesquisa unificada */
+        .busca-unificada-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 200px;
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 0 12px;
+            transition: all 0.3s ease;
+        }
+
+        .busca-unificada-container:hover {
+            border-color: #255996;
+            box-shadow: 0 2px 12px rgba(37, 89, 150, 0.1);
+        }
+
+        .busca-unificada-container:has(.busca-unificada:focus) {
+            border-color: #255996;
+            box-shadow: 0 0 12px rgba(37, 89, 150, 0.2);
+        }
+
+        .busca-unificada-icon {
+            color: #999;
+            font-size: 16px;
+            margin-right: 8px;
+            transition: color 0.3s;
+            flex-shrink: 0;
+        }
+
+        .busca-unificada-container:has(.busca-unificada:focus) .busca-unificada-icon {
+            color: #255996;
+        }
+
+        .busca-unificada {
+            flex: 1;
+            border: none;
+            padding: 12px 0;
+            font-size: 14px;
+            background-color: transparent;
+            outline: none;
+        }
+
+        .busca-unificada::placeholder {
+            color: #aaa;
+        }
+
+        .busca-categorias {
+            color: #999;
+            font-size: 12px;
+            margin-left: 8px;
+            padding: 4px 8px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            white-space: nowrap;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .busca-categorias.ativa {
+            background-color: #e8f1ff;
+            color: #255996;
+            font-weight: 600;
+        }
+
         .cards-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -470,6 +537,71 @@
             }
         }
 
+        /* Animações para transição de páginas */
+        @keyframes cardExitLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+        }
+
+        @keyframes cardExitRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        @keyframes cardEnterLeft {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes cardEnterRight {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .card.exit-left {
+            animation: cardExitLeft 0.4s ease forwards;
+        }
+
+        .card.exit-right {
+            animation: cardExitRight 0.4s ease forwards;
+        }
+
+        .card.enter-left {
+            animation: cardEnterLeft 0.4s ease 0.1s both;
+        }
+
+        .card.enter-right {
+            animation: cardEnterRight 0.4s ease 0.1s both;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -683,12 +815,13 @@
                 font-size: 12px !important;
             }
 
+            .busca-unificada-container {
+                min-width: 150px;
+            }
 
-            #filtroNome,
-            #filtroServico {
-                padding: 8px !important;
-                font-size: 12px !important;
-                min-width: 120px !important;
+            .busca-categorias {
+                font-size: 11px;
+                padding: 3px 6px;
             }
         }
 
@@ -702,12 +835,17 @@
                 margin-left: 5px !important;
             }
 
+            .busca-unificada-container {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
 
-            #filtroNome,
-            #filtroServico {
-                padding: 6px !important;
-                font-size: 11px !important;
-                min-width: 100px !important;
+            .busca-unificada {
+                font-size: 13px;
+            }
+
+            .busca-categorias {
+                display: none;
             }
         }
 
@@ -1050,11 +1188,17 @@
             }
         </style>
         <div class="filtros">
-            <!-- row containing only the text inputs -->
+            <!-- Barra de pesquisa unificada e inteligente -->
             <div class="inputs-row">
-                <input type="search" id="filtroNome" placeholder="Buscar por nome..." />
-                <input type="search" id="filtroServico" placeholder="Buscar por serviço..." />
+                <div class="busca-unificada-container">
+                    <i class="ri-search-line busca-unificada-icon"></i>
+                    <input type="search" id="buscaUnificada"
+                        placeholder="Buscar... (use vírgula para múltiplos filtros: nome, serviço)"
+                        class="busca-unificada" />
+                    <span id="buscaUnificada-categorias" class="busca-categorias"></span>
+                </div>
             </div>
+
             <p>Linha do tempo:</p>
             <!-- Custom dropdown para período -->
             <div class="custom-dropdown">
@@ -1153,11 +1297,12 @@
         // ===================================================
         // VARIÁVEIS DE PAGINAÇÃO
         // ===================================================
-        const ITENS_POR_PAGINA = 12;
+        const ITENS_POR_PAGINA = 24;
         let paginaAtual = 1;
         let totalPaginas = 1;
         let agendamentosFiltradosGlobal = [];
         let periodoAtual = 'hoje'; // Armazenar período atual para preservar ao navegar entre páginas
+        let paginacaoEmAndamento = false; // Impedir múltiplos cliques simultâneos
 
         // ===================================================
         // CARREGAR AGENDAMENTOS
@@ -1244,8 +1389,7 @@
             exibirAgendamentos(agendamentosGlobais, 'hoje');
 
             // Definir filtro padrão como "hoje" para melhor UX
-            document.getElementById('filtroNome').value = '';
-            document.getElementById('filtroServico').value = '';
+            document.getElementById('buscaUnificada').value = '';
             document.getElementById('filtroPeriodo').value = 'hoje';
             document.getElementById('dropdownLabel').textContent = 'Presente (Hoje)';
             const dropdownOptions = document.querySelectorAll('.dropdown-option');
@@ -1349,7 +1493,7 @@
             };
         }
 
-        function exibirAgendamentos(agendamentos, periodo = '', pagina = 1) {
+        function exibirAgendamentos(agendamentos, periodo = '', pagina = 1, direcaoPaginacao = null) {
             const containerCards = document.getElementById('containerCards');
             const paginationContainer = document.getElementById('paginationContainer');
 
@@ -1383,7 +1527,8 @@
             // Limpar container
             containerCards.innerHTML = '';
 
-            // Adicionar cards
+            // Adicionar cards com animação de entrada se for mudança de página
+            const classAnimacaoEntrada = direcaoPaginacao === 'left' ? 'enter-left' : (direcaoPaginacao === 'right' ? 'enter-right' : null);
             agendamentosPagina.forEach((agendamento, indice) => {
                 const primeiraLetra = agendamento.nome.charAt(0).toUpperCase();
                 const corIndex = (indice % 6) + 1;
@@ -1392,7 +1537,7 @@
                 const { status, statusLabel } = determinarStatusAgendamento(agendamento);
 
                 const card = document.createElement('div');
-                card.className = `card card-${corIndex}`;
+                card.className = `card card-${corIndex}${classAnimacaoEntrada ? ' ' + classAnimacaoEntrada : ''}`;
                 card.onclick = () => abrirModal(agendamento);
 
                 card.innerHTML = `
@@ -1478,13 +1623,19 @@
         }
 
         function configurarFiltros() {
-            const filtroNome = document.getElementById('filtroNome');
-            const filtroServico = document.getElementById('filtroServico');
+            const buscaUnificada = document.getElementById('buscaUnificada');
+            const buscaCategorias = document.getElementById('buscaUnificada-categorias');
             const dropdownBtn = document.getElementById('dropdownBtn');
             const dropdownMenu = document.getElementById('dropdownMenu');
             const dropdownOptions = document.querySelectorAll('.dropdown-option');
             const filtroPeriodo = document.getElementById('filtroPeriodo');
             const dropdownLabel = document.getElementById('dropdownLabel');
+
+            // Detectar tipo de entrada na busca unificada
+            buscaUnificada.addEventListener('input', function () {
+                atualizarBadgeBusca(this.value);
+                executarFiltros();
+            });
 
             // Toggle dropdown
             dropdownBtn.addEventListener('click', (e) => {
@@ -1521,9 +1672,168 @@
                     executarFiltros();
                 });
             });
+        }
 
-            filtroNome.addEventListener('input', executarFiltros);
-            filtroServico.addEventListener('input', executarFiltros);
+        // ===================================================
+        // FUNÇÃO PARA DETECTAR TIPO DE BUSCA
+        // ===================================================
+        function detectarTipoBusca(valor) {
+            if (!valor) return 'nome';
+
+            // Se contém "/" ou "-", é provavelmente uma data
+            if (/[-\/]/.test(valor)) {
+                return 'data';
+            }
+
+            // Se contém números (sem "/" ou "-"), buscar por telefone ou ID
+            const apenasNumeros = valor.replace(/\D/g, '');
+            if (apenasNumeros.length >= 2) {
+                return 'telefone';
+            }
+
+            // Default: buscar em nome/serviço
+            return 'nome';
+        }
+
+        // ===================================================
+        // FUNÇÃO PARA VALIDAR UM CRITÉRIO ÚNICO
+        // ===================================================
+        function validarCriterio(agendamento, termo) {
+            if (!termo) return true;
+
+            const termoLimpo = termo.trim().toLowerCase();
+            const tipoBusca = detectarTipoBusca(termoLimpo);
+
+            switch (tipoBusca) {
+                case 'data':
+                    // Buscar por data de forma flexível
+                    const dataFormatada = formatarData(agendamento.data); // DD/MM/AAAA
+                    const dataOriginal = agendamento.data; // AAAA-MM-DD
+
+                    // Remove separadores de ambos os lados
+                    const termoSemSeparadores = termoLimpo.replace(/[-\/]/g, '');
+                    const dataFormatadaSemSeparadores = dataFormatada.replace(/[-\/]/g, '');
+                    const dataOriginalSemSeparadores = dataOriginal.replace(/[-\/]/g, '');
+
+                    return dataFormatadaSemSeparadores.includes(termoSemSeparadores) ||
+                        dataOriginalSemSeparadores.includes(termoSemSeparadores);
+
+                case 'telefone':
+                    // Buscar por telefone (remover caracteres especiais)
+                    const telefoneLimpo = agendamento.telefone.replace(/\D/g, '');
+                    const termolimpo = termoLimpo.replace(/\D/g, '');
+                    return telefoneLimpo.includes(termolimpo) ||
+                        agendamento.id.toString().includes(termolimpo);
+
+                default:
+                    // Buscar em nome e serviço
+                    return agendamento.nome.toLowerCase().includes(termoLimpo) ||
+                        agendamento.servico.toLowerCase().includes(termoLimpo);
+            }
+        }
+
+        // ===================================================
+        // FUNÇÃO PARA BUSCA INTELIGENTE COM MÚLTIPLOS CRITÉRIOS
+        // ===================================================
+        function buscaInteligente(agendamento, termoBusca) {
+            if (!termoBusca) return true;
+
+            // Verificar se há vírgula para múltiplos critérios
+            if (termoBusca.includes(',')) {
+                // Dividir por vírgula e validar TODOS os critérios (lógica AND)
+                const criterios = termoBusca.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+                // Todos os critérios precisam ser atendidos
+                return criterios.every(criterio => validarCriterio(agendamento, criterio));
+            } else {
+                // Um único critério
+                return validarCriterio(agendamento, termoBusca);
+            }
+        }
+
+        // ===================================================
+        // FUNÇÃO PARA DETECTAR CATEGORIAS E ATUALIZAR BADGE
+        // ===================================================
+        // ===================================================
+        // FUNÇÃO PARA RESETAR PERÍODO QUANDO DATA É USADA
+        // ===================================================
+        function resetarPeriodoSeDataUsada(termoBusca) {
+            let temData = false;
+
+            if (termoBusca.includes(',')) {
+                // Múltiplos critérios - verificar se algum é data
+                const criterios = termoBusca.split(',').map(c => c.trim()).filter(c => c.length > 0);
+                temData = criterios.some(criterio => detectarTipoBusca(criterio) === 'data');
+            } else {
+                // Um único critério
+                temData = detectarTipoBusca(termoBusca) === 'data';
+            }
+
+            // Se tem data, resetar período para "Qualquer"
+            if (temData) {
+                const filtroPeriodo = document.getElementById('filtroPeriodo');
+                const dropdownLabel = document.getElementById('dropdownLabel');
+                const dropdownOptions = document.querySelectorAll('.dropdown-option');
+
+                filtroPeriodo.value = '';
+                dropdownLabel.textContent = 'Qualquer';
+                dropdownOptions.forEach(opt => opt.classList.remove('selected'));
+                dropdownOptions[0].classList.add('selected'); // índice 0 é "Qualquer"
+            }
+        }
+
+        function atualizarBadgeBusca(termoBusca) {
+            const badge = document.getElementById('buscaUnificada-categorias');
+
+            if (!termoBusca.trim()) {
+                badge.textContent = '';
+                badge.classList.remove('ativa');
+                return;
+            }
+
+            // Verificar se há data e resetar período se necessário
+            resetarPeriodoSeDataUsada(termoBusca);
+
+            // Se tem vírgula, mostrar múltiplos critérios
+            if (termoBusca.includes(',')) {
+                const criterios = termoBusca.split(',').map(c => c.trim()).filter(c => c.length > 0);
+                const categorias = criterios.map(criterio => {
+                    const tipo = detectarTipoBusca(criterio);
+                    switch (tipo) {
+                        case 'data': return '📅';
+                        case 'telefone': return '📱';
+                        default:
+                            return agendamentosGlobais.some(a =>
+                                a.servico.toLowerCase().includes(criterio.toLowerCase())
+                            ) ? '⚙️' : '👤';
+                    }
+                }).join(' ');
+
+                badge.textContent = `${criterios.length} filtros: ${categorias}`;
+                badge.classList.add('ativa');
+            } else {
+                // Um único critério
+                const tipo = detectarTipoBusca(termoBusca);
+                let emoji = '';
+
+                switch (tipo) {
+                    case 'data':
+                        emoji = '📅 Data';
+                        break;
+                    case 'telefone':
+                        emoji = '📱 Telefone';
+                        break;
+                    default:
+                        // Verificar se é serviço
+                        const ehServico = agendamentosGlobais.some(a =>
+                            a.servico.toLowerCase().includes(termoBusca.toLowerCase())
+                        );
+                        emoji = ehServico ? '⚙️ Serviço' : '👤 Nome';
+                }
+
+                badge.textContent = emoji;
+                badge.classList.add('ativa');
+            }
         }
 
         // ===================================================
@@ -1567,10 +1877,7 @@
         }
 
         function executarFiltros() {
-            const filtroNome = document.getElementById('filtroNome').value.toLowerCase();
-            const filtroServico = document.getElementById('filtroServico').value.toLowerCase();
-
-            // Filtrar agendamentos
+            const termoBusca = document.getElementById('buscaUnificada').value.toLowerCase();
             const periodo = document.getElementById('filtroPeriodo').value;
 
             // Get today's date without timezone issues
@@ -1578,10 +1885,11 @@
             const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
 
             const agendamentosFiltrados = agendamentosGlobais.filter((agendamento) => {
-                const nomeMatch = agendamento.nome.toLowerCase().includes(filtroNome);
-                const servicoMatch = agendamento.servico.toLowerCase().includes(filtroServico);
-                if (!nomeMatch || !servicoMatch) return false;
+                // Aplicar busca inteligente
+                const buscaMatch = buscaInteligente(agendamento, termoBusca);
+                if (!buscaMatch) return false;
 
+                // Aplicar filtro de período
                 if (periodo && agendamento.data) {
                     // Compare dates as strings in YYYY-MM-DD format to avoid timezone issues
                     if (periodo === 'passado' && agendamento.data >= dataHoje) return false;
@@ -1606,33 +1914,71 @@
         function atualizarControlesPaginacao() {
             const paginationContainer = document.getElementById('paginationContainer');
             const paginationInfo = document.getElementById('paginationInfo');
-            const btnVoltar = document.getElementById('btnVoltar');
-            const btnProximo = document.getElementById('btnProximo');
 
             paginationContainer.classList.remove('hidden');
             paginationInfo.textContent = `${paginaAtual} de ${totalPaginas}`;
 
-            // Desabilitar botão "Voltar" se estamos na primeira página
-            btnVoltar.disabled = paginaAtual === 1;
-
-            // Desabilitar botão "Próximo" se estamos na última página
-            btnProximo.disabled = paginaAtual === totalPaginas;
+            // Habilitar/desabilitar botões de acordo com a página atual
+            habilitarBotoesPaginacao();
         }
 
         function irProximaPagina() {
-            if (paginaAtual < totalPaginas) {
+            // Impedir múltiplos cliques durante animação
+            if (paginacaoEmAndamento || paginaAtual >= totalPaginas) return;
+
+            paginacaoEmAndamento = true;
+            desabilitarBotoesPaginacao();
+
+            // Animar cards saindo para a esquerda
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.classList.add('exit-left');
+            });
+
+            // Após animação sair, trocar página
+            setTimeout(() => {
                 paginaAtual++;
-                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual);
+                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual, 'left');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+                paginacaoEmAndamento = false;
+                habilitarBotoesPaginacao();
+            }, 400);
         }
 
         function irPaginaAnterior() {
-            if (paginaAtual > 1) {
+            // Impedir múltiplos cliques durante animação
+            if (paginacaoEmAndamento || paginaAtual <= 1) return;
+
+            paginacaoEmAndamento = true;
+            desabilitarBotoesPaginacao();
+
+            // Animar cards saindo para a direita
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.classList.add('exit-right');
+            });
+
+            // Após animação sair, trocar página
+            setTimeout(() => {
                 paginaAtual--;
-                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual);
+                exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual, 'right');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+                paginacaoEmAndamento = false;
+                habilitarBotoesPaginacao();
+            }, 400);
+        }
+
+        function desabilitarBotoesPaginacao() {
+            document.getElementById('btnVoltar').disabled = true;
+            document.getElementById('btnProximo').disabled = true;
+        }
+
+        function habilitarBotoesPaginacao() {
+            const btnVoltar = document.getElementById('btnVoltar');
+            const btnProximo = document.getElementById('btnProximo');
+
+            btnVoltar.disabled = paginaAtual === 1;
+            btnProximo.disabled = paginaAtual === totalPaginas;
         }
 
         function abrirModal(agendamento) {
@@ -1870,9 +2216,6 @@
             const confirmado = await confirmarAsync(`Deseja realmente excluir o agendamento de ${agendamento.nome}?`);
             if (!confirmado) return;
 
-            // mostrar loader global e desabilitar interação
-            showLoader();
-
             // credenciais em cache
             const nomeUsuario = sessionStorage.getItem('usuarioLogado');
             const senhaCache = sessionStorage.getItem('senhaUsuario');
@@ -1881,21 +2224,45 @@
                 const resultado = await excluirAgendamentoNoServidor(agendamento.id, nomeUsuario, senhaCache);
 
                 if (resultado.sucesso) {
+                    // Remover do array global
                     agendamentosGlobais = agendamentosGlobais.filter(a => a.id !== agendamento.id);
                     sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+
+                    // Remover do array filtrado também
+                    agendamentosFiltradosGlobal = agendamentosFiltradosGlobal.filter(a => a.id !== agendamento.id);
+
+                    // Encontrar e remover o card da DOM com animação
+                    const cards = document.querySelectorAll('.card');
+                    for (let card of cards) {
+                        // Procurar pela informação do agendamento no card
+                        if (card.textContent.includes(agendamento.nome)) {
+                            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => card.remove(), 300);
+                            break;
+                        }
+                    }
+
+                    // Atualizar paginação se necessário
+                    const cardsRestantes = document.querySelectorAll('.card').length;
+                    if (cardsRestantes === 0 && agendamentosFiltradosGlobal.length === 0) {
+                        // Se não há mais agendamentos na página atual, ir para página anterior
+                        if (paginaAtual > 1) {
+                            paginaAtual--;
+                            exibirAgendamentos(agendamentosFiltradosGlobal, periodoAtual, paginaAtual);
+                        } else {
+                            // Se era a única página, exibir mensagem de sem dados
+                            const labelPeriodo = obterLabelPeriodo(periodoAtual);
+                            document.getElementById('containerCards').innerHTML = `<div class="sem-dados">Sem agendamentos para '${labelPeriodo}'</div>`;
+                            document.getElementById('paginationContainer').classList.add('hidden');
+                        }
+                    } else {
+                        // Atualizar controles de paginação
+                        atualizarControlesPaginacao();
+                    }
+
                     mostrarNotificacao('Agendamento excluído com sucesso.', 'exclusao', 4000, 'ri-delete-bin-line', true);
-
-                    // Resetar filtros para padrão
-                    document.getElementById('filtroNome').value = '';
-                    document.getElementById('filtroServico').value = '';
-                    document.getElementById('filtroPeriodo').value = 'hoje';
-                    document.getElementById('dropdownLabel').textContent = 'Presente (Hoje)';
-                    const dropdownOpts = document.querySelectorAll('.dropdown-option');
-                    dropdownOpts.forEach(opt => opt.classList.remove('selected'));
-                    dropdownOpts[2].classList.add('selected');
-
-                    // Executar filtros para aplicar o padrão
-                    executarFiltros();
                 } else {
                     mostrarNotificacao('Não foi possível excluir: ' + (resultado.mensagem || 'erro desconhecido'), 'erro', 4000);
                 }
@@ -1903,8 +2270,6 @@
                 // se for Error, mostre a mensagem
                 const msg = erro && erro.message ? erro.message : 'Erro ao excluir agendamento. Verifique sua conexão e tente novamente.';
                 mostrarNotificacao(msg, 'erro', 4000);
-            } finally {
-                hideLoader();
             }
         }
     </script>

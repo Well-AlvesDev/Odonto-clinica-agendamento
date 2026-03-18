@@ -14,6 +14,41 @@ function horarioParaMinutos(horario) {
     return horas * 60 + minutos;
 }
 
+// =====================================================
+// VALIDAÇÃO DE ANTECEDÊNCIA PARA CANCELAMENTO (2 HORAS)
+// =====================================================
+
+// Calcula o tempo restante até um agendamento em horas e minutos
+function calcularTempoRestante(dataStr, horarioStr) {
+    try {
+        // Converte data no formato YYYY-MM-DD HH:MM para timestamp
+        const [dia, mes, ano] = dataStr.includes('/') ? dataStr.split('/') : [null];
+        const dataFormatada = ano ? `${ano}-${mes}-${dia}` : dataStr;
+
+        const datetime = new Date(`${dataFormatada}T${horarioStr}:00`);
+        const agora = new Date();
+        const diferenca = datetime - agora;
+
+        const horas = Math.floor(diferenca / (1000 * 60 * 60));
+        const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+
+        return {
+            ms: diferenca,
+            horas: horas,
+            minutos: minutos,
+            total: horas + (minutos / 60)
+        };
+    } catch (err) {
+        console.error('Erro ao calcular tempo restante:', err);
+        return { ms: 0, horas: 0, minutos: 0, total: 0 };
+    }
+}
+
+// Verifica se é possível cancelar um agendamento (precisa de 2+ horas de antecedência)
+function podesCancelarAgendamento(dataStr, horarioStr) {
+    const tempoRestante = calcularTempoRestante(dataStr, horarioStr);
+    return tempoRestante.total >= 2;
+}
 
 // CACHE DE DURAÇÕES DE SERVIÇOS
 const SERVICOS_DURACAO_CACHE_KEY = 'servicos_duracao_cache';
@@ -328,7 +363,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
         let html = '<div class="agendamentos-grid">';
         agendamentosValidos.forEach(item => {
             html += `
-                <div class="card-agendamento">
+                <div class="card-agendamento" data-id="${item.id}">
                     <div class="card-header">
                         <div class="card-usuario">
                             <i class="ri-user-line"></i>
@@ -366,11 +401,74 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             </div>
                         </div>
                     </div>
+                    <button type="button" class="btn-cancelar-agendamento" data-id="${item.id}" data-data="${item.data}" data-horario="${item.horario}" title="Cancelar este agendamento">
+                        <i class="ri-close-line"></i> Cancelar
+                    </button>
                 </div>
             `;
         });
         html += '</div>';
         conteudoLista.innerHTML = html;
+
+        // Adiciona event listeners para os botões de cancelar agendamento
+        const botoesCancelar = conteudoLista.querySelectorAll('.btn-cancelar-agendamento');
+        botoesCancelar.forEach(botao => {
+            const idAgendamento = botao.getAttribute('data-id');
+            const dataCadastro = botao.getAttribute('data-data');
+            const horarioCadastro = botao.getAttribute('data-horario');
+
+            // Verifica antecedência e remove botão se cancelamento não for permitido
+            const podeCancelar = podesCancelarAgendamento(dataCadastro, horarioCadastro);
+
+            if (!podeCancelar) {
+                // Remove o botão do DOM completamente
+                botao.remove();
+                return;
+            }
+
+            botao.addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                // Pede confirmação antes de cancelar
+                const confirmacao = confirm('Tem certeza que deseja cancelar este agendamento?');
+                if (!confirmacao) return;
+
+                try {
+                    botao.disabled = true;
+                    botao.textContent = 'Cancelando...';
+
+                    await cancelarAgendamento(idAgendamento);
+
+                    // Remove o card da tela
+                    const card = botao.closest('.card-agendamento');
+                    if (card) {
+                        card.style.opacity = '0';
+                        card.style.transition = 'opacity 0.3s ease';
+                        setTimeout(() => {
+                            card.remove();
+                        }, 300);
+                    }
+
+                    // Recarrega a lista de agendamentos após um tempo
+                    setTimeout(() => {
+                        carregarMeusAgendamentos(conteudoLista);
+                    }, 500);
+
+                } catch (err) {
+                    console.error('Erro ao cancelar agendamento:', err);
+
+                    // Trata erro específico de antecedência da RPC
+                    if (err.message && err.message.includes('2 horas')) {
+                        alert('❌ Cancelamento não permitido.\n\n' + err.message);
+                    } else {
+                        alert('❌ Erro ao cancelar o agendamento. Tente novamente.');
+                    }
+
+                    botao.disabled = false;
+                    botao.textContent = 'Cancelar';
+                }
+            });
+        });
 
         // Mostra a mensagem de comparecimento após os cards serem renderizados
         const msgComparencimento = document.getElementById('msgComparencimento');
@@ -1005,4 +1103,35 @@ async function salvarNovoAgendamento(nome, telefone, servico, data, horario) {
 
     salvarIdLocalmente(novoId);
     return novoId;
+}
+
+// Remove um ID do cache local
+function removerIdLocalmente(idParaRemover) {
+    let listaIds = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    listaIds = listaIds.filter(id => id !== idParaRemover);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(listaIds));
+}
+
+// Cancela um agendamento usando RPC (com security definer)
+async function cancelarAgendamento(idAgendamento) {
+    try {
+        // Chama a RPC para deletar o agendamento (com security definer)
+        const { error } = await _supabase
+            .rpc('cancelar_agendamento_rpc', {
+                id_agendamento: idAgendamento
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        // Se sucesso, remove o ID do cache local
+        removerIdLocalmente(idAgendamento);
+        console.log(`Agendamento ${idAgendamento} cancelado com sucesso`);
+        return true;
+
+    } catch (err) {
+        console.error('Erro ao cancelar agendamento:', err);
+        throw err;
+    }
 }

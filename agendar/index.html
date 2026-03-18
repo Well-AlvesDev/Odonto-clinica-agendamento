@@ -475,6 +475,46 @@
             font-size: 14px;
         }
 
+        /* Botão de Cancelar Agendamento */
+        .btn-cancelar-agendamento {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 12px;
+            background: #fee;
+            border: 1px solid #e74c3c;
+            border-radius: 6px;
+            color: #c0392b;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-cancelar-agendamento:hover {
+            background: #f5d5d5;
+            border-color: #c0392b;
+            box-shadow: 0 2px 6px rgba(192, 57, 43, 0.2);
+        }
+
+        .btn-cancelar-agendamento:active {
+            background: #f0c5c5;
+        }
+
+        .btn-cancelar-agendamento:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-cancelar-agendamento i {
+            font-size: 16px;
+        }
+
         /* Responsivo para telas pequenas */
         @media (max-width: 640px) {
             .agendamentos-grid {
@@ -1104,88 +1144,88 @@
                 <img src="../recursos/imgs/lgpd-logo.webp" alt=""
                     style="width: 200px; display: block; margin: 5px auto;">
                 <p style="font-size: 13px; margin-top: -30px;">
+              
+                    <a style="color: #1b4275; font-size: 1.1em; font-weight: bold;"> Termos de Uso e Política de
+                        Privacidade – Odonto Clínica </a>
                     <br>
-                    <br>
-                    <a style="color: #1b4275;"> Termos de Uso e Política de Privacidade – Odonto Clínica <br>
-                        Ao utilizar este sistema de agendamento, você concorda com as condições de serviço e o
-                        tratamento de
-                        dados descritos abaixo:</a>
-                    <br>
-                    <br>
+                    Ao utilizar este sistema de agendamento, você concorda com as condições de serviço e o tratamento de
+                    dados descritos abaixo:
+                    <br><br>
+
                     <strong>1. Regras de Agendamento e Cancelamento</strong>
                     <br>
                     <a style="text-decoration: underline;">Serviços:</a> Este formulário destina-se exclusivamente à
-                    reserva de horários para procedimentos na
-                    Odonto Clínica.
+                    reserva de horários para procedimentos na Odonto Clínica.
                     <br>
                     <a style="text-decoration: underline;">Cancelamento:</a> O usuário pode cancelar ou reagendar seu
-                    horário com, no mínimo, 4 horas de
-                    antecedência.
+                    horário com, no mínimo, 2 horas de antecedência.
                     <br>
-                    <a style="text-decoration: underline;"> Uso Indevido:</a> <a style="color: #e74c3c;">Agendamentos e
-                        cancelamentos sucessivos ou
-                        em massa são monitorados. Para evitar
-                        fraudes ou sobrecarga do sistema, o indivíduo poderá ser suspenso ou banido temporariamente
-                        em caso de abuso comprovado.</a>
-                    <br>
+                    <a style="text-decoration: underline;">Uso Indevido:</a> <a style="color: #e74c3c;">Agendamentos e
+                        cancelamentos sucessivos ou em massa são monitorados. Para evitar fraudes ou sobrecarga do
+                        sistema, o usuário poderá ser suspenso ou banido temporariamente em caso de abuso
+                        comprovado.</a>
+                    <br><br>
+
                     <strong>2. Pagamento</strong>
                     <br>
-                    <a style="text-decoration: underline;"> Local do Pagamento:</a> Não solicitamos dados de cartão ou
+                    <a style="text-decoration: underline;">Local do Pagamento:</a> Não solicitamos dados de cartão ou
                     pagamentos antecipados via site.
                     <br>
-                    <a style="text-decoration: underline;"> Finalização:</a> O pagamento referente ao serviço agendado
-                    será realizado presencialmente na Odonto
-                    Clínica, após o devido atendimento.
-                    <br>
+                    <a style="text-decoration: underline;">Finalização:</a> O pagamento referente ao serviço agendado
+                    será realizado presencialmente na Odonto Clínica, após o devido atendimento.
+                    <br><br>
+
                     <strong>3. Segurança e Integridade</strong>
                     <br>
-                    <mark> Qualquer tentativa de ataque, invasão ou manipulação de dados contra este sistema resultará
-                        em
+                    <mark>Qualquer tentativa de ataque, invasão ou manipulação de dados contra este sistema resultará em
                         banimento imediato e poderá sofrer sanções legais conforme a legislação vigente de crimes
                         cibernéticos.</mark>
+                    <br><br>
+
+                    <strong>4. Política de Privacidade e Proteção de Dados</strong>
                     <br>
-                    <strong> 4. Política de Privacidade e Proteção de Dados </strong>
-                    <a style="color: #a5550f;"> Em conformidade com a Lei Geral de Proteção de Dados (LGPD), informamos:
-                    </a>
+                    <a style="color: #a5550f;">Em conformidade com a Lei Geral de Proteção de Dados (LGPD),
+                        informamos:</a>
                     <br>
-                    <a style="text-decoration: underline;"> Finalidade:</a> Os dados coletados (Nome, Telefone, Serviço
-                    e Horário) servem exclusivamente para a
-                    identificação do paciente e organização da agenda da clínica.
+                    <a style="text-decoration: underline;">Finalidade:</a> Os dados coletados (Nome, Telefone, Serviço e
+                    Horário) destinam-se à identificação do paciente, organização da agenda e à <strong>realização de
+                        levantamentos estatísticos e análises internas</strong>. Esse processamento permite o
+                    acompanhamento histórico dos serviços prestados a cada cliente, garantindo uma gestão clínica mais
+                    eficiente e a melhoria contínua do atendimento prestado.
                     <br>
-                    <a style="text-decoration: underline;"> Operação Técnica:</a> O responsável pela manutenção do
-                    sistema atua como Operador de Dados, acessando as
-                    informações estritamente para garantir o funcionamento do banco de dados e suporte técnico, sob
-                    protocolos de confidencialidade.
+                    <a style="text-decoration: underline;">Operação Técnica:</a> O responsável pela manutenção do
+                    sistema atua como Operador de Dados, acessando as informações estritamente para garantir o
+                    funcionamento do banco de dados e suporte técnico, sob rígidos protocolos de confidencialidade.
                     <br>
-                    <a style="text-decoration: underline;"> Segurança:</a> Utilizamos a infraestrutura do Supabase, que
-                    provê armazenamento criptografado e camadas
-                    de segurança contra acessos não autorizados.
+                    <a style="text-decoration: underline;">Segurança:</a> Utilizamos a infraestrutura do Supabase, que
+                    provê armazenamento criptografado e múltiplas camadas de proteção contra acessos não autorizados.
                     <br>
-                    <a style="text-decoration: underline;"> Retenção:</a> Os dados serão mantidos apenas pelo período
-                    necessário para a prestação do serviço ou
-                    conforme obrigações legais de prontuário odontológico.
+                    <a style="text-decoration: underline;">Retenção:</a> Os dados serão mantidos de forma segura apenas
+                    pelo período necessário para a prestação do serviço, realização das análises mencionadas ou conforme
+                    obrigações legais de prontuário odontológico.
                     <br>
-                    <a style="text-decoration: underline;"> Direitos do Usuário:</a> O paciente pode, a qualquer
-                    momento, solicitar a retificação ou exclusão de
-                    seus dados de contato da base de agendamento online, entrando em contato direto com a clínica.
-                    <br>
+                    <a style="text-decoration: underline;">Direitos do Usuário:</a> O paciente pode, a qualquer momento,
+                    solicitar a retificação ou exclusão de seus dados de contato da base de agendamento online, entrando
+                    em contato direto com a clínica.
+                    <br><br>
+
                     <strong>5. Infraestrutura e Segurança Tecnológica (Supabase)</strong>
                     <br>
                     <a style="text-decoration: underline;">Padrões de Proteção:</a> O sistema utiliza a infraestrutura
-                    do Supabase, que opera sob rigorosos protocolos de segurança para garantir a integridade dos
-                    dados[cite: 17].
+                    do Supabase, que opera sob rigorosos protocolos de segurança para garantir a integridade das
+                    informações.
                     <br>
                     <a style="text-decoration: underline;">Criptografia:</a> Todos os dados são criptografados em
                     repouso (AES-256) e em trânsito (TLS 1.2+), impedindo o acesso indevido durante o armazenamento ou
-                    envio das informações.
+                    tráfego das informações.
                     <br>
                     <a style="text-decoration: underline;">Controle de Acesso:</a> Utilizamos a tecnologia Row Level
                     Security (RLS), que define políticas granulares de acesso, garantindo que as informações sejam
-                    visualizadas apenas por quem tem permissão[cite: 17].
+                    visualizadas apenas por pessoal autorizado.
                     <br>
                     <a style="text-decoration: underline;">Defesa e Conformidade:</a> A plataforma conta com proteção
                     contra ataques de força bruta e segue padrões internacionais de conformidade (como SOC 2 e HIPAA),
-                    reforçando a segurança do prontuário odontológico[cite: 18].
+                    reforçando a segurança e o sigilo do prontuário odontológico.
                 </p>
             </div>
         </div>

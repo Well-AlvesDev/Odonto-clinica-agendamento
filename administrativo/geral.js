@@ -694,15 +694,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
 
-    carregarNomeUsuario();
-    carregarDataAtual();
-    await carregarDadosDoServidor();
-    await carregarServicosClinica();
-    configurarFormulario();
+    // Mostrar loader
+    document.getElementById('loaderOverlay').style.display = 'flex';
 
-    // Renderizar badges de serviços nos formulários
-    renderizarBadgesServicos('servicosNovoContainer', servicosSelecionadosNovo);
-    renderizarBadgesServicos('servicosEditContainer', servicosSelecionadosEdicao);
+    try {
+        carregarNomeUsuario();
+        carregarDataAtual();
+        await carregarDadosDoServidor();
+        await carregarServicosClinica();
+        configurarFormulario();
+
+        // Renderizar badges de serviços nos formulários
+        renderizarBadgesServicos('servicosNovoContainer', servicosSelecionadosNovo);
+        renderizarBadgesServicos('servicosEditContainer', servicosSelecionadosEdicao);
+    } finally {
+        // Esconder loader
+        document.getElementById('loaderOverlay').style.display = 'none';
+    }
 });
 
 // ===================================================
@@ -1977,7 +1985,7 @@ function abrirModalExclusao(data) {
     idHorarioEmExclusao = data;
     const dataFormatada = formatarData(horario.data);
     document.getElementById('mensagemExclusao').innerHTML =
-        `Tem certeza que deseja excluir a data <strong>${dataFormatada}</strong>?<br><br>Esta ação é irreversível e removerá:<br>- A data registrada<br>- Os horários associados<br>- Os serviços cadastrados`;
+        `Tem certeza que deseja excluir a data <strong>${dataFormatada}</strong>?<br><br>Esta ação é irreversível e removerá a data registrada no sistema, não ficando mais disponível para agendamento.`;
 
     document.getElementById('confirmationExclusaoOverlay').classList.add('ativo');
     congelarScroll();
