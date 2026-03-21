@@ -1526,20 +1526,24 @@
             document.getElementById('piorMesCount').textContent = `Pior mês: ${piorMes} (${minAgendamentos} agendamentos)`;
 
             // Calcular agendamentos por serviço nos últimos 12 meses
-            const dataInicio12 = new Date(hoje);
-            dataInicio12.setMonth(dataInicio12.getMonth() - 11);
-            dataInicio12.setDate(1);
             const agendamentosPorServicoMes = {};
 
-            agendamentosGlobais.forEach(agendamento => {
-                const dataAgendamento = new Date(agendamento.data + 'T00:00:00');
-                if (dataAgendamento >= dataInicio12 && dataAgendamento <= hoje) {
-                    if (!agendamentosPorServicoMes[agendamento.servico]) {
-                        agendamentosPorServicoMes[agendamento.servico] = 0;
+            // Usar a mesma lógica do gráfico para garantir consistência
+            for (let i = 11; i >= 0; i--) {
+                const data = new Date(hoje);
+                data.setMonth(data.getMonth() - i);
+                const ano = data.getFullYear();
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+
+                agendamentosGlobais.forEach(agendamento => {
+                    if (agendamento.data.startsWith(`${ano}-${mes}`)) {
+                        if (!agendamentosPorServicoMes[agendamento.servico]) {
+                            agendamentosPorServicoMes[agendamento.servico] = 0;
+                        }
+                        agendamentosPorServicoMes[agendamento.servico]++;
                     }
-                    agendamentosPorServicoMes[agendamento.servico]++;
-                }
-            });
+                });
+            }
 
             // Renderizar legenda de serviços
             const legendaServicosContainerMes = document.getElementById('agendamentosPorServicoLegendMes');

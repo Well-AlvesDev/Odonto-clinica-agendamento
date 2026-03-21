@@ -381,8 +381,16 @@ async function carregarMeusAgendamentos(conteudoLista) {
             return;
         }
 
+        // Carrega os preços de todos os serviços únicos
+        const servicosUnicos = [...new Set(agendamentosValidos.map(item => item.servico))];
+        const precosMap = {};
+        for (const servico of servicosUnicos) {
+            precosMap[servico] = await obterPrecoServico(servico);
+        }
+
         let html = '<div class="agendamentos-grid">';
         agendamentosValidos.forEach(item => {
+            const preco = precosMap[item.servico] || 0;
             html += `
                 <div class="card-agendamento" data-id="${item.id}">
                     <div class="card-header">
@@ -404,6 +412,11 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             <i class="ri-bubble-chart-line"></i>
                             <span class="card-label">Serviço</span>
                             <span class="card-value">${item.servico}</span>
+                        </div>
+                        <div class="card-item">
+                           <i class="ri-money-dollar-circle-line"></i>
+                            <span class="card-label">Preço</span>
+                            <span class="card-value">R$ ${preco.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                     <div class="card-footer">
