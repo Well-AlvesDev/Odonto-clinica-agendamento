@@ -50,11 +50,11 @@ function podesCancelarAgendamento(dataStr, horarioStr) {
     return tempoRestante.total >= 2;
 }
 
-// CACHE DE DURAÇÕES DE SERVIÇOS
-const SERVICOS_DURACAO_CACHE_KEY = 'servicos_duracao_cache';
+// CACHE DE DURAÇÕES E PREÇOS DE SERVIÇOS
+const SERVICOS_DURACAO_CACHE_KEY = 'servicos_duracao_preco_cache';
 const SERVICOS_DURACAO_CACHE_EXPIRY = 30 * 1000; // 30 segundos em milissegundos
 
-// Verifica se o cache de durações é válido
+// Verifica se o cache de durações e preços é válido
 function isDuracoesCacheValido() {
     const cached = localStorage.getItem(SERVICOS_DURACAO_CACHE_KEY);
     if (!cached) return false;
@@ -75,7 +75,7 @@ function isDuracoesCacheValido() {
     }
 }
 
-// Salva durações em cache
+// Salva durações e preços em cache
 function salvarDuracoesEmCache(duracoes) {
     const cacheData = {
         duracoes: duracoes,
@@ -84,7 +84,7 @@ function salvarDuracoesEmCache(duracoes) {
     localStorage.setItem(SERVICOS_DURACAO_CACHE_KEY, JSON.stringify(cacheData));
 }
 
-// Obtém durações do cache
+// Obtém durações e preços do cache
 function obterDuracoesDoCache() {
     const cached = localStorage.getItem(SERVICOS_DURACAO_CACHE_KEY);
     if (!cached) return null;
@@ -121,23 +121,23 @@ function normalizarServicoNome(nome) {
         });
 }
 
-// Carrega as durações dos serviços do Supabase com cache
-// Retorna um objeto: { "canal": 60, "limpeza": 30, ... }
+// Carrega as durações e preços dos serviços do Supabase com cache
+// Retorna um objeto: { "canal": { duracao: 60, preco: 100 }, "limpeza": { duracao: 30, preco: 50 }, ... }
 async function carregarDuracoesServicos() {
     try {
         // Verifica se o cache é válido
         if (isDuracoesCacheValido()) {
-            console.log('Durações de serviços carregadas do cache');
+            console.log('Durações e preços de serviços carregados do cache');
             const cached = obterDuracoesDoCache();
             // atualizar referência global para uso imediato
             window.duracoesServicosCache = cached || {};
             return cached;
         }
 
-        // Se cache inválido, faz o fetch
+        // Se cache inválido, faz o fetch (inclui price)
         const { data, error } = await _supabase
             .from('servicos_tempo')
-            .select('servico, duracao_minuto');
+            .select('servico, duracao_minuto, price');
 
         if (error) throw error;
 
@@ -147,11 +147,14 @@ async function carregarDuracoesServicos() {
             return {};
         }
 
-        // Cria um objeto normalizado { "servico": duracao }
+        // Cria um objeto normalizado { "servico": { duracao: X, preco: Y } }
         const duracoes = {};
         data.forEach(item => {
             const servicoNormalizado = normalizarServicoNome(item.servico);
-            duracoes[servicoNormalizado] = item.duracao_minuto;
+            duracoes[servicoNormalizado] = {
+                duracao: item.duracao_minuto,
+                preco: item.price || 0
+            };
         });
 
         // Salva em cache
@@ -159,16 +162,16 @@ async function carregarDuracoesServicos() {
         // guarda também na variável global para acesso rápido
         window.duracoesServicosCache = duracoes;
 
-        console.log('Durações de serviços carregadas do Supabase e cacheadas');
+        console.log('Durações e preços de serviços carregados do Supabase e cacheados');
         return duracoes;
 
     } catch (err) {
-        console.error('Erro ao buscar durações de serviços:', err);
+        console.error('Erro ao buscar durações e preços de serviços:', err);
 
         // Se falhar, tenta retornar do cache mesmo que expirado
         const duracoesCache = obterDuracoesDoCache();
         if (duracoesCache) {
-            console.log('Retornando durações do cache (expirado) devido a erro');
+            console.log('Retornando durações e preços do cache (expirado) devido a erro');
             window.duracoesServicosCache = duracoesCache;
             return duracoesCache;
         }
@@ -187,13 +190,31 @@ async function obterDuracaoServico(nomeServico) {
     // procura no cache global se existir
     if (window.duracoesServicosCache) {
         const chave = normalizarServicoNome(nomeServico);
-        return window.duracoesServicosCache[chave] || 0;
+        const dados = window.duracoesServicosCache[chave];
+        return dados ? dados.duracao : 0;
     }
 
     // fallback: carrega via Supabase (pode acionar fetch ou cache)
     const duracoes = await carregarDuracoesServicos();
     const servicoNormalizado = normalizarServicoNome(nomeServico);
-    return duracoes[servicoNormalizado] || 0;
+    const dados = duracoes[servicoNormalizado];
+    return dados ? dados.duracao : 0;
+}
+
+// Obtém o preço de um serviço específico
+async function obterPrecoServico(nomeServico) {
+    // procura no cache global se existir
+    if (window.duracoesServicosCache) {
+        const chave = normalizarServicoNome(nomeServico);
+        const dados = window.duracoesServicosCache[chave];
+        return dados ? dados.preco : 0;
+    }
+
+    // fallback: carrega via Supabase (pode acionar fetch ou cache)
+    const duracoes = await carregarDuracoesServicos();
+    const servicoNormalizado = normalizarServicoNome(nomeServico);
+    const dados = duracoes[servicoNormalizado];
+    return dados ? dados.preco : 0;
 }
 
 // CACHE NO LOCALSTORAGE

@@ -266,6 +266,23 @@
         box-shadow: 0 4px 16px rgba(37, 89, 150, 0.2);
     }
 
+    /* Animação para cards ao mudar de página */
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .horario-card-animated {
+        animation: slideInUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
     .horario-info {
         flex: 1;
     }
@@ -1073,5 +1090,69 @@
 
         100% {
             transform: rotate(360deg);
+        }
+    }
+
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-pagination {
+        padding: 8px 14px;
+        background-color: #255996;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-pagination:hover:not(:disabled) {
+        background-color: #1e4573;
+        box-shadow: 0 4px 12px rgba(37, 89, 150, 0.3);
+    }
+
+    .btn-pagination:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .pagination-info {
+        font-weight: 600;
+        color: #255996;
+        font-size: 14px;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .pagination-container {
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .btn-pagination {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .pagination-info {
+            font-size: 12px;
+            min-width: 50px;
         }
     }

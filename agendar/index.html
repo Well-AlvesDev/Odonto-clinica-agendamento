@@ -1143,8 +1143,10 @@
             <div class="modal-termos-body">
                 <img src="../recursos/imgs/lgpd-logo.webp" alt=""
                     style="width: 200px; display: block; margin: 5px auto;">
+                <br>
+                <br>
                 <p style="font-size: 13px; margin-top: -30px;">
-              
+
                     <a style="color: #1b4275; font-size: 1.1em; font-weight: bold;"> Termos de Uso e Política de
                         Privacidade – Odonto Clínica </a>
                     <br>
@@ -1366,30 +1368,42 @@
                 this.currentLabel = option.getAttribute('data-label');
                 this.hiddenInput.value = this.currentValue;
 
-                // Atualiza o label do botão, incluindo duração se houver
+                // Atualiza o label do botão, incluindo duração e preço se houver
                 let label = this.currentLabel;
                 let duracaoStr = '';
+                let precoStr = '';
 
                 if (this.currentValue) {
                     let duracaoMin = 0;
+                    let preco = 0;
                     if (window.duracoesServicosCache) {
                         const chave = (typeof normalizarServicoNome === 'function')
                             ? normalizarServicoNome(this.currentValue)
                             : this.currentValue.toLowerCase().trim();
-                        duracaoMin = window.duracoesServicosCache[chave] || 0;
+                        duracaoMin = window.duracoesServicosCache[chave]?.duracao || 0;
+                        preco = window.duracoesServicosCache[chave]?.preco || 0;
                     } else {
                         duracaoMin = await obterDuracaoServico(this.currentValue);
+                        preco = await obterPrecoServico(this.currentValue);
                     }
 
                     const horas = Math.floor(duracaoMin / 60);
                     const minutos = duracaoMin % 60;
                     if (horas >= 1) {
-                        duracaoStr = ` (${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min)`;
+                        duracaoStr = `${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min`;
                     } else {
-                        duracaoStr = ` (${minutos.toString().padStart(2, '0')}min)`;
+                        duracaoStr = `${minutos.toString().padStart(2, '0')}min`;
                     }
+
+                    // Formata preço em reais
+                    const precoFormatado = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(preco);
+
+                    precoStr = ` (${duracaoStr}) - ${precoFormatado}`;
                 }
-                this.toggle.querySelector('.dropdown-label').textContent = label + duracaoStr;
+                this.toggle.querySelector('.dropdown-label').textContent = label + precoStr;
 
                 // Atualiza o estado de seleção
                 this.options.forEach(opt => {
@@ -1426,7 +1440,7 @@
                             const chave = (typeof normalizarServicoNome === 'function')
                                 ? normalizarServicoNome(this.currentValue)
                                 : this.currentValue.toLowerCase().trim();
-                            duracao = window.duracoesServicosCache[chave] || 0;
+                            duracao = window.duracoesServicosCache[chave]?.duracao || 0;
                         } else {
                             duracao = await obterDuracaoServico(this.currentValue);
                         }
@@ -1928,7 +1942,7 @@
                                 const chave = (typeof normalizarServicoNome === 'function')
                                     ? normalizarServicoNome(servicoSelecionado)
                                     : servicoSelecionado.toLowerCase().trim();
-                                duracao = window.duracoesServicosCache[chave] || 0;
+                                duracao = window.duracoesServicosCache[chave]?.duracao || 0;
                             } else {
                                 duracao = await obterDuracaoServico(servicoSelecionado);
                             }
@@ -2018,16 +2032,30 @@
                                 };
                                 return mapa[c] || c;
                             });
-                    const duracaoMin = duracoes[servicoNormalizado] || 0;
+
+                    // Obtém dados de duração e preço
+                    const dadosServico = duracoes[servicoNormalizado] || {};
+                    const duracaoMin = dadosServico.duracao || 0;
+                    const preco = dadosServico.preco || 0;
+
+                    // Formata duração
                     const horas = Math.floor(duracaoMin / 60);
                     const minutos = duracaoMin % 60;
                     let duracaoStr = '';
                     if (horas >= 1) {
-                        duracaoStr = ` (${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min)`;
+                        duracaoStr = `${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min`;
                     } else {
-                        duracaoStr = ` (${minutos.toString().padStart(2, '0')}min)`;
+                        duracaoStr = `${minutos.toString().padStart(2, '0')}min`;
                     }
-                    li.textContent = servico + duracaoStr;
+
+                    // Formata preço (exemplo: R$ 100,00)
+                    const precoFormatado = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(preco);
+
+                    // Monta texto final: [NOME] (TEMPO) - PREÇO
+                    li.textContent = `${servico} (${duracaoStr}) - ${precoFormatado}`;
                     dropdownMenu.appendChild(li);
                 });
 

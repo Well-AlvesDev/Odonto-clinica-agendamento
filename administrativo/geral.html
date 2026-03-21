@@ -54,6 +54,16 @@
             <div id="horariosContainer" class="horarios-container">
                 <div class="sem-dados">Nenhum horário registrado ainda.</div>
             </div>
+            <!-- Controle de Paginação -->
+            <div id="paginationContainer" class="pagination-container" style="display: none;">
+                <button class="btn-pagination" id="btnAnterior" onclick="irPaginaAnterior()">
+                    <i class="ri-arrow-left-s-line"></i> Anterior
+                </button>
+                <span class="pagination-info" id="paginationInfo">1 de 1</span>
+                <button class="btn-pagination" id="btnProximo" onclick="irProximaPagina()">
+                    Próximo <i class="ri-arrow-right-s-line"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Gerenciamento de Serviços da Clínica -->
@@ -103,6 +113,13 @@
                         <span id="detalhesDuracaoServico">-</span>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Preço do Serviço</label>
+                    <div
+                        style="padding: 12px; background-color: #f9f9f9; border-radius: 6px; border: 1px solid #ddd; color: #333; font-weight: 500;">
+                        <span id="detalhesPrecoServico">-</span>
+                    </div>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar" onclick="fecharModalDetalhesServico()">Fechar</button>
                 </div>
@@ -125,6 +142,10 @@
                 <div class="form-group">
                     <label for="inputDuracaoServico">Duração (minutos) *</label>
                     <input type="number" id="inputDuracaoServico" placeholder="Ex: 30" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="inputPrecoServico">Preço (R$) *</label>
+                    <input type="number" id="inputPrecoServico" placeholder="Ex: 50.00" min="0" step="0.01" required>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancelar" onclick="fecharModalServico()">Cancelar</button>

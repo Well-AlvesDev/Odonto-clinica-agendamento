@@ -49,6 +49,12 @@ const datePickerStateNovo = {
 };
 
 // ===================================================
+// VARIÁVEIS DE PAGINAÇÃO
+// ===================================================
+let paginacaoAtual = 1;
+const ITENS_POR_PAGINA = 6;
+
+// ===================================================
 // FUNÇÕES PARA CONGELAR/DESCONGELAR SCROLL
 // ===================================================
 function congelarScroll() {
@@ -718,6 +724,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 // ===================================================
 async function carregarDadosDoServidor() {
     try {
+        // Resetar paginação ao carregar novos dados
+        paginacaoAtual = 1;
+
         // Buscar datas e serviços da tabela 'cpxm'
         const { data: dataCpxm, error: errorCpxm } = await _supabase
             .from('cpxm')
@@ -1104,9 +1113,11 @@ async function salvarNovoHorario() {
 // ===================================================
 function exibirHorarios() {
     const container = document.getElementById('horariosContainer');
+    const paginationContainer = document.getElementById('paginationContainer');
 
     if (horariosGlobais.length === 0) {
         container.innerHTML = '<div class="sem-dados">Nenhum horário registrado ainda.</div>';
+        paginationContainer.style.display = 'none';
         return;
     }
 
@@ -1134,11 +1145,34 @@ function exibirHorarios() {
     // Combinar na ordem desejada
     const horariosOrdenados = [...hoje, ...ativos, ...finalizados];
 
+    // ===================================================
+    // LÓGICA DE PAGINAÇÃO
+    // ===================================================
+    const totalPages = Math.ceil(horariosOrdenados.length / ITENS_POR_PAGINA);
+
+    // Validar página atual
+    if (paginacaoAtual > totalPages) {
+        paginacaoAtual = totalPages;
+    }
+    if (paginacaoAtual < 1) {
+        paginacaoAtual = 1;
+    }
+
+    // Calcular índices
+    const startIdx = (paginacaoAtual - 1) * ITENS_POR_PAGINA;
+    const endIdx = startIdx + ITENS_POR_PAGINA;
+
+    // Obter horários da página atual
+    const horariosPagina = horariosOrdenados.slice(startIdx, endIdx);
+
     container.innerHTML = '';
 
-    horariosOrdenados.forEach(horario => {
+    horariosPagina.forEach((horario, index) => {
         const card = document.createElement('div');
-        card.className = 'horario-card';
+        card.className = 'horario-card horario-card-animated';
+
+        // Aplicar delay progressivo a cada card
+        card.style.animationDelay = `${index * 0.08}s`;
 
         const dataFormatada = formatarData(horario.data);
         const horariosFormatados = formatarHorarios(horario.horarios);
@@ -1163,6 +1197,52 @@ function exibirHorarios() {
 
         container.appendChild(card);
     });
+
+    // ===================================================
+    // ATUALIZAR CONTROLES DE PAGINAÇÃO
+    // ===================================================
+    atualizarControlesPaginacao(totalPages);
+}
+
+// ===================================================
+// FUNÇÕES DE PAGINAÇÃO
+// ===================================================
+function atualizarControlesPaginacao(totalPages) {
+    const paginationContainer = document.getElementById('paginationContainer');
+    const btnAnterior = document.getElementById('btnAnterior');
+    const btnProximo = document.getElementById('btnProximo');
+    const paginationInfo = document.getElementById('paginationInfo');
+
+    // Mostrar ou ocultar container de paginação
+    if (totalPages > 1) {
+        paginationContainer.style.display = 'flex';
+
+        // Atualizar informação de página
+        paginationInfo.textContent = `${paginacaoAtual} de ${totalPages}`;
+
+        // Atualizar estado dos botões
+        btnAnterior.disabled = paginacaoAtual === 1;
+        btnProximo.disabled = paginacaoAtual === totalPages;
+    } else {
+        paginationContainer.style.display = 'none';
+    }
+}
+
+function irPaginaAnterior() {
+    if (paginacaoAtual > 1) {
+        paginacaoAtual--;
+        exibirHorarios();
+        window.scrollTo(0, 0);
+    }
+}
+
+function irProximaPagina() {
+    const totalPages = Math.ceil(horariosGlobais.length / ITENS_POR_PAGINA);
+    if (paginacaoAtual < totalPages) {
+        paginacaoAtual++;
+        exibirHorarios();
+        window.scrollTo(0, 0);
+    }
 }
 
 // ===================================================
@@ -1366,6 +1446,7 @@ async function excluirHorario(data) {
 let servicosClinica = [];
 let servicoEmEdicao = null;
 let duracaoServico = 0; // Nova variável para armazenar duração do serviço em edição
+let precoServico = 0; // Variável para armazenar preço do serviço em edição
 let servicoParaRemover = null; // Variável para armazenar o serviço que será removido
 
 async function carregarServicosClinica() {
@@ -1431,9 +1512,11 @@ function exibirServicosClinica() {
 function abrirModalNovoServico() {
     servicoEmEdicao = null;
     duracaoServico = 0;
+    precoServico = 0;
     document.getElementById('modalServicoTitulo').textContent = 'Adicionar Novo Serviço';
     document.getElementById('inputNomeServico').value = '';
     document.getElementById('inputDuracaoServico').value = '';
+    document.getElementById('inputPrecoServico').value = '';
     document.getElementById('btnSalvarServico').textContent = 'Adicionar Serviço';
     document.getElementById('formServico').onsubmit = function (e) {
         e.preventDefault();
@@ -1468,7 +1551,7 @@ function formatarDuracao(minutos) {
 async function abrirModalDetalhesServico(nomeServico) {
     document.getElementById('detalhesNomeServico').textContent = nomeServico;
 
-    // Carregar duração do serviço
+    // Carregar duração e preço do serviço
     try {
         const usuarioLogado = sessionStorage.getItem('usuarioLogado');
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
@@ -1480,18 +1563,38 @@ async function abrirModalDetalhesServico(nomeServico) {
                 p_acao: 'obter',
                 p_servico_nome: '',
                 p_servico_anterior: nomeServico,
-                p_duracao_minutos: 0
+                p_duracao_minutos: 0,
+                p_preco: null
             });
 
-            if (data && data.sucesso) {
+            console.log('Resposta RPC para detalhes do serviço:', { data, error });
+
+            if (error) {
+                console.error('Erro na RPC:', error);
+                document.getElementById('detalhesDuracaoServico').textContent = '-';
+                document.getElementById('detalhesPrecoServico').textContent = '-';
+            } else if (data && data.sucesso) {
                 const duracao = data.duracao_minutos || 0;
                 const duracaoFormatada = formatarDuracao(duracao);
                 document.getElementById('detalhesDuracaoServico').textContent = duracaoFormatada;
+
+                const preco = data.preco || 0;
+                const precoFormatado = preco > 0 ? `R$ ${preco.toFixed(2).replace('.', ',')}` : '-';
+                document.getElementById('detalhesPrecoServico').textContent = precoFormatado;
+            } else {
+                console.warn('RPC retornou sucesso=false:', data);
+                document.getElementById('detalhesDuracaoServico').textContent = '-';
+                document.getElementById('detalhesPrecoServico').textContent = '-';
             }
+        } else {
+            console.warn('Usuário ou senha não encontrados no sessionStorage');
+            document.getElementById('detalhesDuracaoServico').textContent = '-';
+            document.getElementById('detalhesPrecoServico').textContent = '-';
         }
     } catch (erro) {
-        console.error('Erro ao carregar duração:', erro);
+        console.error('Erro ao carregar detalhes do serviço:', erro);
         document.getElementById('detalhesDuracaoServico').textContent = '-';
+        document.getElementById('detalhesPrecoServico').textContent = '-';
     }
 
     document.getElementById('modalOverlayDetalhesServico').classList.add('ativo');
@@ -1515,7 +1618,7 @@ async function abrirModalEditarServico(nomeServico) {
     document.getElementById('inputNomeServico').value = nomeServico;
     document.getElementById('btnSalvarServico').textContent = 'Atualizar Serviço';
 
-    // Carregar duração do serviço
+    // Carregar duração e preço do serviço
     try {
         const usuarioLogado = sessionStorage.getItem('usuarioLogado');
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
@@ -1533,15 +1636,22 @@ async function abrirModalEditarServico(nomeServico) {
             if (data && data.sucesso) {
                 duracaoServico = data.duracao_minutos || 0;
                 document.getElementById('inputDuracaoServico').value = duracaoServico;
+
+                precoServico = data.preco || 0;
+                document.getElementById('inputPrecoServico').value = precoServico;
             } else {
                 duracaoServico = 0;
+                precoServico = 0;
                 document.getElementById('inputDuracaoServico').value = '';
+                document.getElementById('inputPrecoServico').value = '';
             }
         }
     } catch (erro) {
-        console.error('Erro ao carregar duração:', erro);
+        console.error('Erro ao carregar detalhes do serviço:', erro);
         duracaoServico = 0;
+        precoServico = 0;
         document.getElementById('inputDuracaoServico').value = '';
+        document.getElementById('inputPrecoServico').value = '';
     }
 
     document.getElementById('formServico').onsubmit = function (e) {
@@ -1555,6 +1665,7 @@ async function abrirModalEditarServico(nomeServico) {
 async function salvarServico() {
     const nomeServico = document.getElementById('inputNomeServico').value.trim();
     const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
+    const precoServico = parseFloat(document.getElementById('inputPrecoServico').value);
 
     if (!nomeServico) {
         mostrarErro('Por favor, insira o nome do serviço!');
@@ -1563,6 +1674,11 @@ async function salvarServico() {
 
     if (!duracaoMinutos || duracaoMinutos <= 0) {
         alert('Por favor, insira uma duração válida (maior que 0 minutos)!');
+        return;
+    }
+
+    if (isNaN(precoServico) || precoServico < 0) {
+        alert('Por favor, insira um preço válido!');
         return;
     }
 
@@ -1626,19 +1742,20 @@ async function salvarServico() {
             return;
         }
 
-        // Segunda: Adicionar duração na tabela servicos_tempo
+        // Segunda: Adicionar duração e preço na tabela servicos_tempo
         const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
             p_nome_usuario: usuarioLogado,
             p_senha_usuario: senhaUsuario,
             p_acao: 'adicionar',
             p_servico_nome: nomeServico,
             p_servico_anterior: '',
-            p_duracao_minutos: duracaoMinutos
+            p_duracao_minutos: duracaoMinutos,
+            p_preco: precoServico
         });
 
         if (errorDuracao) {
-            console.error('Erro ao salvar duração:', errorDuracao);
-            mostrarErro('Serviço criado, mas houve erro ao salvar duração: ' + errorDuracao.message);
+            console.error('Erro ao salvar duração e preço:', errorDuracao);
+            mostrarErro('Serviço criado, mas houve erro ao salvar duração e preço: ' + errorDuracao.message);
             if (btnSalvar) {
                 btnSalvar.disabled = false;
                 btnSalvar.classList.remove('loading');
@@ -1648,7 +1765,7 @@ async function salvarServico() {
         }
 
         if (!dataDuracao.sucesso) {
-            mostrarErro('Serviço criado, mas erro ao salvar duração: ' + dataDuracao.mensagem);
+            mostrarErro('Serviço criado, mas erro ao salvar duração e preço: ' + dataDuracao.mensagem);
             if (btnSalvar) {
                 btnSalvar.disabled = false;
                 btnSalvar.classList.remove('loading');
@@ -1663,7 +1780,7 @@ async function salvarServico() {
 
         exibirServicosClinica();
         fecharModalServico();
-        mostrarSucesso('Serviço e duração adicionados com sucesso!');
+        mostrarSucesso('Serviço, duração e preço adicionados com sucesso!');
 
         // Restaurar botão ao final (sucesso)
         if (btnSalvar) {
@@ -1687,6 +1804,7 @@ async function salvarServico() {
 async function atualizarServico() {
     const nomeNovoServico = document.getElementById('inputNomeServico').value.trim();
     const duracaoMinutos = parseInt(document.getElementById('inputDuracaoServico').value);
+    const precoMinutos = parseFloat(document.getElementById('inputPrecoServico').value);
 
     if (!nomeNovoServico) {
         mostrarErro('Por favor, insira o nome do serviço!');
@@ -1698,7 +1816,12 @@ async function atualizarServico() {
         return;
     }
 
-    if (servicoEmEdicao === nomeNovoServico && duracaoServico === duracaoMinutos) {
+    if (isNaN(precoMinutos) || precoMinutos < 0) {
+        alert('Por favor, insira um preço válido!');
+        return;
+    }
+
+    if (servicoEmEdicao === nomeNovoServico && duracaoServico === duracaoMinutos && precoServico === precoMinutos) {
         fecharModalServico();
         return;
     }
@@ -1765,19 +1888,20 @@ async function atualizarServico() {
             }
         }
 
-        // Atualizar duração na tabela servicos_tempo
+        // Atualizar duração e preço na tabela servicos_tempo
         const { data: dataDuracao, error: errorDuracao } = await _supabase.rpc('gerenciar_tempo_servicos', {
             p_nome_usuario: usuarioLogado,
             p_senha_usuario: senhaUsuario,
             p_acao: 'editar',
             p_servico_nome: '',
             p_servico_anterior: nomeNovoServico !== servicoEmEdicao ? nomeNovoServico : servicoEmEdicao,
-            p_duracao_minutos: duracaoMinutos
+            p_duracao_minutos: duracaoMinutos,
+            p_preco: precoMinutos
         });
 
         if (errorDuracao) {
-            console.error('Erro ao atualizar duração:', errorDuracao);
-            mostrarErro('Erro ao atualizar duração: ' + errorDuracao.message);
+            console.error('Erro ao atualizar duração e preço:', errorDuracao);
+            mostrarErro('Erro ao atualizar duração e preço: ' + errorDuracao.message);
             if (btnSalvar) {
                 btnSalvar.disabled = false;
                 btnSalvar.classList.remove('loading');
@@ -1787,7 +1911,7 @@ async function atualizarServico() {
         }
 
         if (!dataDuracao.sucesso) {
-            mostrarErro('Erro ao atualizar duração: ' + dataDuracao.mensagem);
+            mostrarErro('Erro ao atualizar duração e preço: ' + dataDuracao.mensagem);
             if (btnSalvar) {
                 btnSalvar.disabled = false;
                 btnSalvar.classList.remove('loading');
@@ -1807,7 +1931,7 @@ async function atualizarServico() {
         servicosDisponiveis = servicosClinica;
         exibirServicosClinica();
         fecharModalServico();
-        mostrarSucesso('Serviço e duração atualizados com sucesso!');
+        mostrarSucesso('Serviço, duração e preço atualizados com sucesso!');
 
         // Restaurar botão ao final (sucesso)
         if (btnSalvar) {
