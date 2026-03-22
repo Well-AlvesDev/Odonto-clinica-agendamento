@@ -1549,7 +1549,14 @@ function formatarDuracao(minutos) {
 }
 
 async function abrirModalDetalhesServico(nomeServico) {
-    document.getElementById('detalhesNomeServico').textContent = nomeServico;
+    // Abrir modal imediatamente com loader visível
+    document.getElementById('modalOverlayDetalhesServico').classList.add('ativo');
+    document.getElementById('loaderDetalhesServico').style.display = 'flex';
+    document.getElementById('detalhesServico').style.display = 'none';
+    congelarScroll();
+
+    // Registrar o tempo de abertura
+    const tempoAbertura = Date.now();
 
     // Carregar duração e preço do serviço
     try {
@@ -1569,11 +1576,9 @@ async function abrirModalDetalhesServico(nomeServico) {
 
             console.log('Resposta RPC para detalhes do serviço:', { data, error });
 
-            if (error) {
-                console.error('Erro na RPC:', error);
-                document.getElementById('detalhesDuracaoServico').textContent = '-';
-                document.getElementById('detalhesPrecoServico').textContent = '-';
-            } else if (data && data.sucesso) {
+            let detalheCarregoPorSucesso = false;
+
+            if (!error && data && data.sucesso) {
                 const duracao = data.duracao_minutos || 0;
                 const duracaoFormatada = formatarDuracao(duracao);
                 document.getElementById('detalhesDuracaoServico').textContent = duracaoFormatada;
@@ -1581,28 +1586,55 @@ async function abrirModalDetalhesServico(nomeServico) {
                 const preco = data.preco || 0;
                 const precoFormatado = preco > 0 ? `R$ ${preco.toFixed(2).replace('.', ',')}` : '-';
                 document.getElementById('detalhesPrecoServico').textContent = precoFormatado;
+                detalheCarregoPorSucesso = true;
             } else {
-                console.warn('RPC retornou sucesso=false:', data);
+                console.error('Erro ao carregar detalhes ou sucesso=false:', error || data);
                 document.getElementById('detalhesDuracaoServico').textContent = '-';
                 document.getElementById('detalhesPrecoServico').textContent = '-';
             }
+
+            // Aguardar no mínimo 0.7 segundos a partir da abertura
+            const tempoDecorrido = Date.now() - tempoAbertura;
+            const tempoMinimoLoader = 700; // 0.7 segundos
+            const tempoEspera = Math.max(0, tempoMinimoLoader - tempoDecorrido);
+
+            await new Promise(resolve => setTimeout(resolve, tempoEspera));
+
         } else {
             console.warn('Usuário ou senha não encontrados no sessionStorage');
             document.getElementById('detalhesDuracaoServico').textContent = '-';
             document.getElementById('detalhesPrecoServico').textContent = '-';
+
+            // Aguardar no mínimo 0.7 segundos
+            const tempoDecorrido = Date.now() - tempoAbertura;
+            const tempoMinimoLoader = 700;
+            const tempoEspera = Math.max(0, tempoMinimoLoader - tempoDecorrido);
+
+            await new Promise(resolve => setTimeout(resolve, tempoEspera));
         }
     } catch (erro) {
         console.error('Erro ao carregar detalhes do serviço:', erro);
         document.getElementById('detalhesDuracaoServico').textContent = '-';
         document.getElementById('detalhesPrecoServico').textContent = '-';
+
+        // Aguardar no mínimo 0.7 segundos
+        const tempoDecorrido = Date.now() - tempoAbertura;
+        const tempoMinimoLoader = 700;
+        const tempoEspera = Math.max(0, tempoMinimoLoader - tempoDecorrido);
+
+        await new Promise(resolve => setTimeout(resolve, tempoEspera));
     }
 
-    document.getElementById('modalOverlayDetalhesServico').classList.add('ativo');
-    congelarScroll();
+    // Preencher o nome e mostrar detalhes (esconder loader)
+    document.getElementById('detalhesNomeServico').textContent = nomeServico;
+    document.getElementById('loaderDetalhesServico').style.display = 'none';
+    document.getElementById('detalhesServico').style.display = 'block';
 }
 
 function fecharModalDetalhesServico() {
     document.getElementById('modalOverlayDetalhesServico').classList.remove('ativo');
+    document.getElementById('loaderDetalhesServico').style.display = 'none';
+    document.getElementById('detalhesServico').style.display = 'block';
     descongelarScroll();
 }
 

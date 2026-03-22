@@ -902,6 +902,29 @@
             </div>
         </div>
 
+        <!-- Faturamento Bruto Chart -->
+        <div class="charts-section" style="grid-template-columns: 1fr;">
+            <div class="chart-container">
+                <div class="chart-title"><i class="ri-money-dollar-circle-line"></i> Faturamento Bruto (Últimos 7 dias)
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chartFaturamento"></canvas>
+                </div>
+                <div class="chart-legend" id="chartFaturamentoLegend">
+                    <div class="legend-item"
+                        style="border-bottom: 1px solid #DDD; padding-bottom: 8px; margin-bottom: 8px;">
+                        <span><strong id="totalFaturamentoBruto">Total: R$ 0,00</strong> faturado nos últimos 7
+                            dias</span>
+                    </div>
+                    <div class="legend-item">
+                        <span style="color: #555; font-weight: 600;">Faturamento por Serviço:</span>
+                    </div>
+                    <div id="faturamentoPorServicoLegend" style="padding-left: 20px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Dashboard Cards -->
         <div class="dashboard-grid">
             <div class="card-info agora">
@@ -1015,6 +1038,7 @@
         // Variáveis globais
         let chartDia = null;
         let chartMes = null;
+        let chartFaturamento = null;
 
         // ===================================================
         // FUNÇÃO PARA DETERMINAR STATUS DO AGENDAMENTO
@@ -1040,13 +1064,48 @@
             }
 
             // Se é hoje, verificar se está dentro do intervalo de horário
-            const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
-            const durationRaw = duracaoServicos[agendamento.servico];
-            const duracao = Number.isInteger(durationRaw) ? durationRaw : parseInt(durationRaw, 10) || 0;
+            // Validações prévias
+            if (!agendamento.horario || !agendamento.horario.includes(':')) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
 
-            const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
-            const horaInicio = parseInt(horaInicioStr, 10);
-            const minInicio = parseInt(minInitStr, 10);
+            if (!agendamento.servico) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
+
+            // Extrair duração do serviço
+            const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
+            const servicoInfo = duracaoServicos[agendamento.servico];
+
+            let duracao = 0;
+            if (servicoInfo) {
+                if (typeof servicoInfo === 'object' && servicoInfo.duracao) {
+                    duracao = parseInt(servicoInfo.duracao, 10) || 0;
+                } else if (typeof servicoInfo === 'number') {
+                    duracao = parseInt(servicoInfo, 10) || 0;
+                }
+            }
+
+            // CRÍTICO: Se não conseguir determinar a duração com certeza, NUNCA marcar como 'agora'
+            if (!duracao || duracao <= 0) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
+
+            // Extrair horário de início
+            const partes = agendamento.horario.split(':');
+            if (partes.length < 2) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
+
+            const horaInicio = parseInt(partes[0], 10);
+            const minInicio = parseInt(partes[1], 10);
+
+            // Validar valores numéricos
+            if (isNaN(horaInicio) || isNaN(minInicio) || horaInicio < 0 || horaInicio > 23 || minInicio < 0 || minInicio > 59) {
+                return { status: 'pendente', statusLabel: 'Pendente' };
+            }
+
+            // Calcular minutos do dia
             const minutosInicio = horaInicio * 60 + minInicio;
             const minutosFim = minutosInicio + duracao;
 
@@ -1054,15 +1113,17 @@
             const minAtualNum = parseInt(minutos, 10);
             const minutosAtual = horaAtualNum * 60 + minAtualNum;
 
-            if (minutosAtual < minutosInicio) {
-                return { status: 'pendente', statusLabel: 'Pendente' };
-            }
-
+            // Verificar se está DENTRO do intervalo (INCLUSIVO do início, EXCLUSIVO do fim)
             if (minutosAtual >= minutosInicio && minutosAtual < minutosFim) {
                 return { status: 'agora', statusLabel: 'Agora' };
             }
 
-            return { status: 'confirmado', statusLabel: 'Concluído' };
+            // Se passou, é concluído. Se não chegou, é pendente
+            if (minutosAtual >= minutosFim) {
+                return { status: 'confirmado', statusLabel: 'Concluído' };
+            }
+
+            return { status: 'pendente', statusLabel: 'Pendente' };
         }
 
         // ===================================================
@@ -1081,21 +1142,24 @@
             let pendentesHoje = 0;
             let totalAgendamentos = agendamentosGlobais.length;
 
-            agendamentosGlobais.forEach(agendamento => {
+            // Filtrar apenas agendamentos de hoje para verificar qual está acontecendo
+            const agendamentosHoje = agendamentosGlobais.filter(a => a.data === dataHoje);
+
+            agendamentosHoje.forEach(agendamento => {
                 const status = determinarStatusAgendamento(agendamento);
 
-                if (status.status === 'agora') {
+                if (status.status === 'confirmado') {
+                    concuidosHoje++;
+                } else if (status.status === 'pendente') {
+                    pendentesHoje++;
+                } else if (status.status === 'agora') {
+                    // Só atribui agendamento agora se realmente está acontecendo AGORA
                     agendamentoAgora = agendamento;
                 }
+            });
 
-                if (agendamento.data === dataHoje) {
-                    if (status.status === 'confirmado') {
-                        concuidosHoje++;
-                    } else if (status.status === 'pendente') {
-                        pendentesHoje++;
-                    }
-                }
-
+            // Buscar agendamentos futuros
+            agendamentosGlobais.forEach(agendamento => {
                 if (agendamento.data > dataHoje) {
                     agendamentosFuturos.push(agendamento);
                 }
@@ -1119,13 +1183,18 @@
             // Agendamento agora
             const cardAgora = document.getElementById('cardAgora');
             if (stats.agendamentoAgora) {
-                cardAgora.innerHTML = `
-                    <div>1</div>
-                    <div class="agora-appointment">
-                        <div class="agora-appointment-name">${stats.agendamentoAgora.nome}</div>
-                        <div class="agora-appointment-service">${stats.agendamentoAgora.servico} às ${stats.agendamentoAgora.horario}</div>
-                    </div>
-                `;
+                try {
+                    cardAgora.innerHTML = `
+                        <div>1</div>
+                        <div class="agora-appointment">
+                            <div class="agora-appointment-name">${stats.agendamentoAgora.nome || 'Paciente'}</div>
+                            <div class="agora-appointment-service">${stats.agendamentoAgora.servico || '-'} às ${stats.agendamentoAgora.horario || '--:--'}</div>
+                        </div>
+                    `;
+                } catch (erro) {
+                    console.error('Erro ao renderizar agendamento agora:', erro);
+                    cardAgora.textContent = '-';
+                }
             } else {
                 cardAgora.textContent = '-';
             }
@@ -1245,10 +1314,12 @@
 
             // Abrir modal
             document.getElementById('appointmentsModalOverlay').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
         }
 
         function fecharModalAgendamentos() {
             document.getElementById('appointmentsModalOverlay').classList.remove('ativo');
+            document.body.style.overflow = '';
         }
 
         // Fechar modal ao clicar fora
@@ -1266,6 +1337,7 @@
         function criarGraficos() {
             criarGraficoDia();
             criarGraficoMes();
+            criarGraficoFaturamento7dias();
         }
 
         function criarGraficoDia() {
@@ -1647,6 +1719,160 @@
                         });
                     }
                 }]
+            });
+        }
+
+        function criarGraficoFaturamento7dias() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const hojeStr = `${ano}-${mes}-${dia}`;
+
+            // Calcular data de início (6 dias antes de hoje, totalizando 7 dias)
+            const dataInicio7 = new Date(hoje);
+            dataInicio7.setDate(dataInicio7.getDate() - 6);
+            const anoInicio = dataInicio7.getFullYear();
+            const mesInicio = String(dataInicio7.getMonth() + 1).padStart(2, '0');
+            const diaInicio = String(dataInicio7.getDate()).padStart(2, '0');
+            const inicioStr = `${anoInicio}-${mesInicio}-${diaInicio}`;
+
+            // Calcular faturamento por serviço nos últimos 7 dias
+            const faturamentoPorServico = {};
+            let totalFaturamento = 0;
+
+            const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
+
+            agendamentosGlobais.forEach(agendamento => {
+                // Comparar usando strings de data (sem hora)
+                if (agendamento.data >= inicioStr && agendamento.data <= hojeStr) {
+                    const servicoInfo = duracaoServicos[agendamento.servico];
+                    let preco = 0;
+
+                    // Extrair preço do objeto de serviço
+                    if (servicoInfo) {
+                        if (typeof servicoInfo === 'object' && servicoInfo.preco !== undefined) {
+                            preco = parseFloat(servicoInfo.preco) || 0;
+                        } else if (typeof servicoInfo === 'number') {
+                            // Formato antigo (apenas duração)
+                            preco = 0;
+                        }
+                    }
+
+                    if (!faturamentoPorServico[agendamento.servico]) {
+                        faturamentoPorServico[agendamento.servico] = {
+                            quantidade: 0,
+                            total: 0
+                        };
+                    }
+
+                    faturamentoPorServico[agendamento.servico].quantidade++;
+                    faturamentoPorServico[agendamento.servico].total += preco;
+                    totalFaturamento += preco;
+                }
+            });
+
+            // Verificar se há dados
+            const servicosOrdenados = Object.entries(faturamentoPorServico)
+                .filter(([_, dados]) => dados.quantidade > 0)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            const serviços = servicosOrdenados.map(([nome]) => nome);
+            const valores = servicosOrdenados.map(([_, dados]) => dados.total);
+
+            // Cores vibrantes para o gráfico de pizza
+            const cores = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384',
+                '#36A2EB', '#FFCE56', '#FF9F40', '#FF6384', '#C9CBCF'
+            ];
+
+            const coresBackground = cores.slice(0, serviços.length);
+            const coresBorder = coresBackground.map(cor => {
+                // Escurecer a cor para a borda
+                return cor;
+            });
+
+            // Atualizar total faturamento
+            const totalFormatado = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(totalFaturamento);
+
+            document.getElementById('totalFaturamentoBruto').textContent = `Total: ${totalFormatado} faturado nos últimos 7 dias`;
+
+            // Renderizar legenda de faturamento por serviço
+            const legendaFaturamentoContainer = document.getElementById('faturamentoPorServicoLegend');
+            legendaFaturamentoContainer.innerHTML = '';
+
+            if (servicosOrdenados.length === 0) {
+                legendaFaturamentoContainer.innerHTML = '<div class="legend-item"><span style="color: #999;">Nenhum faturamento nos últimos 7 dias</span></div>';
+            } else {
+                servicosOrdenados.forEach(([servico, dados], index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'legend-item';
+                    itemDiv.style.fontSize = '12px';
+                    itemDiv.style.paddingBottom = '4px';
+                    const cor = coresBackground[index];
+                    const valorFormatado = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(dados.total);
+
+                    const percentual = ((dados.total / totalFaturamento) * 100).toFixed(1);
+
+                    itemDiv.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="legend-dot" style="background-color: ${cor}; width: 14px; height: 14px;"></span>
+                            <span>
+                                <strong>${servico}:</strong> ${valorFormatado} 
+                                <span style="color: #999;">(${dados.quantidade}x, ${percentual}%)</span>
+                            </span>
+                        </div>
+                    `;
+                    legendaFaturamentoContainer.appendChild(itemDiv);
+                });
+            }
+
+            // Criar gráfico de pizza
+            const ctx = document.getElementById('chartFaturamento');
+            if (chartFaturamento) chartFaturamento.destroy();
+
+            chartFaturamento = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: serviços,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: valores,
+                        backgroundColor: coresBackground,
+                        borderColor: coresBorder,
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const valor = context.parsed;
+                                    const valorFormatado = new Intl.NumberFormat('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                    }).format(valor);
+                                    const percentual = ((valor / totalFaturamento) * 100).toFixed(1);
+                                    return `${context.label}: ${valorFormatado} (${percentual}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 

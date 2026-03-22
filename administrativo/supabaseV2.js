@@ -219,7 +219,7 @@ window.excluirAgendamentoNoServidor = excluirAgendamentoNoServidor;
 async function buscarDuracaoServicosDoServidor() {
     const { data, error } = await _supabase
         .from('servicos_tempo')
-        .select('servico, duracao_minuto');
+        .select('servico, duracao_minuto, price');
 
     if (error) {
         console.error('Erro ao buscar duração dos serviços:', error);
@@ -230,11 +230,14 @@ async function buscarDuracaoServicosDoServidor() {
     const duracaoMap = {};
     if (data && Array.isArray(data)) {
         data.forEach(item => {
-            duracaoMap[item.servico] = item.duracao_minuto;
+            duracaoMap[item.servico] = {
+                duracao: item.duracao_minuto,
+                preco: item.price || 0
+            };
         });
     }
 
-    console.log('Durações dos serviços carregadas:', duracaoMap);
+    console.log('Durações e preços dos serviços carregados:', duracaoMap);
     return duracaoMap;
 }
 
