@@ -1,0 +1,5 @@
+Bem... de início, eu gostaria deixar claro que não gosto de escrever readme(risos). Enfim, irei ser breve. Esse é um sistema completo
+de agendamento. Que pode ser usado em clínicas, barbearias e demais tipos...
+Sim, eu utilizei IA para gerar maior parte do código, eu tive a função de apenas revisar todo o código, dessa forma
+consegui um desenvolvimento mais rápido e eficiente. Eu espero que você goste do projeto e seja criativo com ele. Se quiser contribuir, será muito bem vindo você e sua contribuição.
+Até o momento tenho apenas isso para dizer (risos), não sou bom com readme. Valeu!
