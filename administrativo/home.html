@@ -1297,7 +1297,7 @@
         // ===================================================
         // VARIÁVEIS DE PAGINAÇÃO
         // ===================================================
-        const ITENS_POR_PAGINA = 24;
+        const ITENS_POR_PAGINA = 24; // número divisivel por 1, 2 e 3 para manter layout consistente
         let paginaAtual = 1;
         let totalPaginas = 1;
         let agendamentosFiltradosGlobal = [];
@@ -1445,8 +1445,8 @@
             const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
 
             // Garantir que a duração é um número
-            const durationRaw = duracaoServicos[agendamento.servico];
-            const duracao = Number.isInteger(durationRaw) ? durationRaw : parseInt(durationRaw, 10) || 0;
+            const durationObj = duracaoServicos[agendamento.servico];
+            const duracao = durationObj?.duracao || 0;
 
             // Converter horário inicial para minutos desde 00:00
             const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
