@@ -554,6 +554,46 @@
             font-size: 14px;
         }
 
+        /* Buttons for Período Selection */
+        .periodo-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-periodo {
+            padding: 8px 16px;
+            border: 2px solid #E0E0E0;
+            background-color: white;
+            color: #666;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn-periodo:hover {
+            border-color: #2196F3;
+            color: #2196F3;
+            background-color: #F0F7FF;
+        }
+
+        .btn-periodo.ativo {
+            background-color: #2196F3;
+            color: white;
+            border-color: #2196F3;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-periodo.ativo:hover {
+            background-color: #1976D2;
+            border-color: #1976D2;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
         /* Modal de Agendamentos por Data */
         .appointments-modal-overlay {
             display: none;
@@ -905,7 +945,13 @@
         <!-- Faturamento Bruto Chart -->
         <div class="charts-section" style="grid-template-columns: 1fr;">
             <div class="chart-container">
-                <div class="chart-title"><i class="ri-money-dollar-circle-line"></i> Faturamento Bruto (Últimos 7 dias)
+                <div class="chart-title"><i class="ri-money-dollar-circle-line"></i> Faturamento Bruto (<span
+                        id="periodoTitle">Últimos 7 dias</span>)
+                </div>
+                <div class="periodo-buttons">
+                    <button class="btn-periodo ativo" data-dias="7" onclick="mudarPeriodoFaturamento(7)">7 dias</button>
+                    <button class="btn-periodo" data-dias="15" onclick="mudarPeriodoFaturamento(15)">15 dias</button>
+                    <button class="btn-periodo" data-dias="30" onclick="mudarPeriodoFaturamento(30)">30 dias</button>
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="chartFaturamento"></canvas>
@@ -1039,6 +1085,7 @@
         let chartDia = null;
         let chartMes = null;
         let chartFaturamento = null;
+        let periodoFaturamentoAtual = 7;
 
         // ===================================================
         // FUNÇÃO PARA DETERMINAR STATUS DO AGENDAMENTO
@@ -1337,7 +1384,7 @@
         function criarGraficos() {
             criarGraficoDia();
             criarGraficoMes();
-            criarGraficoFaturamento7dias();
+            criarGraficoFaturamento(periodoFaturamentoAtual);
         }
 
         function criarGraficoDia() {
@@ -1722,19 +1769,19 @@
             });
         }
 
-        function criarGraficoFaturamento7dias() {
+        function criarGraficoFaturamento(dias = 7) {
             const hoje = new Date();
             const ano = hoje.getFullYear();
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
             const dia = String(hoje.getDate()).padStart(2, '0');
             const hojeStr = `${ano}-${mes}-${dia}`;
 
-            // Calcular data de início (6 dias antes de hoje, totalizando 7 dias)
-            const dataInicio7 = new Date(hoje);
-            dataInicio7.setDate(dataInicio7.getDate() - 6);
-            const anoInicio = dataInicio7.getFullYear();
-            const mesInicio = String(dataInicio7.getMonth() + 1).padStart(2, '0');
-            const diaInicio = String(dataInicio7.getDate()).padStart(2, '0');
+            // Calcular data de início
+            const dataInicio = new Date(hoje);
+            dataInicio.setDate(dataInicio.getDate() - (dias - 1));
+            const anoInicio = dataInicio.getFullYear();
+            const mesInicio = String(dataInicio.getMonth() + 1).padStart(2, '0');
+            const diaInicio = String(dataInicio.getDate()).padStart(2, '0');
             const inicioStr = `${anoInicio}-${mesInicio}-${diaInicio}`;
 
             // Calcular faturamento por serviço nos últimos 7 dias
@@ -1799,14 +1846,17 @@
                 currency: 'BRL'
             }).format(totalFaturamento);
 
-            document.getElementById('totalFaturamentoBruto').textContent = `Total: ${totalFormatado} faturado nos últimos 7 dias`;
+            const textoPeriodo = dias === 7 ? 'últimos 7 dias' : dias === 15 ? 'últimos 15 dias' : 'últimos 30 dias';
+            document.getElementById('totalFaturamentoBruto').textContent = `Total: ${totalFormatado} faturado nos ${textoPeriodo}`;
+            document.getElementById('periodoTitle').textContent = dias === 7 ? 'Últimos 7 dias' : dias === 15 ? 'Últimos 15 dias' : 'Últimos 30 dias';
 
             // Renderizar legenda de faturamento por serviço
             const legendaFaturamentoContainer = document.getElementById('faturamentoPorServicoLegend');
             legendaFaturamentoContainer.innerHTML = '';
 
             if (servicosOrdenados.length === 0) {
-                legendaFaturamentoContainer.innerHTML = '<div class="legend-item"><span style="color: #999;">Nenhum faturamento nos últimos 7 dias</span></div>';
+                const msgPeriodo = dias === 7 ? 'últimos 7 dias' : dias === 15 ? 'últimos 15 dias' : 'últimos 30 dias';
+                legendaFaturamentoContainer.innerHTML = `<div class="legend-item"><span style="color: #999;">Nenhum faturamento nos ${msgPeriodo}</span></div>`;
             } else {
                 servicosOrdenados.forEach(([servico, dados], index) => {
                     const itemDiv = document.createElement('div');
@@ -1874,6 +1924,24 @@
                     }
                 }
             });
+        }
+
+        // ===================================================
+        // MUDAR PERÍODO DE FATURAMENTO
+        // ===================================================
+        function mudarPeriodoFaturamento(dias) {
+            periodoFaturamentoAtual = dias;
+
+            // Atualizar botões ativos
+            document.querySelectorAll('.btn-periodo').forEach(btn => {
+                btn.classList.remove('ativo');
+                if (parseInt(btn.getAttribute('data-dias')) === dias) {
+                    btn.classList.add('ativo');
+                }
+            });
+
+            // Recriar gráfico com novo período
+            criarGraficoFaturamento(dias);
         }
 
         // ===================================================

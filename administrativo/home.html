@@ -1342,6 +1342,10 @@
 
             // Configurar atualização automática a cada 1 minuto (60000 ms)
             setInterval(atualizarAgendamentosAuto, 60000);
+
+            // Configurar atualização de status visual a cada 10 segundos (10000 ms)
+            // Isso recalcula se um agendamento já finalizou sem fazer requisições ao servidor
+            setInterval(atualizarStatusVisual, 10000);
         });
 
         async function carregarAgendamentos() {
@@ -1444,9 +1448,20 @@
             // Se é hoje, verificar se está dentro do intervalo de horário
             const duracaoServicos = JSON.parse(sessionStorage.getItem('duracaoServicos') || '{}');
 
-            // Garantir que a duração é um número
+            // Garantir que a duração é um número válido
             const durationObj = duracaoServicos[agendamento.servico];
-            const duracao = durationObj?.duracao || 0;
+            let duracao = durationObj?.duracao;
+
+            // Converter para número (pode estar como string no sessionStorage)
+            if (duracao !== null && duracao !== undefined) {
+                duracao = parseInt(duracao, 10);
+            }
+
+            // Se duração não é válida, usar fallback de 30 minutos (padrão mínimo)
+            if (!duracao || isNaN(duracao) || duracao <= 0) {
+                console.warn(`Duração não encontrada para serviço '${agendamento.servico}'. Usando fallback de 30 minutos.`);
+                duracao = 30; // Fallback: 30 minutos
+            }
 
             // Converter horário inicial para minutos desde 00:00
             const [horaInicioStr, minInitStr] = agendamento.horario.split(':');
@@ -1491,6 +1506,44 @@
                 status: 'pendente',
                 statusLabel: 'Pendente'
             };
+        }
+
+        // ===================================================
+        // FUNÇÃO PARA ATUALIZAR STATUS VISUAL DOS AGENDAMENTOS
+        // ===================================================
+        // Esta função recalcula o status de cada agendamento visível
+        // a cada 10 segundos sem fazer requisições ao servidor
+        function atualizarStatusVisual() {
+            // Iterar por todos os cards visíveis
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((cardElement) => {
+                // Obter índice do card para localizar agendamento correspondente
+                const cardIndex = Array.from(cards).indexOf(cardElement);
+                const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+                const agendamentoIndex = inicio + cardIndex;
+
+                if (agendamentoIndex < agendamentosFiltradosGlobal.length) {
+                    const agendamento = agendamentosFiltradosGlobal[agendamentoIndex];
+
+                    // Recalcular status atual
+                    const { status, statusLabel } = determinarStatusAgendamento(agendamento);
+
+                    // Atualizar badge de status
+                    const badgeElement = cardElement.querySelector('.card-status-badge');
+                    if (badgeElement) {
+                        // Remover classes antigas e adicionar a nova
+                        badgeElement.className = `card-status-badge ${status}`;
+                        badgeElement.textContent = statusLabel;
+                    }
+
+                    // Atualizar texto do botão excluir
+                    const btnExcluir = cardElement.querySelector('.btn-excluir a');
+                    if (btnExcluir) {
+                        const botaoTexto = status === 'confirmado' ? 'Apagar' : 'Cancelar';
+                        btnExcluir.textContent = botaoTexto;
+                    }
+                }
+            });
         }
 
         function exibirAgendamentos(agendamentos, periodo = '', pagina = 1, direcaoPaginacao = null) {
