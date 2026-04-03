@@ -1118,9 +1118,18 @@ async function carregarHorariosOcupados() {
 
 // Salva novo agendamento
 async function salvarNovoAgendamento(nome, telefone, servico, data, horario) {
-    // Garante que data e horario sejam strings (text)
+    // Garanta que data e horario sejam strings (text)
     const dataTexto = String(data);
     const horarioTexto = String(horario);
+
+    // Garante que o telefone está formatado como (XX)9XXXX-XXXX
+    let telefoneFormatado = telefone;
+    if (typeof telefone === 'string') {
+        const numeros = telefone.replace(/\D/g, '');
+        if (numeros.length === 11) {
+            telefoneFormatado = `(${numeros.substring(0, 2)})${numeros.substring(2, 7)}-${numeros.substring(7)}`;
+        }
+    }
 
     const { data: novoId, error } = await _supabase
         .rpc('salvar_agendamento_rpc', {
@@ -1128,7 +1137,7 @@ async function salvarNovoAgendamento(nome, telefone, servico, data, horario) {
             horario_input: horarioTexto,
             nome_input: nome,
             servico_input: servico,
-            telefone_input: telefone
+            telefone_input: telefoneFormatado
         });
 
     if (error) {

@@ -1060,11 +1060,7 @@
 
         <div>
             <label for="telefone">Telefone:</label>
-            <p> </p>
-            <div class="telefone-container">
-                <span class="telefone-prefixo">(81) 9</span>
-                <input type="tel" id="telefone" required placeholder="XXXX-XXXX" maxlength="9" inputmode="numeric">
-            </div>
+            <input type="tel" id="telefone" required placeholder="(XX) 9XXXX-XXXX" inputmode="numeric">
         </div>
 
         <div>
@@ -1723,6 +1719,9 @@
                 // Limpa o container
                 this.scrollContainer.innerHTML = '';
 
+                const badgesDisponiveis = [];
+                const badgesBloqueadas = [];
+
                 // Gera últimos 2 dias + próximos 14 dias
                 for (let i = -2; i <= 14; i++) {
                     const data = new Date(hoje);
@@ -1758,8 +1757,17 @@
                         }
                     });
 
-                    this.scrollContainer.appendChild(badge);
+                    // Separa badges disponíveis de bloqueadas
+                    if (ehDataPassada) {
+                        badgesBloqueadas.push(badge);
+                    } else {
+                        badgesDisponiveis.push(badge);
+                    }
                 }
+
+                // Adiciona primeiro os badges disponíveis, depois os bloqueados
+                badgesDisponiveis.forEach(badge => this.scrollContainer.appendChild(badge));
+                badgesBloqueadas.forEach(badge => this.scrollContainer.appendChild(badge));
             }
 
             gerarBadgesDatasCom(datasDisponiveis) {
@@ -1770,7 +1778,8 @@
                 // Limpa o container
                 this.scrollContainer.innerHTML = '';
 
-                let badgesGeradas = 0;
+                const badgesDisponiveis = [];
+                const badgesBloqueadas = [];
 
                 // Ordena as datas cronologicamente
                 const datasOrdenadas = this.ordenarDatasCronologicamente(datasDisponiveis);
@@ -1849,11 +1858,19 @@
                             }
                         });
 
-                        this.scrollContainer.appendChild(badge);
-                        badgesGeradas++;
+                        // Separa badges disponíveis de bloqueadas
+                        if (ehDataPassada) {
+                            badgesBloqueadas.push(badge);
+                        } else {
+                            badgesDisponiveis.push(badge);
+                        }
                     } catch (error) {
                     }
                 });
+
+                // Adiciona primeiro os badges disponíveis, depois os bloqueados
+                badgesDisponiveis.forEach(badge => this.scrollContainer.appendChild(badge));
+                badgesBloqueadas.forEach(badge => this.scrollContainer.appendChild(badge));
             }
 
             isDataPassada(dataFormatada) {
@@ -2235,11 +2252,16 @@
         telefonInput.addEventListener('input', (e) => {
             let value = e.target.value;
             let numeros = value.replace(/\D/g, '');
-            numeros = numeros.substring(0, 8);
-            if (numeros.length >= 5) {
-                value = numeros.substring(0, 4) + '-' + numeros.substring(4);
+            numeros = numeros.substring(0, 11); // Limita a 11 dígitos (DDD + 9 + 8 dígitos)
+
+            if (numeros.length === 0) {
+                value = '';
+            } else if (numeros.length <= 2) {
+                value = '(' + numeros;
+            } else if (numeros.length <= 7) {
+                value = '(' + numeros.substring(0, 2) + ') ' + numeros.substring(2);
             } else {
-                value = numeros;
+                value = '(' + numeros.substring(0, 2) + ') ' + numeros.substring(2, 7) + '-' + numeros.substring(7);
             }
             e.target.value = value;
         });
@@ -2251,7 +2273,7 @@
 
             const nome = document.getElementById('nome').value;
             const telefonComHifen = document.getElementById('telefone').value;
-            const telefone = '(81)9' + telefonComHifen;
+            const telefone = telefonComHifen.replace(/\D/g, ''); // Remove formatação para obter apenas os dígitos
             const servico = dropdownServico.getValue();
             const data = seletorDatas.getData();
             const horario = seletorHorarios.getHorario();
