@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Agendamentos - Área Administrativa</title>
+    <link rel="stylesheet" href="../recursos/css/home.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="ri-calendar-event-line"></i> AGENDAMENTOS</h1>
+            <div class="user-info">
+                <span id="usuarioLogado"><i class="ri-user-line"></i> Usuário</span>
+                <button class="btn-logout" onclick="fazerLogout()">Sair <i class="ri-logout-circle-r-line"></i></button>
+            </div>
+        </header>
+
+        <div class="top-actions">
+            <button class="btn-home" onclick="window.location.href='home.html'"><i class="ri-arrow-go-back-line"></i>
+                Voltar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Logout -->
+    <div id="confirmationLogoutOverlay" class="confirmation-modal-overlay" onclick="fecharModalConfirmacao()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-logout-circle-r-line confirmation-modal-icon"></i>
+                <div class="confirmation-modal-title">Fazer Logout?</div>
+            </div>
+            <div class="confirmation-modal-message">
+                Tem certeza que deseja sair da sistema? Você precisará fazer login novamente.
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalConfirmacao()">
+                    Cancelar
+                </button>
+                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar" onclick="confirmarLogout()">
+                    Sair
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Sistema de Agendamento Odontológico - Área Administrativa</p>
+        <p id="dataAtual"></p>
+    </footer>
+
+    <script src="../recursos/js/supabaseV2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', carregarDataAtual);
+    </script>
+</body>
+
+</html>

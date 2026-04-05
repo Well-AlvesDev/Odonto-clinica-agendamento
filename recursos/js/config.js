@@ -1664,6 +1664,9 @@ function iniciarEdicaoServico(campo) {
     campoEdicaoAtual = campo;
     const isDuracao = campo === 'duracao';
 
+    // Atualizar o título do modal com o nome do serviço
+    document.getElementById('modalEdicaoServicoTitulo').textContent = `Editar Serviço > ${servicoDetalhesAtual}`;
+
     const label = document.getElementById('labelEdicaoServico');
     const inputValor = document.getElementById('inputEditarServicoValor');
     const btnSalvar = document.getElementById('btnSalvarEdicaoServico');
