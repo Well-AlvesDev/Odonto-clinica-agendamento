@@ -1767,15 +1767,33 @@ async function salvarEdicaoServico() {
             throw new Error(data ? data.mensagem || 'Falha ao atualizar.' : 'Falha ao atualizar.');
         }
 
-        // Atualiza cache local e UI
-        await carregarDuracoesServicos();
-        const valorAtualizado = campoEdicaoAtual === 'duracao' ? await obterDuracaoServico(servicoDetalhesAtual) : await obterPrecoServico(servicoDetalhesAtual);
+        // Atualiza cache local e UI sem fazer novo request ao servidor
+        const servicoNormalizado = normalizarServicoNome(servicoDetalhesAtual);
+        if (!window.duracoesServicosCache) {
+            window.duracoesServicosCache = {};
+        }
+        if (!window.duracoesServicosCache[servicoNormalizado]) {
+            window.duracoesServicosCache[servicoNormalizado] = {};
+        }
 
         if (campoEdicaoAtual === 'duracao') {
-            document.getElementById('detalhesDuracaoServico').textContent = formatarDuracao(valorAtualizado);
+            // Atualiza o cache com a nova duração
+            window.duracoesServicosCache[servicoNormalizado].duracao = valorConversao;
+            // Atualiza o DOM
+            document.getElementById('detalhesDuracaoServico').textContent = formatarDuracao(valorConversao);
+            // Atualiza a variável global de duração
+            duracaoServico = valorConversao;
         } else {
-            document.getElementById('detalhesPrecoServico').textContent = valorAtualizado >= 0 ? `R$ ${Number(valorAtualizado).toFixed(2).replace('.', ',')}` : '-';
+            // Atualiza o cache com o novo preço
+            window.duracoesServicosCache[servicoNormalizado].preco = valorConversao;
+            // Atualiza o DOM
+            document.getElementById('detalhesPrecoServico').textContent = valorConversao >= 0 ? `R$ ${Number(valorConversao).toFixed(2).replace('.', ',')}` : '-';
+            // Atualiza a variável global de preço
+            precoServico = valorConversao;
         }
+
+        // Invalidar cache do localStorage para sincronizar com outras abas
+        invalidarCacheDuracoesServicos();
 
         mostrarSucesso('Atualização realizada com sucesso.');
         fecharModalEdicaoServico();
@@ -1948,6 +1966,9 @@ async function salvarServico() {
         servicosClinica.push(nomeServico);
         servicosDisponiveis = servicosClinica;
 
+        // Invalidar cache de durações para que os dados sejam recarregados
+        invalidarCacheDuracoesServicos();
+
         exibirServicosClinica();
         fecharModalServico();
         mostrarSucesso('Serviço, duração e preço adicionados com sucesso!');
@@ -2099,6 +2120,10 @@ async function atualizarServico() {
         }
 
         servicosDisponiveis = servicosClinica;
+
+        // Invalidar cache de durações para que os dados atualizados sejam recarregados
+        invalidarCacheDuracoesServicos();
+
         exibirServicosClinica();
         fecharModalServico();
         mostrarSucesso('Serviço, duração e preço atualizados com sucesso!');
@@ -2210,6 +2235,9 @@ async function confirmarRemocaoServico() {
             // Remover da lista
             servicosClinica = servicosClinica.filter(s => s !== nomeServico);
             servicosDisponiveis = servicosClinica;
+
+            // Invalidar cache de durações para que os dados sejam recarregados
+            invalidarCacheDuracoesServicos();
 
             exibirServicosClinica();
         })();

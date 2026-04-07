@@ -100,6 +100,7 @@ function obterDuracoesDoCache() {
 // Invalida o cache de durações de serviços (usado quando for necessário forçar um novo fetch imediato)
 function invalidarCacheDuracoesServicos() {
     localStorage.removeItem(SERVICOS_DURACAO_CACHE_KEY);
+    window.duracoesServicosCache = {}; // Resetar cache em memória também
     console.log('[Cache] Durações de serviços invalidadas');
 }
 
@@ -182,6 +183,7 @@ async function carregarDuracoesServicos() {
 }
 
 // Obtém a duração de um serviço específico
+// Obtém a duração de um serviço específico
 // Antes de disparar qualquer fetch, tenta usar a tabela pré-carregada em
 // `window.duracoesServicosCache` (populada por carregarDuracoesServicos
 // quando a página inicializa). Isso evita um segundo request quando o
@@ -191,7 +193,10 @@ async function obterDuracaoServico(nomeServico) {
     if (window.duracoesServicosCache) {
         const chave = normalizarServicoNome(nomeServico);
         const dados = window.duracoesServicosCache[chave];
-        return dados ? dados.duracao : 0;
+        // Se o serviço foi encontrado no cache, retorna
+        if (dados) {
+            return dados.duracao;
+        }
     }
 
     // fallback: carrega via Supabase (pode acionar fetch ou cache)
@@ -207,7 +212,10 @@ async function obterPrecoServico(nomeServico) {
     if (window.duracoesServicosCache) {
         const chave = normalizarServicoNome(nomeServico);
         const dados = window.duracoesServicosCache[chave];
-        return dados ? dados.preco : 0;
+        // Se o serviço foi encontrado no cache, retorna
+        if (dados) {
+            return dados.preco;
+        }
     }
 
     // fallback: carrega via Supabase (pode acionar fetch ou cache)
