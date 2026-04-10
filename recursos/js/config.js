@@ -1627,7 +1627,7 @@ async function abrirModalDetalhesServico(nomeServico) {
 
         const preco = await obterPrecoServico(nomeServico);
         precoServico = preco;
-        const precoFormatado = preco > 0 ? `R$ ${preco.toFixed(2).replace('.', ',')}` : '-';
+        const precoFormatado = preco === 0 ? 'GRÁTIS' : `R$ ${preco.toFixed(2).replace('.', ',')}`;
         document.getElementById('detalhesPrecoServico').textContent = precoFormatado;
 
         // Aguardar no mínimo 0.7 segundos a partir da abertura
@@ -1787,7 +1787,7 @@ async function salvarEdicaoServico() {
             // Atualiza o cache com o novo preço
             window.duracoesServicosCache[servicoNormalizado].preco = valorConversao;
             // Atualiza o DOM
-            document.getElementById('detalhesPrecoServico').textContent = valorConversao >= 0 ? `R$ ${Number(valorConversao).toFixed(2).replace('.', ',')}` : '-';
+            document.getElementById('detalhesPrecoServico').textContent = valorConversao === 0 ? 'GRÁTIS' : `R$ ${Number(valorConversao).toFixed(2).replace('.', ',')}`;
             // Atualiza a variável global de preço
             precoServico = valorConversao;
         }

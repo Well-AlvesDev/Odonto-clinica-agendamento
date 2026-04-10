@@ -1392,10 +1392,15 @@
                     }
 
                     // Formata preço em reais
-                    const precoFormatado = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                    }).format(preco);
+                    let precoFormatado;
+                    if (preco === 0) {
+                        precoFormatado = 'GRÁTIS';
+                    } else {
+                        precoFormatado = new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }).format(preco);
+                    }
 
                     precoStr = ` (${duracaoStr}) - ${precoFormatado}`;
                 }
@@ -2066,10 +2071,15 @@
                     }
 
                     // Formata preço (exemplo: R$ 100,00)
-                    const precoFormatado = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                    }).format(preco);
+                    let precoFormatado;
+                    if (preco === 0) {
+                        precoFormatado = 'GRÁTIS';
+                    } else {
+                        precoFormatado = new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }).format(preco);
+                    }
 
                     // Monta texto final: [NOME] (TEMPO) - PREÇO
                     li.textContent = `${servico} (${duracaoStr}) - ${precoFormatado}`;

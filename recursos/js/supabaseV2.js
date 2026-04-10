@@ -7,6 +7,67 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+// ===================================================
+// VARIÁVEL GLOBAL PARA CONTROLAR AUTO-REFRESH
+// ===================================================
+
+let intervalAutoRefreshAgendamentos = null;
+const INTERVALO_AUTO_REFRESH_MS = 15000; // 15 segundos
+
+// ===================================================
+// FUNÇÃO PARA CALCULAR STATUS DO AGENDAMENTO
+// ===================================================
+
+/**
+ * Calcula o status atual de um agendamento baseado no horário atual
+ * @param {string} horario - Horário do agendamento (formato HH:MM)
+ * @param {string} servico - Nome do serviço
+ * @returns {string} - Status: 'pendente', 'agora' ou 'concluído'
+ */
+function calcularStatusAgendamento(horario, servico) {
+    try {
+        // Obter durações do sessionStorage
+        const duracoesJson = sessionStorage.getItem('servicosDuracoes');
+        const duracoes = duracoesJson ? JSON.parse(duracoesJson) : {};
+
+        // Normalizar nome do serviço (mesmo padrão usado no backend)
+        const servicoNormalizado = (servico || '')
+            .toLowerCase()
+            .trim();
+
+        // Obter duração do serviço em minutos (padrão: 0 se não encontrar)
+        const duracao = duracoes[servicoNormalizado] || 0;
+
+        // Converter horário para minutos desde 00:00
+        const [horas, minutos] = (horario || '00:00').split(':').map(Number);
+        const horarioEmMinutos = horas * 60 + minutos;
+
+        // Calcular horário de término
+        const horariotermino = horarioEmMinutos + duracao;
+
+        // Obter horário atual em minutos
+        const agora = new Date();
+        const horaAtual = agora.getHours();
+        const minutoAtual = agora.getMinutes();
+        const horarioAtualEmMinutos = horaAtual * 60 + minutoAtual;
+
+        // Comparar e determinar status
+        if (horarioAtualEmMinutos < horarioEmMinutos) {
+            // Ainda não começou
+            return 'pendente';
+        } else if (horarioAtualEmMinutos >= horarioEmMinutos && horarioAtualEmMinutos < horariotermino) {
+            // Está acontecendo agora
+            return 'agora';
+        } else {
+            // Já encerrou
+            return 'concluído';
+        }
+    } catch (erro) {
+        console.error('Erro ao calcular status do agendamento:', erro);
+        return 'pendente'; // Default para segurança
+    }
+}
+
 
 
 // ===================================================
@@ -62,6 +123,9 @@ async function fazerLogin() {
                 // manter também a senha em cache de sessão conforme solicitado
                 sessionStorage.setItem('senhaUsuario', senhaUsuario);
                 sessionStorage.setItem('agendamentos', JSON.stringify(agendamentosGlobais));
+
+                // Carregar e salvar durações dos serviços
+                await carregarDuracesSessao();
 
                 // Redirecionar para página de agendamentos após 1.5 segundos
                 setTimeout(() => {
@@ -180,15 +244,48 @@ function confirmarLogout() {
     // Fechar modal
     fecharModalConfirmacao();
 
+    // Parar auto-refresh dos agendamentos
+    pararAutoRefreshAgendamentos();
+
     // Limpar dados de sessão
     sessionStorage.removeItem('usuarioLogado');
     sessionStorage.removeItem('senhaUsuario');
     sessionStorage.removeItem('agendamentos');
+    sessionStorage.removeItem('servicosDuracoes');
 
     // Redirecionar para página de login
     setTimeout(() => {
         window.location.href = './login.html';
     }, 300);
+}
+
+// ===================================================
+// CARREGAR DURAÇÕES DOS SERVIÇOS PARA SESSÃO
+// ===================================================
+
+/**
+ * Carrega as durações dos serviços do Supabase e salva em sessionStorage
+ * para uso no cálculo de status dos agendamentos
+ */
+async function carregarDuracesSessao() {
+    try {
+        // Chamar a função já existente em supabase.js para carregar durações
+        const duracoes = await carregarDuracoesServicos();
+
+        // Normalizar os dados para armazenar apenas o nome do serviço e duração
+        const duracoesNormalizadas = {};
+        Object.keys(duracoes).forEach(chave => {
+            // Chave já vem normalizada de carregarDuracoesServicos()
+            duracoesNormalizadas[chave] = duracoes[chave].duracao;
+        });
+
+        // Salvar em sessionStorage para acesso rápido no cálculo de status
+        sessionStorage.setItem('servicosDuracoes', JSON.stringify(duracoesNormalizadas));
+        console.log('✓ Durações dos serviços carregadas e armazenadas na sessão');
+    } catch (erro) {
+        console.error('Erro ao carregar durações dos serviços:', erro);
+        // Não é crítico - usar defaults (duração 0) se falhar
+    }
 }
 
 function carregarDataAtual() {
@@ -199,6 +296,186 @@ function carregarDataAtual() {
     if (elementoData) {
         elementoData.textContent = `Hoje: ${dataFormatada}`;
     }
+}
+
+// ===================================================
+// CARREGAR AGENDAMENTOS DE HOJE COM VALIDAÇÃO
+// ===================================================
+
+async function carregarAgendamentosHoje(autoRefresh = false) {
+    try {
+        // Validar se há usuário logado
+        const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+        const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+        if (!usuarioLogado || !senhaUsuario) {
+            console.warn('Nenhum usuário logado. Redirecionando para login...');
+            // Parar auto-refresh se estiver ativo
+            pararAutoRefreshAgendamentos();
+            setTimeout(() => {
+                window.location.href = './login.html';
+            }, 1000);
+            return;
+        }
+
+        // Mostrar carregando apenas se não for auto-refresh
+        const containerAgendamentos = document.getElementById('agendamentosLista');
+        if (containerAgendamentos && !autoRefresh) {
+            containerAgendamentos.innerHTML = '<div class="carregando"><i class="ri-loader-4-line"></i> Carregando agendamentos...</div>';
+        }
+
+        // Chamar RPC com security definer passando nome e senha
+        const { data, error } = await _supabase.rpc('obter_agendamentos_hoje', {
+            p_nome_admin: usuarioLogado,
+            p_senha_admin: senhaUsuario
+        });
+
+        // Verificar erros
+        if (error) {
+            console.error('Erro ao carregar agendamentos:', error);
+            if (!autoRefresh) {
+                mostrarErroAgendamentos('Erro ao carregar agendamentos. Tente recarregar a página.');
+            }
+            return;
+        }
+
+        // Processar e exibir agendamentos
+        if (data && data.length > 0) {
+            exibirAgendamentos(data);
+        } else {
+            exibirMensagemVazio();
+        }
+
+    } catch (erro) {
+        console.error('Erro inesperado ao carregar agendamentos:', erro);
+        if (!autoRefresh) {
+            mostrarErroAgendamentos('Erro inesperado. Tente recarregar a página.');
+        }
+    }
+}
+
+// ===================================================
+// INICIAR AUTO-REFRESH DOS AGENDAMENTOS A CADA 15 SEGUNDOS
+// ===================================================
+
+function iniciarAutoRefreshAgendamentos() {
+    // Se já existe um intervalo, limpar antes
+    if (intervalAutoRefreshAgendamentos) {
+        clearInterval(intervalAutoRefreshAgendamentos);
+    }
+
+    // Carregar agendamentos imediatamente
+    carregarAgendamentosHoje(false);
+
+    // Configurar intervalo para atualizar a cada 15 segundos
+    intervalAutoRefreshAgendamentos = setInterval(() => {
+        carregarAgendamentosHoje(true);
+    }, INTERVALO_AUTO_REFRESH_MS);
+
+    console.log('✓ Auto-refresh de agendamentos ativado (a cada 15 segundos)');
+}
+
+// ===================================================
+// PARAR AUTO-REFRESH DOS AGENDAMENTOS
+// ===================================================
+
+function pararAutoRefreshAgendamentos() {
+    if (intervalAutoRefreshAgendamentos) {
+        clearInterval(intervalAutoRefreshAgendamentos);
+        intervalAutoRefreshAgendamentos = null;
+        console.log('✓ Auto-refresh de agendamentos desativado');
+    }
+}
+
+// ===================================================
+// EXIBIR AGENDAMENTOS NA PÁGINA
+// ===================================================
+
+function exibirAgendamentos(agendamentos) {
+    const containerAgendamentos = document.getElementById('agendamentosLista');
+
+    if (!containerAgendamentos) return;
+
+    // Limpar container
+    containerAgendamentos.innerHTML = '';
+
+    // Criar elementos para cada agendamento
+    agendamentos.forEach(agendamento => {
+        const cardAgendamento = document.createElement('div');
+        cardAgendamento.className = 'agendamento-card';
+        cardAgendamento.setAttribute('data-id', agendamento.id);
+
+        // Calcular status do agendamento
+        const status = calcularStatusAgendamento(agendamento.horario, agendamento.servico);
+        cardAgendamento.setAttribute('data-status', status);
+
+        // Formatar horário
+        const horarioFormatado = agendamento.horario || 'Sem horário';
+
+        // Texto e classe de status
+        const statusTexto = {
+            'pendente': 'Pendente',
+            'agora': 'Em Andamento',
+            'concluído': 'Concluído'
+        };
+        const statusClasse = `status-${status}`;
+
+        cardAgendamento.innerHTML = `
+            <div class="agendamento-info">
+                <div class="agendamento-header">
+                    <h3>${agendamento.nome}</h3>
+                    <div class="agendamento-header-right">
+                        <span class="agendamento-hora"><i class="ri-time-line"></i> ${horarioFormatado}</span>
+                        <span class="agendamento-status ${statusClasse}">${statusTexto[status]}</span>
+                    </div>
+                </div>
+                <div class="agendamento-detalhes">
+                    <p class="agendamento-servico"><strong>Serviço:</strong> ${agendamento.servico || 'Não especificado'}</p>
+                    <p class="agendamento-contato"><i class="ri-phone-line"></i> ${agendamento.telefone || 'Sem telefone'}</p>
+                    <p class="agendamento-data"><i class="ri-calendar-line"></i> ${agendamento.data || 'Sem data'}</p>
+                </div>
+            </div>
+        `;
+
+        containerAgendamentos.appendChild(cardAgendamento);
+    });
+}
+
+// ===================================================
+// EXIBIR MENSAGEM DE VAZIO
+// ===================================================
+
+function exibirMensagemVazio() {
+    const containerAgendamentos = document.getElementById('agendamentosLista');
+
+    if (!containerAgendamentos) return;
+
+    containerAgendamentos.innerHTML = `
+        <div class="agendamentos-vazio">
+            <i class="ri-calendar-blank-line"></i>
+            <p>Nenhum agendamento para hoje</p>
+        </div>
+    `;
+}
+
+// ===================================================
+// EXIBIR ERRO DE AGENDAMENTOS
+// ===================================================
+
+function mostrarErroAgendamentos(mensagem) {
+    const containerAgendamentos = document.getElementById('agendamentosLista');
+
+    if (!containerAgendamentos) return;
+
+    containerAgendamentos.innerHTML = `
+        <div class="agendamentos-erro">
+            <i class="ri-alert-line"></i>
+            <p>${mensagem}</p>
+            <button class="btn-recarregar" onclick="carregarAgendamentosHoje()">
+                <i class="ri-refresh-line"></i> Tentar novamente
+            </button>
+        </div>
+    `;
 }
 
 
