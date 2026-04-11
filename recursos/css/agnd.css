@@ -276,16 +276,19 @@
         transform: none;
         box-shadow: none;
     }
- .confirmation-modal-btn.confirmation-modal-btn-cancelar{
+
+    .confirmation-modal-btn.confirmation-modal-btn-cancelar {
         background-color: #e8e8e8;
         color: #333;
         font-weight: 400;
- }
+    }
+
     #btnFecharModal.confirmation-modal-btn.confirmation-modal-btn-cancelar {
         color: #e71f1f;
         border: 1px solid #ea3b3b;
         background-color: white;
     }
+
     /* Estilos para Card de Agendamentos */
     .agendamentos-container {
         background-color: white;
