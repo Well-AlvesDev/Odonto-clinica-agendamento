@@ -188,12 +188,12 @@
 
     .confirmation-modal-icon {
         font-size: 28px;
-        color: #d32f2f;
+        color: #2f71d3;
     }
 
     .confirmation-modal-title {
         font-size: 18px;
-        font-weight: 700;
+        font-weight: 400;
         color: #131313;
     }
 
@@ -210,7 +210,8 @@
         justify-content: flex-end;
     }
 
-    .confirmation-modal-btn {
+    .confirmation-modal-btn,
+    .confirmation-modal-btn[href] {
         padding: 10px 16px;
         border: none;
         border-radius: 8px;
@@ -218,6 +219,10 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
     }
 
     .confirmation-modal-btn-cancelar {
@@ -230,6 +235,12 @@
         background-color: #d8d8d8;
     }
 
+    .confirmation-modal-btn.disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .confirmation-modal-btn-confirmar {
         background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
         color: white;
@@ -238,6 +249,17 @@
     .confirmation-modal-btn-confirmar:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    }
+
+    #btnWhatsapp.confirmation-modal-btn-confirmar {
+        background: linear-gradient(135deg, #25d366 0%, #1da851 100%);
+        color: white;
+        border: none;
+    }
+
+    #btnWhatsapp.confirmation-modal-btn-confirmar:hover {
+        transform: translateY(0px);
+        box-shadow: 0 0px 0px rgba(37, 211, 101, 0);
     }
 
     .confirmation-modal-btn-confirmar:active {
@@ -254,7 +276,16 @@
         transform: none;
         box-shadow: none;
     }
-
+ .confirmation-modal-btn.confirmation-modal-btn-cancelar{
+        background-color: #e8e8e8;
+        color: #333;
+        font-weight: 400;
+ }
+    #btnFecharModal.confirmation-modal-btn.confirmation-modal-btn-cancelar {
+        color: #e71f1f;
+        border: 1px solid #ea3b3b;
+        background-color: white;
+    }
     /* Estilos para Card de Agendamentos */
     .agendamentos-container {
         background-color: white;
@@ -630,11 +661,11 @@
 
     /* Status: Agora (Em Andamento) */
     .agendamento-status.status-agora {
-        background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
-        color: #2e7d32;
-        border: 1px solid #81c784;
+        background: red;
+        color: #ffe1e1;
+        border: 1px solid #f32323;
         animation: statusPulse 0.8s ease infinite;
-        box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+        box-shadow: 0 0 8px rgba(227, 66, 48, 0.3);
     }
 
     /* Status: Concluído */
@@ -650,7 +681,7 @@
     }
 
     .agendamento-card[data-status="agora"] {
-        border-left: 4px solid #4caf50;
+        border-left: 4px solid #cf3629;
         background: linear-gradient(135deg, #f9f9f9 0%, #f0f8f5 100%);
     }
 
@@ -659,18 +690,6 @@
         opacity: 0.85;
     }
 
-    /* Animação de pulsação para status "agora" */
-    @keyframes statusPulse {
-
-        0%,
-        100% {
-            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
-        }
-
-        50% {
-            box-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
-        }
-    }
 
     /* Responsivo para mobile */
     @media (max-width: 768px) {
@@ -690,4 +709,10 @@
             font-size: 11px;
             padding: 3px 8px;
         }
+    }
+
+    .confirmation-modal-actions i {
+        font-size: 16px;
+        font-weight: 400;
+        margin-right: 8px;
     }

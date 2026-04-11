@@ -300,6 +300,104 @@
             background: white;
         }
 
+        /* Estilos para Seleção de Serviços (Badges) */
+        .servicos-container {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .servicos-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .servicos-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .servicos-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .servicos-scroll::-webkit-scrollbar-thumb {
+            background: #d37c7cd7;
+            border-radius: 10px;
+        }
+
+        .servicos-scroll::-webkit-scrollbar-thumb:hover {
+            background: #c56a6ad0;
+        }
+
+        .servico-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 90px;
+            padding: 12px 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            font-size: 13px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .servico-badge:hover {
+            border-color: #d37c7cd7;
+            background: #fff9f8;
+        }
+
+        .servico-badge.selected {
+            background: #d37c7cd7;
+            border-color: #d37c7cd7;
+            color: white;
+        }
+
+        .servico-badge-nome {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .servico-badge.selected .servico-badge-nome {
+            color: white;
+        }
+
+        .servico-badge-preco {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .servico-badge.selected .servico-badge-preco {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .servico-badge-duracao {
+            font-size: 10px;
+            color: #999;
+            display: block;
+        }
+
+        .servico-badge.selected .servico-badge-duracao {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
         /* Estilos para datas passadas */
         .data-badge.passada {
             opacity: 0.4;
@@ -1065,28 +1163,10 @@
 
         <div>
             <label for="servico">Serviço:</label>
-            <div class="dropdown-container" id="dropdownServico">
-                <button type="button" class="dropdown-toggle" id="dropdownToggle" aria-haspopup="listbox"
-                    aria-expanded="false">
-                    <span class="dropdown-label">Selecione um serviço</span>
-                    <svg class="dropdown-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </button>
-                <ul class="dropdown-menu" id="dropdownMenu" role="listbox">
-                    <li class="dropdown-option" data-value="" data-label="Selecione um serviço">Selecione um serviço
-                    </li>
-                    <li class="dropdown-option" data-value="Limpeza" data-label="Limpeza">Limpeza</li>
-                    <li class="dropdown-option" data-value="Branqueamento" data-label="Branqueamento">Branqueamento</li>
-                    <li class="dropdown-option" data-value="Restauração" data-label="Restauração">Restauração</li>
-                    <li class="dropdown-option" data-value="Implante" data-label="Implante">Implante</li>
-                    <li class="dropdown-option" data-value="Extração" data-label="Extração">Extração</li>
-                    <li class="dropdown-option" data-value="Tratamento de Canal" data-label="Tratamento de Canal">
-                        Tratamento de Canal</li>
-                    <li class="dropdown-option" data-value="Aparelho" data-label="Aparelho">Aparelho</li>
-                    <li class="dropdown-option" data-value="Consulta" data-label="Consulta">Consulta</li>
-                </ul>
+            <div class="servicos-container" id="servicosContainer">
+                <div class="servicos-scroll" id="servicosScroll">
+                    <!-- Badges de serviços serão inseridos aqui via JavaScript -->
+                </div>
             </div>
             <input type="hidden" id="servico" name="servico" required>
         </div>
@@ -1271,127 +1351,58 @@
     <script src="../recursos/js/supabase.js"></script>
 
     <script>
-        // DROPDOWN CUSTOMIZADO UNIVERSAL
-        class CustomDropdown {
-            constructor(containerId) {
-                this.container = document.getElementById(containerId);
-                this.toggle = this.container.querySelector('.dropdown-toggle');
-                this.menu = this.container.querySelector('.dropdown-menu');
-                this.options = this.container.querySelectorAll('.dropdown-option');
-                this.hiddenInput = document.getElementById('servico');
-                this.currentValue = '';
-                this.currentLabel = 'Selecione um serviço';
-                this.init();
+        // DROPDOWN CUSTOMIZADO UNIVERSAL - [REMOVIDO E SUBSTITUÍDO POR BADGES]
+        // Classe CustomDropdown foi removida e substituída por SeletorServicos com badges horizontais
+
+        // SELEÇÃO DE SERVIÇOS (BADGES)
+        class SeletorServicos {
+            constructor(scrollContainerId, hiddenInputId) {
+                this.scrollContainer = document.getElementById(scrollContainerId);
+                this.hiddenInput = document.getElementById(hiddenInputId);
+                this.servicosSelecionados = [];
+                this.servicoInfo = {}; // Armazena informações de duração e preço dos serviços
             }
 
-            init() {
-                this.toggle.addEventListener('click', () => this.toggleMenu());
-                this.options.forEach(option => {
-                    option.addEventListener('click', (e) => {
-                        if (!option.classList.contains('disabled')) {
-                            this.selectOption(option);
-                        }
-                        e.preventDefault();
-                    });
-                    option.addEventListener('keydown', (e) => this.handleKeydown(e, option));
-                });
+            async gerarBadges(servicos, duracoesCache) {
+                // Limpa o container
+                this.scrollContainer.innerHTML = '';
 
-                document.addEventListener('click', (e) => this.handleClickOutside(e));
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.menu.classList.contains('open')) {
-                        this.closeMenu();
-                        this.toggle.focus();
-                    }
-                });
-
-                this.toggle.addEventListener('keydown', (e) => this.handleToggleKeydown(e));
-            }
-
-            toggleMenu() {
-                if (this.menu.classList.contains('open')) {
-                    this.closeMenu();
-                } else {
-                    this.openMenu();
+                if (!servicos || servicos.length === 0) {
+                    this.scrollContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Nenhum serviço disponível</p>';
+                    return;
                 }
-            }
 
-            openMenu() {
-                this.menu.classList.add('open');
-                this.toggle.setAttribute('aria-expanded', 'true');
+                // Cria badges para cada serviço
+                servicos.forEach((servico) => {
+                    const badge = document.createElement('button');
+                    badge.type = 'button';
+                    badge.className = 'servico-badge';
+                    badge.setAttribute('data-servico', servico);
 
-                // Reseta o scroll da lista para o topo
-                this.menu.scrollTop = 0;
+                    // Normaliza o nome do serviço para buscar no cache
+                    const servicoNormalizado = (typeof normalizarServicoNome === 'function')
+                        ? normalizarServicoNome(servico)
+                        : servico.toLowerCase().trim();
 
-                // Scroll suave para posição confortável de visualização
-                this.scrollToComfortablePosition();
+                    // Obtém informações de duração e preço
+                    const dadosServico = duracoesCache[servicoNormalizado] || {};
+                    const duracaoMin = dadosServico.duracao || 0;
+                    const preco = dadosServico.preco || 0;
 
-                // Foca na primeira opção ou na selecionada
-                const selectedOption = this.menu.querySelector('[aria-selected="true"]');
-                if (selectedOption) {
-                    selectedOption.focus();
-                } else {
-                    this.options[0].focus();
-                }
-            }
+                    // Armazena informações do serviço
+                    this.servicoInfo[servico] = { duracaoMin, preco };
 
-            scrollToComfortablePosition() {
-                // Aguarda o menu renderizar antes de fazer scroll
-                setTimeout(() => {
-                    const toggleRect = this.toggle.getBoundingClientRect();
-                    const menuHeight = this.menu.offsetHeight;
-                    const toggleHeight = this.toggle.offsetHeight;
-
-                    // Calcula a posição ideal (dropdown deve ficar no meio/terço superior da tela)
-                    const targetPosition = toggleRect.top + toggleHeight + (menuHeight / 2) - (window.innerHeight / 3);
-
-                    // Faz scroll suave se necessário
-                    if (targetPosition > 0) {
-                        window.scrollBy({
-                            top: targetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                }, 50);
-            }
-
-            closeMenu() {
-                this.menu.classList.remove('open');
-                this.toggle.setAttribute('aria-expanded', 'false');
-            }
-
-            async selectOption(option) {
-                this.currentValue = option.getAttribute('data-value');
-                this.currentLabel = option.getAttribute('data-label');
-                this.hiddenInput.value = this.currentValue;
-
-                // Atualiza o label do botão, incluindo duração e preço se houver
-                let label = this.currentLabel;
-                let duracaoStr = '';
-                let precoStr = '';
-
-                if (this.currentValue) {
-                    let duracaoMin = 0;
-                    let preco = 0;
-                    if (window.duracoesServicosCache) {
-                        const chave = (typeof normalizarServicoNome === 'function')
-                            ? normalizarServicoNome(this.currentValue)
-                            : this.currentValue.toLowerCase().trim();
-                        duracaoMin = window.duracoesServicosCache[chave]?.duracao || 0;
-                        preco = window.duracoesServicosCache[chave]?.preco || 0;
-                    } else {
-                        duracaoMin = await obterDuracaoServico(this.currentValue);
-                        preco = await obterPrecoServico(this.currentValue);
-                    }
-
+                    // Formata duração
                     const horas = Math.floor(duracaoMin / 60);
                     const minutos = duracaoMin % 60;
+                    let duracaoStr = '';
                     if (horas >= 1) {
                         duracaoStr = `${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min`;
                     } else {
                         duracaoStr = `${minutos.toString().padStart(2, '0')}min`;
                     }
 
-                    // Formata preço em reais
+                    // Formata preço
                     let precoFormatado;
                     if (preco === 0) {
                         precoFormatado = 'GRÁTIS';
@@ -1402,111 +1413,105 @@
                         }).format(preco);
                     }
 
-                    precoStr = ` (${duracaoStr}) - ${precoFormatado}`;
-                }
-                this.toggle.querySelector('.dropdown-label').textContent = label + precoStr;
+                    // Constrói o HTML do badge
+                    badge.innerHTML = `
+                        <span class="servico-badge-nome">${servico}</span>
+                        <span class="servico-badge-duracao">${duracaoStr}</span>
+                        <span class="servico-badge-preco">${precoFormatado}</span>
+                    `;
 
-                // Atualiza o estado de seleção
-                this.options.forEach(opt => {
-                    opt.removeAttribute('aria-selected');
-                    opt.classList.remove('selected');
-                });
-                option.setAttribute('aria-selected', 'true');
-                option.classList.add('selected');
-
-                // Desabilita ou habilita "Selecione um serviço" conforme necessário
-                const defaultOption = this.menu.querySelector('[data-value=""]');
-                if (this.currentValue === '') {
-                    // Se selecionou "Selecione um serviço", libera as outras opções
-                    this.options.forEach(opt => {
-                        opt.classList.remove('disabled');
+                    // Adiciona event listeners
+                    badge.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.selecionarServico(servico, badge);
                     });
+
+                    badge.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.selecionarServico(servico, badge);
+                        }
+                    });
+
+                    this.scrollContainer.appendChild(badge);
+                });
+            }
+
+            selecionarServico(servico, badge) {
+                const selecaoExistente = this.servicosSelecionados.indexOf(servico);
+                if (selecaoExistente >= 0) {
+                    this.servicosSelecionados.splice(selecaoExistente, 1);
+                    badge.classList.remove('selected');
+                    badge.setAttribute('aria-pressed', 'false');
                 } else {
-                    // Se selecionou uma opção válida, desabilita "Selecione um serviço"
-                    if (defaultOption) {
-                        defaultOption.classList.add('disabled');
-                    }
+                    this.servicosSelecionados.push(servico);
+                    badge.classList.add('selected');
+                    badge.setAttribute('aria-pressed', 'true');
                 }
+
+                this.hiddenInput.value = this.getServico();
 
                 // Invalida o cache de horários ocupados pois mudou o serviço
                 if (typeof invalidarCacheHorariosOcupados === 'function') {
                     invalidarCacheHorariosOcupados();
                 }
 
-                // Se uma data já está selecionada, regenera os horários com a nova duração do serviço
+                // Se uma data já está selecionada, regenera os horários com a nova duração total dos serviços
                 if (typeof seletorDatas !== 'undefined' && typeof seletorHorarios !== 'undefined' && seletorDatas && seletorDatas.dataSelecionada) {
-                    let duracao = 0;
-                    if (this.currentValue) {
-                        if (window.duracoesServicosCache) {
-                            const chave = (typeof normalizarServicoNome === 'function')
-                                ? normalizarServicoNome(this.currentValue)
-                                : this.currentValue.toLowerCase().trim();
-                            duracao = window.duracoesServicosCache[chave]?.duracao || 0;
-                        } else {
-                            duracao = await obterDuracaoServico(this.currentValue);
-                        }
+                    const duracaoTotal = this.getDuracaoTotal();
+                    seletorHorarios.gerarBadgesParaData(seletorDatas.dataSelecionada, duracaoTotal);
+                }
+
+                // Scroll suave para o badge selecionado
+                badge.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+
+            getServico() {
+                return this.servicosSelecionados.join(', ');
+            }
+
+            getServicosSelecionados() {
+                return this.servicosSelecionados.slice();
+            }
+
+            getDuracaoTotal() {
+                return this.servicosSelecionados.reduce((total, servico) => {
+                    return total + (this.servicoInfo[servico]?.duracaoMin || 0);
+                }, 0);
+            }
+
+            setServico(servico) {
+                const servicos = String(servico || '')
+                    .split(',')
+                    .map(item => item.trim())
+                    .filter(Boolean);
+
+                this.limparServico();
+
+                servicos.forEach(nomeServico => {
+                    const badge = this.scrollContainer.querySelector(`[data-servico="${nomeServico}"]`);
+                    if (badge) {
+                        badge.classList.add('selected');
+                        badge.setAttribute('aria-pressed', 'true');
+                        this.servicosSelecionados.push(nomeServico);
                     }
-                    seletorHorarios.gerarBadgesParaData(seletorDatas.dataSelecionada, duracao);
-                }
+                });
 
-                this.closeMenu();
-                this.toggle.focus();
+                this.hiddenInput.value = this.getServico();
             }
 
-            handleToggleKeydown(e) {
-                if ((e.key === 'Enter' || e.key === ' ') && !this.menu.classList.contains('open')) {
-                    e.preventDefault();
-                    this.openMenu();
-                } else if (e.key === 'ArrowDown' && !this.menu.classList.contains('open')) {
-                    e.preventDefault();
-                    this.openMenu();
-                } else if (e.key === 'ArrowUp' && !this.menu.classList.contains('open')) {
-                    e.preventDefault();
-                    this.openMenu();
-                }
-            }
-
-            handleKeydown(e, option) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (!option.classList.contains('disabled')) {
-                        this.selectOption(option);
-                    }
-                } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    const nextOption = option.nextElementSibling;
-                    if (nextOption && nextOption.classList.contains('dropdown-option')) {
-                        nextOption.focus();
-                    }
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    const prevOption = option.previousElementSibling;
-                    if (prevOption && prevOption.classList.contains('dropdown-option')) {
-                        prevOption.focus();
-                    }
-                }
-            }
-
-            handleClickOutside(e) {
-                if (!this.container.contains(e.target) && this.menu.classList.contains('open')) {
-                    this.closeMenu();
-                }
-            }
-
-            getValue() {
-                return this.currentValue;
-            }
-
-            setValue(value) {
-                const option = Array.from(this.options).find(opt => opt.getAttribute('data-value') === value);
-                if (option) {
-                    this.selectOption(option);
-                }
+            limparServico() {
+                this.scrollContainer.querySelectorAll('.servico-badge.selected').forEach(badge => {
+                    badge.classList.remove('selected');
+                    badge.setAttribute('aria-pressed', 'false');
+                });
+                this.servicosSelecionados = [];
+                this.hiddenInput.value = '';
             }
         }
 
-        // Inicializa o dropdown de serviço
-        const dropdownServico = new CustomDropdown('dropdownServico');
+        // Inicializa o seletor de serviços
+        let seletorServicos;
 
         // SELEÇÃO DE HORÁRIOS
         class SeletorHorarios {
@@ -1954,23 +1959,10 @@
                 // Scroll suave para o badge selecionado
                 badge.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-                // Gera badges de horários para a data selecionada com a duração do serviço
+                // Gera badges de horários para a data selecionada com a duração total dos serviços
                 if (typeof seletorHorarios !== 'undefined' && seletorHorarios) {
-                    (async () => {
-                        const servicoSelecionado = dropdownServico.getValue();
-                        let duracao = 0;
-                        if (servicoSelecionado) {
-                            if (window.duracoesServicosCache) {
-                                const chave = (typeof normalizarServicoNome === 'function')
-                                    ? normalizarServicoNome(servicoSelecionado)
-                                    : servicoSelecionado.toLowerCase().trim();
-                                duracao = window.duracoesServicosCache[chave]?.duracao || 0;
-                            } else {
-                                duracao = await obterDuracaoServico(servicoSelecionado);
-                            }
-                        }
-                        seletorHorarios.gerarBadgesParaData(dataFormatada, duracao);
-                    })();
+                    const duracaoTotal = seletorServicos ? seletorServicos.getDuracaoTotal() : 0;
+                    seletorHorarios.gerarBadgesParaData(dataFormatada, duracaoTotal);
                 }
             }
 
@@ -2017,98 +2009,16 @@
                     return;
                 }
 
-                // Obtém o menu do dropdown
-                const dropdownMenu = document.getElementById('dropdownMenu');
-
-                // Remove as opções antigas (mantém apenas "Selecione um serviço")
-                const opcoes = dropdownMenu.querySelectorAll('.dropdown-option');
-                opcoes.forEach(opcao => {
-                    if (opcao.getAttribute('data-value') !== '') {
-                        opcao.remove();
-                    }
-                });
-
                 // aguarda durações (já começou antes)
                 const duracoes = await duracoesPromise;
 
-                servicos.forEach(servico => {
-                    const li = document.createElement('li');
-                    li.className = 'dropdown-option';
-                    li.setAttribute('data-value', servico);
-                    li.setAttribute('data-label', servico);
+                // Inicializa o seletor de serviços se não foi inicializado
+                if (!seletorServicos) {
+                    seletorServicos = new SeletorServicos('servicosScroll', 'servico');
+                }
 
-                    // normaliza usando função global, se disponível
-                    const servicoNormalizado = (typeof normalizarServicoNome === 'function')
-                        ? normalizarServicoNome(servico)
-                        : servico
-                            .toLowerCase()
-                            .trim()
-                            .replace(/[áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ]/g, c => {
-                                const mapa = {
-                                    'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-                                    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-                                    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-                                    'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-                                    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-                                    'ç': 'c'
-                                };
-                                return mapa[c] || c;
-                            });
-
-                    // Obtém dados de duração e preço
-                    const dadosServico = duracoes[servicoNormalizado] || {};
-                    const duracaoMin = dadosServico.duracao || 0;
-                    const preco = dadosServico.preco || 0;
-
-                    // Formata duração
-                    const horas = Math.floor(duracaoMin / 60);
-                    const minutos = duracaoMin % 60;
-                    let duracaoStr = '';
-                    if (horas >= 1) {
-                        duracaoStr = `${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}min`;
-                    } else {
-                        duracaoStr = `${minutos.toString().padStart(2, '0')}min`;
-                    }
-
-                    // Formata preço (exemplo: R$ 100,00)
-                    let precoFormatado;
-                    if (preco === 0) {
-                        precoFormatado = 'GRÁTIS';
-                    } else {
-                        precoFormatado = new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                        }).format(preco);
-                    }
-
-                    // Monta texto final: [NOME] (TEMPO) - PREÇO
-                    li.textContent = `${servico} (${duracaoStr}) - ${precoFormatado}`;
-                    dropdownMenu.appendChild(li);
-                });
-
-                // Reinicializa o dropdown com as novas opções
-                dropdownServico.options = dropdownMenu.querySelectorAll('.dropdown-option');
-
-                // Reaplica os event listeners apenas às NOVAS opções
-                dropdownServico.options.forEach(option => {
-                    // Remove listeners antigos (se existirem)
-                    const clone = option.cloneNode(true);
-                    option.parentNode.replaceChild(clone, option);
-                });
-
-                // Recarrega referência após limpar listeners
-                dropdownServico.options = dropdownMenu.querySelectorAll('.dropdown-option');
-
-                // Adiciona listeners para as opções
-                dropdownServico.options.forEach(option => {
-                    option.addEventListener('click', (e) => {
-                        if (!option.classList.contains('disabled')) {
-                            dropdownServico.selectOption(option);
-                        }
-                        e.preventDefault();
-                    });
-                    option.addEventListener('keydown', (e) => dropdownServico.handleKeydown(e, option));
-                });
+                // Popula os badges com os serviços
+                await seletorServicos.gerarBadges(servicos, duracoes);
 
                 // Esconde o loader após sucesso
                 loaderContainer.classList.add('hide');
@@ -2284,7 +2194,7 @@
             const nome = document.getElementById('nome').value;
             const telefonComHifen = document.getElementById('telefone').value;
             const telefone = telefonComHifen.replace(/\D/g, ''); // Remove formatação para obter apenas os dígitos
-            const servico = dropdownServico.getValue();
+            const servico = seletorServicos ? seletorServicos.getServico() : null;
             const data = seletorDatas.getData();
             const horario = seletorHorarios.getHorario();
 
@@ -2322,7 +2232,7 @@
 
             // Preenche o modal com os dados
             document.getElementById('revisaoNome').textContent = nome;
-            document.getElementById('revisaoTelefone').textContent = telefone;
+            document.getElementById('revisaoTelefone').textContent = telefonComHifen;
             document.getElementById('revisaoServico').textContent = servico;
             document.getElementById('revisaoData').textContent = dataFormatada;
             document.getElementById('revisaoHorario').textContent = horario;
@@ -2392,7 +2302,7 @@
 
                 // Reseta o formulário (pero fica escondido)
                 formulario.reset();
-                dropdownServico.setValue('');
+                if (seletorServicos) seletorServicos.limparServico();
                 seletorDatas.dataSelecionada = null;
                 seletorDatas.hiddenInput.value = '';
                 seletorDatas.scrollContainer.querySelectorAll('.data-badge.selected').forEach(badge => {

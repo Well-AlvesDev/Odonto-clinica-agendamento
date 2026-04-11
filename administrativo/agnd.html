@@ -48,6 +48,39 @@
         </div>
     </div>
 
+    <!-- Modal de Detalhes do Agendamento -->
+    <div id="agendamentoDetalhesOverlay" class="confirmation-modal-overlay" onclick="fecharModalDetalhesAgendamento()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-id-card-line confirmation-modal-icon"></i>
+                <div class="confirmation-modal-title">Detalhes do Agendamento</div>
+            </div>
+            <div class="confirmation-modal-message" id="detalhesAgendamentoMensagem">
+                <p><strong>Paciente:</strong> <span id="modalPacienteNome"></span></p>
+                <p><strong>Serviço:</strong> <span id="modalServico"></span></p>
+                <p><strong>Horário:</strong> <span id="modalHorario"></span></p>
+                <p><strong>Telefone:</strong> <span id="modalTelefone"></span></p>
+            </div>
+            <div class="confirmation-modal-actions" style="flex-direction: column; gap: 10px; align-items: stretch;">
+                <a id="btnWhatsapp" class="confirmation-modal-btn confirmation-modal-btn-confirmar" href="#"
+                    target="_blank" rel="noopener noreferrer">
+                    <i class="ri-whatsapp-line"></i> Contatar via WhatsApp
+                </a>
+                <a id="btnTelefone" class="confirmation-modal-btn confirmation-modal-btn-cancelar" href="#">
+                    <i class="ri-phone-line"></i> Ligar para o paciente
+                </a>
+                <button id="btnCancelarAgendamentoModal" class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="confirmarCancelarAgendamento()">
+                    <i class="ri-close-circle-line"></i> Cancelar Agendamento
+                </button>
+                <button id="btnFecharModal" class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalDetalhesAgendamento()">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="agendamentos-container">
         <div class="agendamentos-header">
             <h2 style="font-weight: 400;"><i class="ri-calendar-check-line"></i> Agendados para Hoje</h2>
@@ -68,6 +101,7 @@
     </footer>
 
     <script src="../recursos/js/supabaseV2.js"></script>
+    <script src="../recursos/js/supabase.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Validar se há sessão ativa
@@ -86,8 +120,11 @@
             atualizarNomeUsuario();
             carregarDataAtual();
 
-            // Iniciar auto-refresh dos agendamentos a cada 15 segundos
-            iniciarAutoRefreshAgendamentos();
+            // Carregar durações dos serviços para o cálculo de status "agora"
+            carregarDuracesSessao().then(() => {
+                // Iniciar auto-refresh dos agendamentos a cada 15 segundos
+                iniciarAutoRefreshAgendamentos();
+            });
         });
     </script>
 </body>

@@ -13,6 +13,7 @@ const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 let intervalAutoRefreshAgendamentos = null;
 const INTERVALO_AUTO_REFRESH_MS = 15000; // 15 segundos
+let agendamentoSelecionadoDetalhes = null;
 
 // ===================================================
 // FUNÇÃO PARA CALCULAR STATUS DO AGENDAMENTO
@@ -21,7 +22,7 @@ const INTERVALO_AUTO_REFRESH_MS = 15000; // 15 segundos
 /**
  * Calcula o status atual de um agendamento baseado no horário atual
  * @param {string} horario - Horário do agendamento (formato HH:MM)
- * @param {string} servico - Nome do serviço
+ * @param {string} servico - Nome do serviço ou lista de serviços separados por vírgula
  * @returns {string} - Status: 'pendente', 'agora' ou 'concluído'
  */
 function calcularStatusAgendamento(horario, servico) {
@@ -30,20 +31,28 @@ function calcularStatusAgendamento(horario, servico) {
         const duracoesJson = sessionStorage.getItem('servicosDuracoes');
         const duracoes = duracoesJson ? JSON.parse(duracoesJson) : {};
 
-        // Normalizar nome do serviço (mesmo padrão usado no backend)
-        const servicoNormalizado = (servico || '')
-            .toLowerCase()
-            .trim();
+        // Extrair todos os serviços do texto (separados por vírgula)
+        const servicos = (servico || '')
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
 
-        // Obter duração do serviço em minutos (padrão: 0 se não encontrar)
-        const duracao = duracoes[servicoNormalizado] || 0;
+        // Somar duração de todos os serviços do agendamento
+        const duracaoTotal = servicos.reduce((total, nomeServico) => {
+            // Usar a mesma normalização que é usada em carregarDuracoesServicos
+            const nomeNormalizado = (typeof normalizarServicoNome === 'function')
+                ? normalizarServicoNome(nomeServico)
+                : nomeServico.toLowerCase().trim();
+            const duracao = parseInt(duracoes[nomeNormalizado], 10) || 0;
+            return total + duracao;
+        }, 0);
 
         // Converter horário para minutos desde 00:00
         const [horas, minutos] = (horario || '00:00').split(':').map(Number);
         const horarioEmMinutos = horas * 60 + minutos;
 
-        // Calcular horário de término
-        const horariotermino = horarioEmMinutos + duracao;
+        // Calcular horário de término usando duração total
+        const horarioTermino = horarioEmMinutos + duracaoTotal;
 
         // Obter horário atual em minutos
         const agora = new Date();
@@ -53,18 +62,15 @@ function calcularStatusAgendamento(horario, servico) {
 
         // Comparar e determinar status
         if (horarioAtualEmMinutos < horarioEmMinutos) {
-            // Ainda não começou
             return 'pendente';
-        } else if (horarioAtualEmMinutos >= horarioEmMinutos && horarioAtualEmMinutos < horariotermino) {
-            // Está acontecendo agora
+        } else if (horarioAtualEmMinutos >= horarioEmMinutos && horarioAtualEmMinutos < horarioTermino) {
             return 'agora';
         } else {
-            // Já encerrou
             return 'concluído';
         }
     } catch (erro) {
         console.error('Erro ao calcular status do agendamento:', erro);
-        return 'pendente'; // Default para segurança
+        return 'pendente';
     }
 }
 
@@ -355,6 +361,93 @@ async function carregarAgendamentosHoje(autoRefresh = false) {
 }
 
 // ===================================================
+// RECALCULAR APENAS OS STATUS DOS AGENDAMENTOS (sem novo fetch)
+// ===================================================
+
+function recalcularStatusAgendamentos() {
+    const containerAgendamentos = document.getElementById('agendamentosLista');
+    if (!containerAgendamentos) return;
+
+    // Definir prioridade dos status
+    const prioridadeStatus = {
+        'agora': 1,      // primeiro
+        'pendente': 2,   // segundo
+        'concluído': 3   // terceiro
+    };
+
+    // Selecionar todos os cards de agendamentos
+    const cards = Array.from(containerAgendamentos.querySelectorAll('.agendamento-card'));
+    let houveMudancaDeStatus = false;
+
+    // Atualizar status de cada card
+    cards.forEach(card => {
+        const id = card.getAttribute('data-id');
+        const horarioElement = card.querySelector('.agendamento-hora');
+        const servicoElement = card.querySelector('.agendamento-servico');
+        const statusElement = card.querySelector('.agendamento-status');
+
+        if (horarioElement && servicoElement && statusElement) {
+            // Extrair horário e serviço do card
+            const horarioTexto = horarioElement.textContent.replace(/[^\d:]/g, '').trim();
+            const servicoTexto = servicoElement.textContent.replace(/Serviço:\s*/i, '').trim();
+
+            // Recalcular status
+            const novoStatus = calcularStatusAgendamento(horarioTexto, servicoTexto);
+
+            // Se o status mudou, atualizar o visual e marcar que houve mudança
+            if (card.getAttribute('data-status') !== novoStatus) {
+                card.setAttribute('data-status', novoStatus);
+                houveMudancaDeStatus = true;
+
+                // Atualizar classe CSS
+                statusElement.className = 'agendamento-status';
+                const statusClasse = `status-${novoStatus}`;
+                statusElement.classList.add(statusClasse);
+
+                // Atualizar texto do status
+                const statusTexto = {
+                    'pendente': 'Pendente',
+                    'agora': 'Agora',
+                    'concluído': 'Concluído'
+                };
+                statusElement.textContent = statusTexto[novoStatus] || 'Desconhecido';
+            }
+        }
+    });
+
+    // Sempre reordenar os cards para garantir a ordem correta
+    cards.sort((a, b) => {
+        const statusA = a.getAttribute('data-status');
+        const statusB = b.getAttribute('data-status');
+        const prioridadeA = prioridadeStatus[statusA] || 999;
+        const prioridadeB = prioridadeStatus[statusB] || 999;
+
+        // Se status são diferentes, ordenar por status
+        if (prioridadeA !== prioridadeB) {
+            return prioridadeA - prioridadeB;
+        }
+
+        // Se status são iguais, ordenar por horário (decrescente - maior primeiro)
+        const horarioElementA = a.querySelector('.agendamento-hora');
+        const horarioElementB = b.querySelector('.agendamento-hora');
+        const horarioTextoA = horarioElementA ? horarioElementA.textContent.replace(/[^\d:]/g, '').trim() : '00:00';
+        const horarioTextoB = horarioElementB ? horarioElementB.textContent.replace(/[^\d:]/g, '').trim() : '00:00';
+
+        const partsA = horarioTextoA.split(':').map(Number);
+        const partsB = horarioTextoB.split(':').map(Number);
+        const minutosA = partsA[0] * 60 + partsA[1];
+        const minutosB = partsB[0] * 60 + partsB[1];
+
+        return minutosB - minutosA; // Decrescente (maior primeiro)
+    });
+
+    // Reorganizar cards no DOM
+    cards.forEach(card => {
+        containerAgendamentos.appendChild(card);
+    });
+}
+
+// ===================================================
 // INICIAR AUTO-REFRESH DOS AGENDAMENTOS A CADA 15 SEGUNDOS
 // ===================================================
 
@@ -369,7 +462,10 @@ function iniciarAutoRefreshAgendamentos() {
 
     // Configurar intervalo para atualizar a cada 15 segundos
     intervalAutoRefreshAgendamentos = setInterval(() => {
+        // Recarregar agendamentos do servidor
         carregarAgendamentosHoje(true);
+        // E também recalcular status dos agendamentos já exibidos
+        recalcularStatusAgendamentos();
     }, INTERVALO_AUTO_REFRESH_MS);
 
     console.log('✓ Auto-refresh de agendamentos ativado (a cada 15 segundos)');
@@ -399,14 +495,45 @@ function exibirAgendamentos(agendamentos) {
     // Limpar container
     containerAgendamentos.innerHTML = '';
 
-    // Criar elementos para cada agendamento
-    agendamentos.forEach(agendamento => {
+    // Definir prioridade dos status
+    const prioridadeStatus = {
+        'agora': 1,      // primeiro
+        'pendente': 2,   // segundo
+        'concluído': 3   // terceiro
+    };
+
+    // Calcular status e ordenar agendamentos
+    const agendamentosComStatus = agendamentos.map(agendamento => ({
+        ...agendamento,
+        status: calcularStatusAgendamento(agendamento.horario, agendamento.servico)
+    }));
+
+    agendamentosComStatus.sort((a, b) => {
+        const prioridadeA = prioridadeStatus[a.status] || 999;
+        const prioridadeB = prioridadeStatus[b.status] || 999;
+
+        // Se status são diferentes, ordenar por status
+        if (prioridadeA !== prioridadeB) {
+            return prioridadeA - prioridadeB;
+        }
+
+        // Se status são iguais, ordenar por horário (decrescente - maior primeiro)
+        const horarioA = a.horario ? a.horario.split(':').map(Number) : [0, 0];
+        const horarioB = b.horario ? b.horario.split(':').map(Number) : [0, 0];
+        const minutosA = horarioA[0] * 60 + horarioA[1];
+        const minutosB = horarioB[0] * 60 + horarioB[1];
+
+        return minutosB - minutosA; // Decrescente (maior primeiro)
+    });
+
+    // Criar elementos para cada agendamento (já ordenados)
+    agendamentosComStatus.forEach(agendamento => {
         const cardAgendamento = document.createElement('div');
         cardAgendamento.className = 'agendamento-card';
         cardAgendamento.setAttribute('data-id', agendamento.id);
 
-        // Calcular status do agendamento
-        const status = calcularStatusAgendamento(agendamento.horario, agendamento.servico);
+        // Usar status já calculado
+        const status = agendamento.status;
         cardAgendamento.setAttribute('data-status', status);
 
         // Formatar horário
@@ -415,7 +542,7 @@ function exibirAgendamentos(agendamentos) {
         // Texto e classe de status
         const statusTexto = {
             'pendente': 'Pendente',
-            'agora': 'Em Andamento',
+            'agora': 'Agora',
             'concluído': 'Concluído'
         };
         const statusClasse = `status-${status}`;
@@ -423,7 +550,7 @@ function exibirAgendamentos(agendamentos) {
         cardAgendamento.innerHTML = `
             <div class="agendamento-info">
                 <div class="agendamento-header">
-                    <h3>${agendamento.nome}</h3>
+                 <h3>  <i class="ri-user-line"></i>  ${agendamento.nome}</h3>
                     <div class="agendamento-header-right">
                         <span class="agendamento-hora"><i class="ri-time-line"></i> ${horarioFormatado}</span>
                         <span class="agendamento-status ${statusClasse}">${statusTexto[status]}</span>
@@ -437,8 +564,114 @@ function exibirAgendamentos(agendamentos) {
             </div>
         `;
 
+        cardAgendamento.addEventListener('click', () => {
+            abrirModalDetalhesAgendamento(agendamento);
+        });
+
         containerAgendamentos.appendChild(cardAgendamento);
     });
+}
+
+function abrirModalDetalhesAgendamento(agendamento) {
+    agendamentoSelecionadoDetalhes = agendamento;
+
+    const modalPacienteNome = document.getElementById('modalPacienteNome');
+    const modalServico = document.getElementById('modalServico');
+    const modalHorario = document.getElementById('modalHorario');
+    const modalTelefone = document.getElementById('modalTelefone');
+    const btnWhatsapp = document.getElementById('btnWhatsapp');
+    const btnTelefone = document.getElementById('btnTelefone');
+    const btnCancelar = document.getElementById('btnCancelarAgendamentoModal');
+
+    if (modalPacienteNome) modalPacienteNome.textContent = agendamento.nome || 'Sem nome';
+    if (modalServico) modalServico.textContent = agendamento.servico || 'Não informado';
+    if (modalHorario) modalHorario.textContent = agendamento.horario || 'Sem horário';
+    if (modalTelefone) modalTelefone.textContent = agendamento.telefone || 'Sem telefone';
+
+    const telefoneLimpo = (agendamento.telefone || '').replace(/\D/g, '');
+    const whatsappHref = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '#';
+    const telefoneHref = telefoneLimpo ? `tel:+55${telefoneLimpo}` : '#';
+
+    if (btnWhatsapp) {
+        btnWhatsapp.href = whatsappHref;
+        btnWhatsapp.setAttribute('aria-label', 'Abrir WhatsApp');
+        btnWhatsapp.classList.toggle('disabled', !telefoneLimpo);
+    }
+    if (btnTelefone) {
+        btnTelefone.href = telefoneHref;
+        btnTelefone.setAttribute('aria-label', 'Ligar para telefone');
+        btnTelefone.classList.toggle('disabled', !telefoneLimpo);
+    }
+    if (btnCancelar) {
+        btnCancelar.disabled = false;
+        // Alterar texto do botão baseado no status do agendamento
+        const status = calcularStatusAgendamento(agendamento.horario, agendamento.servico);
+        if (status === 'concluído') {
+            btnCancelar.innerHTML = '<i class="ri-delete-bin-line"></i> Apagar Registro de Agendamento';
+        } else {
+            btnCancelar.innerHTML = '<i class="ri-close-circle-line"></i> Cancelar Agendamento';
+        }
+    }
+
+    const overlay = document.getElementById('agendamentoDetalhesOverlay');
+    if (overlay) overlay.classList.add('ativo');
+}
+
+function fecharModalDetalhesAgendamento() {
+    const overlay = document.getElementById('agendamentoDetalhesOverlay');
+    if (overlay) overlay.classList.remove('ativo');
+    agendamentoSelecionadoDetalhes = null;
+}
+
+async function confirmarCancelarAgendamento() {
+    const botao = document.getElementById('btnCancelarAgendamentoModal');
+    if (!agendamentoSelecionadoDetalhes) return;
+
+    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+    const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+    if (!usuarioLogado || !senhaUsuario) {
+        alert('Sessão expirada. Faça login novamente.');
+        window.location.href = './login.html';
+        return;
+    }
+
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = 'Cancelando...';
+    }
+
+    try {
+        const { data, error } = await _supabase.rpc('cancelar_agendamento_por_admin', {
+            p_nome_admin: usuarioLogado,
+            p_senha_admin: senhaUsuario,
+            p_id_agendamento: String(agendamentoSelecionadoDetalhes.id)
+        });
+
+        if (error) {
+            console.error('Erro ao cancelar agendamento:', error);
+            alert('Erro ao cancelar agendamento: ' + error.message);
+            return;
+        }
+
+        const resultado = Array.isArray(data) ? data[0] : data;
+        if (resultado && resultado.sucesso) {
+            alert(resultado.mensagem || 'Agendamento cancelado com sucesso.');
+            fecharModalDetalhesAgendamento();
+            carregarAgendamentosHoje();
+        } else {
+            const mensagem = resultado?.mensagem || 'Não foi possível cancelar o agendamento.';
+            alert(mensagem);
+        }
+    } catch (erro) {
+        console.error('Erro ao cancelar agendamento:', erro);
+        alert('Erro inesperado ao cancelar o agendamento.');
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = 'Cancelar Agendamento';
+        }
+    }
 }
 
 // ===================================================
