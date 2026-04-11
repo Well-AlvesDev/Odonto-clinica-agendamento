@@ -153,7 +153,7 @@ async function carregarDuracoesServicos() {
         data.forEach(item => {
             const servicoNormalizado = normalizarServicoNome(item.servico);
             duracoes[servicoNormalizado] = {
-                duracao: item.duracao_minuto,
+                duracao: parseInt(item.duracao_minuto, 10) || 0,
                 preco: item.price || 0
             };
         });
@@ -206,6 +206,14 @@ async function obterDuracaoServico(nomeServico) {
     return dados ? dados.duracao : 0;
 }
 
+function obterServicosDeTexto(servicoTexto) {
+    if (!servicoTexto || typeof servicoTexto !== 'string') return [];
+    return servicoTexto
+        .split(',')
+        .map(servico => servico.trim())
+        .filter(Boolean);
+}
+
 // Obtém o preço de um serviço específico
 async function obterPrecoServico(nomeServico) {
     // procura no cache global se existir
@@ -223,6 +231,14 @@ async function obterPrecoServico(nomeServico) {
     const servicoNormalizado = normalizarServicoNome(nomeServico);
     const dados = duracoes[servicoNormalizado];
     return dados ? dados.preco : 0;
+}
+
+async function obterPrecoTotalServicos(servicoTexto) {
+    const servicos = obterServicosDeTexto(servicoTexto);
+    if (servicos.length === 0) return 0;
+
+    const precos = await Promise.all(servicos.map(nome => obterPrecoServico(nome)));
+    return precos.reduce((total, preco) => total + Number(preco || 0), 0);
 }
 
 // CACHE NO LOCALSTORAGE
@@ -244,15 +260,14 @@ function lerIdsLocais() {
 
 // Remove IDs de agendamentos com datas passadas do cache
 // Remove IDs de agendamentos com datas/horários passados do cache
-function limparIdsComDataPassada(agendamentos) {
+async function limparIdsComDataPassada(agendamentos) {
     const agora = new Date();
-
     const idsValidos = [];
 
-    agendamentos.forEach((item) => {
+    for (const item of agendamentos) {
         try {
             if (!item || !item.id) {
-                return;
+                continue;
             }
 
             let data = String(item.data || '').trim();
@@ -260,7 +275,7 @@ function limparIdsComDataPassada(agendamentos) {
 
             if (!data) {
                 idsValidos.push(item.id);
-                return;
+                continue;
             }
 
             let dataObj;
@@ -271,34 +286,33 @@ function limparIdsComDataPassada(agendamentos) {
 
                 if (isNaN(dia) || isNaN(mes) || isNaN(ano)) {
                     idsValidos.push(item.id);
-                    return;
+                    continue;
                 }
 
                 dataObj = new Date(ano, mes - 1, dia);
             } else if (data.includes('-')) {
                 // Formato YYYY-MM-DD
                 const [ano, mesStr, diaStr] = data.split('-');
-                const mes = parseInt(mesStr);
-                const dia = parseInt(diaStr);
-                const anoNum = parseInt(ano);
+                const mes = parseInt(mesStr, 10);
+                const dia = parseInt(diaStr, 10);
+                const anoNum = parseInt(ano, 10);
 
                 if (isNaN(dia) || isNaN(mes) || isNaN(anoNum)) {
                     idsValidos.push(item.id);
-                    return;
+                    continue;
                 }
 
                 dataObj = new Date(anoNum, mes - 1, dia);
             } else {
                 idsValidos.push(item.id);
-                return;
+                continue;
             }
 
             if (isNaN(dataObj.getTime())) {
                 idsValidos.push(item.id);
-                return;
+                continue;
             }
 
-            // Se tem horário, adiciona à comparação
             if (horario && horario.includes(':')) {
                 const [horas, minutos] = horario.split(':').map(Number);
 
@@ -311,8 +325,24 @@ function limparIdsComDataPassada(agendamentos) {
                 dataObj.setHours(0, 0, 0, 0);
             }
 
-            // Só mantém se a data/hora é futura
-            if (dataObj > agora) {
+            const servicos = obterServicosDeTexto(item.servico);
+            let duracaoTotalMinutos = 0;
+
+            if (servicos.length > 0) {
+                const duracoes = await Promise.all(servicos.map(nome => obterDuracaoServico(nome)));
+                duracaoTotalMinutos = duracoes.reduce((total, valor) => total + (Number(valor) || 0), 0);
+            }
+
+            const dataFim = new Date(dataObj.getTime());
+            if (duracaoTotalMinutos > 0) {
+                dataFim.setMinutes(dataFim.getMinutes() + duracaoTotalMinutos);
+            }
+
+            const agendamentoAindaVigente = duracaoTotalMinutos > 0
+                ? agora <= dataFim
+                : agora <= dataObj;
+
+            if (agendamentoAindaVigente) {
                 idsValidos.push(item.id);
             }
         } catch (err) {
@@ -320,7 +350,7 @@ function limparIdsComDataPassada(agendamentos) {
                 idsValidos.push(item.id);
             }
         }
-    });
+    }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(idsValidos));
 }
@@ -371,8 +401,8 @@ async function carregarMeusAgendamentos(conteudoLista) {
             return;
         }
 
-        // Limpa IDs de agendamentos com datas passadas
-        limparIdsComDataPassada(data);
+        // Limpa IDs de agendamentos com datas passadas após o horário de término
+        await limparIdsComDataPassada(data);
 
         // Obtém os IDs válidos após a limpeza
         const idsValidos = (lerIdsLocais() || []).filter(Boolean);
@@ -390,7 +420,11 @@ async function carregarMeusAgendamentos(conteudoLista) {
         }
 
         // Carrega os preços de todos os serviços únicos
-        const servicosUnicos = [...new Set(agendamentosValidos.map(item => item.servico))];
+        const servicosUnicos = new Set();
+        agendamentosValidos.forEach(item => {
+            obterServicosDeTexto(item.servico).forEach(nome => servicosUnicos.add(nome));
+        });
+
         const precosMap = {};
         for (const servico of servicosUnicos) {
             precosMap[servico] = await obterPrecoServico(servico);
@@ -398,7 +432,10 @@ async function carregarMeusAgendamentos(conteudoLista) {
 
         let html = '<div class="agendamentos-grid">';
         agendamentosValidos.forEach(item => {
-            const preco = precosMap[item.servico] || 0;
+            const servicos = obterServicosDeTexto(item.servico);
+            const precoTotal = servicos.reduce((total, nomeServico) => {
+                return total + (precosMap[nomeServico] || 0);
+            }, 0);
             html += `
                 <div class="card-agendamento" data-id="${item.id}">
                     <div class="card-header">
@@ -424,7 +461,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
                         <div class="card-item">
                            <i class="ri-money-dollar-circle-line"></i>
                             <span class="card-label">Preço</span>
-                            <span class="card-value">R$ ${preco.toFixed(2).replace('.', ',')}</span>
+                            <span class="card-value">R$ ${precoTotal.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                     <div class="card-footer">
