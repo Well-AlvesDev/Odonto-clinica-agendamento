@@ -436,6 +436,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
             const precoTotal = servicos.reduce((total, nomeServico) => {
                 return total + (precosMap[nomeServico] || 0);
             }, 0);
+            const podeCancelar = podesCancelarAgendamento(item.data, item.horario);
             html += `
                 <div class="card-agendamento" data-id="${item.id}">
                     <div class="card-header">
@@ -480,7 +481,21 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn-cancelar-agendamento" data-id="${item.id}" data-data="${item.data}" data-horario="${item.horario}" title="Cancelar este agendamento">
+                    ${!podeCancelar ? `
+                    <div class="aviso-cancelamento-indisponivel">
+                        <div class="aviso-conteudo">
+                            <i class="ri-alert-line"></i>
+                            <div class="aviso-texto">
+                                <p class="aviso-titulo">Este agendamento começa em menos de 2 horas</p>
+                                <p class="aviso-descricao">Para cancelamentos de última hora, entre em contato diretamente com o estabelecimento:</p>
+                                <a href="https://wa.me/5511999990000?text=Gostaria%20de%20cancelar%20meu%20agendamento" target="_blank" rel="noopener noreferrer" class="aviso-link-whatsapp">
+                                    <i class="ri-whatsapp-line"></i> (11) 99999-0000
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <button type="button" class="btn-cancelar-agendamento" data-id="${item.id}" data-data="${item.data}" data-horario="${item.horario}" title="${!podeCancelar ? 'Cancelamento não disponível - horário muito próximo' : 'Cancelar este agendamento'}" ${!podeCancelar ? 'disabled' : ''}>
                         <i class="ri-close-line"></i> Cancelar
                     </button>
                 </div>
@@ -496,12 +511,12 @@ async function carregarMeusAgendamentos(conteudoLista) {
             const dataCadastro = botao.getAttribute('data-data');
             const horarioCadastro = botao.getAttribute('data-horario');
 
-            // Verifica antecedência e remove botão se cancelamento não for permitido
+            // Verifica antecedência
             const podeCancelar = podesCancelarAgendamento(dataCadastro, horarioCadastro);
 
+            // Se não puder cancelar, desabilita o botão
             if (!podeCancelar) {
-                // Remove o botão do DOM completamente
-                botao.remove();
+                botao.disabled = true;
                 return;
             }
 
