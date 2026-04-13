@@ -623,22 +623,117 @@ function fecharModalDetalhesAgendamento() {
     agendamentoSelecionadoDetalhes = null;
 }
 
-async function confirmarCancelarAgendamento() {
-    const botao = document.getElementById('btnCancelarAgendamentoModal');
+// ===================================================
+// MODAIS DE CONFIRMAÇÃO E SUCESSO PARA EXCLUSÃO
+// ===================================================
+
+function abrirModalConfirmacaoExclusao() {
+    if (!agendamentoSelecionadoDetalhes) return;
+
+    // Calcular status do agendamento
+    const status = calcularStatusAgendamento(
+        agendamentoSelecionadoDetalhes.horario,
+        agendamentoSelecionadoDetalhes.servico
+    );
+
+    // Elementos do modal
+    const confirmacaoIcon = document.getElementById('confirmacaoIcon');
+    const confirmacaoTitulo = document.getElementById('confirmacaoTitulo');
+    const confirmacaoMensagem = document.getElementById('confirmacaoMensagem');
+    const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+
+    // Atualizar conteúdo dinamicamente baseado no status
+    if (status === 'concluído') {
+        // Contexto de exclusão de registro
+        if (confirmacaoIcon) {
+            confirmacaoIcon.className = 'ri-delete-bin-line confirmation-modal-icon';
+            confirmacaoIcon.style.color = '#d32f2f';
+        }
+        if (confirmacaoTitulo) {
+            confirmacaoTitulo.textContent = 'Apagar Registro?';
+        }
+        if (confirmacaoMensagem) {
+            confirmacaoMensagem.textContent = 'Tem certeza que deseja apagar o registro deste agendamento concluído? Esta ação não pode ser desfeita.';
+        }
+        if (btnConfirmarExclusao) {
+            btnConfirmarExclusao.innerHTML = '<i class="ri-delete-bin-line"></i> Sim, Apagar';
+        }
+    } else {
+        // Contexto de cancelamento de agendamento
+        if (confirmacaoIcon) {
+            confirmacaoIcon.className = 'ri-close-circle-line confirmation-modal-icon';
+            confirmacaoIcon.style.color = '#d32f2f';
+        }
+        if (confirmacaoTitulo) {
+            confirmacaoTitulo.textContent = 'Cancelar Agendamento?';
+        }
+        if (confirmacaoMensagem) {
+            confirmacaoMensagem.textContent = 'Tem certeza que deseja cancelar este agendamento? A notificação será enviada ao paciente. Esta ação não pode ser desfeita.';
+        }
+        if (btnConfirmarExclusao) {
+            btnConfirmarExclusao.innerHTML = '<i class="ri-close-circle-line"></i> Sim, Cancelar';
+        }
+    }
+
+    const overlay = document.getElementById('confirmacaoExclusaoOverlay');
+    if (overlay) overlay.classList.add('ativo');
+}
+
+function fecharModalConfirmacaoExclusao() {
+    const overlay = document.getElementById('confirmacaoExclusaoOverlay');
+    if (overlay) overlay.classList.remove('ativo');
+}
+
+function mostrarModalSucesso(mensagem = null) {
+    if (!agendamentoSelecionadoDetalhes) return;
+
+    // Se não foi fornecida uma mensagem, usar uma padrão baseada no status
+    if (!mensagem) {
+        const status = calcularStatusAgendamento(
+            agendamentoSelecionadoDetalhes.horario,
+            agendamentoSelecionadoDetalhes.servico
+        );
+
+        if (status === 'concluído') {
+            mensagem = 'Registro de agendamento apagado com sucesso.';
+        } else {
+            mensagem = 'Agendamento cancelado com sucesso.';
+        }
+    }
+
+    const mensagemElement = document.getElementById('mensagemSucesso');
+    if (mensagemElement) {
+        mensagemElement.textContent = mensagem;
+    }
+    const overlay = document.getElementById('modalSucessoOverlay');
+    if (overlay) overlay.classList.add('ativo');
+}
+
+function fecharModalSucesso() {
+    const overlay = document.getElementById('modalSucessoOverlay');
+    if (overlay) overlay.classList.remove('ativo');
+    fecharModalDetalhesAgendamento();
+    carregarAgendamentosHoje();
+}
+
+async function executarCancelarAgendamento() {
+    const botao = document.getElementById('btnConfirmarExclusao');
     if (!agendamentoSelecionadoDetalhes) return;
 
     const usuarioLogado = sessionStorage.getItem('usuarioLogado');
     const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
     if (!usuarioLogado || !senhaUsuario) {
-        alert('Sessão expirada. Faça login novamente.');
-        window.location.href = './login.html';
+        mostrarErroGenerico('Sessão expirada. Faça login novamente.');
+        setTimeout(() => {
+            window.location.href = './login.html';
+        }, 2000);
         return;
     }
 
     if (botao) {
         botao.disabled = true;
-        botao.textContent = 'Cancelando...';
+        botao.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Processando...';
     }
 
     try {
@@ -650,28 +745,52 @@ async function confirmarCancelarAgendamento() {
 
         if (error) {
             console.error('Erro ao cancelar agendamento:', error);
-            alert('Erro ao cancelar agendamento: ' + error.message);
+            mostrarErroGenerico('Erro ao cancelar agendamento: ' + error.message);
             return;
         }
 
         const resultado = Array.isArray(data) ? data[0] : data;
         if (resultado && resultado.sucesso) {
-            alert(resultado.mensagem || 'Agendamento cancelado com sucesso.');
-            fecharModalDetalhesAgendamento();
-            carregarAgendamentosHoje();
+            fecharModalConfirmacaoExclusao();
+            // Passar a mensagem do servidor ou deixar vazio para usar a mensagem padrão dinâmica
+            mostrarModalSucesso(resultado.mensagem);
         } else {
-            const mensagem = resultado?.mensagem || 'Não foi possível cancelar o agendamento.';
-            alert(mensagem);
+            const mensagem = resultado?.mensagem || 'Não foi possível processar o agendamento.';
+            mostrarErroGenerico(mensagem);
         }
     } catch (erro) {
         console.error('Erro ao cancelar agendamento:', erro);
-        alert('Erro inesperado ao cancelar o agendamento.');
+        mostrarErroGenerico('Erro inesperado ao processar o agendamento.');
     } finally {
         if (botao) {
             botao.disabled = false;
-            botao.textContent = 'Cancelar Agendamento';
+            // Restaurar o texto do botão baseado no status
+            const status = calcularStatusAgendamento(
+                agendamentoSelecionadoDetalhes.horario,
+                agendamentoSelecionadoDetalhes.servico
+            );
+            if (status === 'concluído') {
+                botao.innerHTML = '<i class="ri-delete-bin-line"></i> Sim, Apagar';
+            } else {
+                botao.innerHTML = '<i class="ri-close-circle-line"></i> Sim, Cancelar';
+            }
         }
     }
+}
+
+// ===================================================
+// MODAL GENÉRICO DE ERRO
+// ===================================================
+
+function mostrarErroGenerico(mensagem) {
+    // Se há um modal de sucesso aberto, fechá-lo
+    const modalSucesso = document.getElementById('modalSucessoOverlay');
+    if (modalSucesso && modalSucesso.classList.contains('ativo')) {
+        modalSucesso.classList.remove('ativo');
+    }
+
+    // Usar alert como fallback para erros
+    alert(mensagem);
 }
 
 // ===================================================

@@ -70,12 +70,54 @@
                     <i class="ri-phone-line"></i> Ligar para o paciente
                 </a>
                 <button id="btnCancelarAgendamentoModal" class="confirmation-modal-btn confirmation-modal-btn-cancelar"
-                    onclick="confirmarCancelarAgendamento()">
+                    onclick="abrirModalConfirmacaoExclusao()">
                     <i class="ri-close-circle-line"></i> Cancelar Agendamento
                 </button>
                 <button id="btnFecharModal" class="confirmation-modal-btn confirmation-modal-btn-cancelar"
                     onclick="fecharModalDetalhesAgendamento()">
                     Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Agendamento -->
+    <div id="confirmacaoExclusaoOverlay" class="confirmation-modal-overlay" onclick="fecharModalConfirmacaoExclusao()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i id="confirmacaoIcon" class="ri-alert-line confirmation-modal-icon" style="color: #d32f2f;"></i>
+                <div id="confirmacaoTitulo" class="confirmation-modal-title">Cancelar Agendamento?</div>
+            </div>
+            <div id="confirmacaoMensagem" class="confirmation-modal-message">
+                Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
+                    onclick="fecharModalConfirmacaoExclusao()">
+                    Não, Voltar
+                </button>
+                <button id="btnConfirmarExclusao" class="confirmation-modal-btn confirmation-modal-btn-confirmar"
+                    onclick="executarCancelarAgendamento()">
+                    <i class="ri-delete-bin-line"></i> Sim, Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso -->
+    <div id="modalSucessoOverlay" class="confirmation-modal-overlay" onclick="fecharModalSucesso()">
+        <div class="confirmation-modal" onclick="event.stopPropagation()">
+            <div class="confirmation-modal-header">
+                <i class="ri-check-circle-line confirmation-modal-icon" style="color: #27ae60;"></i>
+                <div class="confirmation-modal-title">Sucesso!</div>
+            </div>
+            <div class="confirmation-modal-message" id="mensagemSucesso">
+                Agendamento cancelado com sucesso.
+            </div>
+            <div class="confirmation-modal-actions">
+                <button class="confirmation-modal-btn confirmation-modal-btn-confirmar confirmation-modal-btn-sucesso"
+                    onclick="fecharModalSucesso()">
+                    OK
                 </button>
             </div>
         </div>
