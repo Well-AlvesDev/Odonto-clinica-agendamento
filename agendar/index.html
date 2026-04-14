@@ -1118,6 +1118,79 @@
         #formularioAgendamento.hidden {
             display: none;
         }
+
+        /* Botão de WhatsApp */
+        .btn-whatsapp {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: #25d366;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            z-index: 999;
+        }
+
+        .btn-whatsapp:hover {
+            background: #20a652;
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-whatsapp:active {
+            background: #1a8a43;
+            transform: scale(0.95);
+        }
+
+        .btn-whatsapp i {
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        /* Mensagem de ajuda com WhatsApp */
+        .msg-ajuda-whatsapp {
+            text-align: center;
+            font-size: 12px;
+            color: #333;
+            margin-top: 12px;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .link-whatsapp-ajuda {
+            color: #25d366;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .link-whatsapp-ajuda:hover {
+            color: #20a652;
+            text-decoration: underline;
+        }
+
+        /* Responsivo para telas pequenas */
+        @media (max-width: 640px) {
+            .btn-whatsapp {
+                top: 77px;
+                right: 12px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .btn-whatsapp i {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 
@@ -1182,16 +1255,17 @@
                 — Nenhum agendamento carregado —
             </div>
         </div>
-    </header>
 
+    </header>
     <button type="button" id="verAgendamentos"><i class="ri-eye-line"></i> Ver meus agendamentos</button>
 
-    <!-- botão fixo de WhatsApp -->
-    <a href="#" class="btn-whatsapp" target="_blank" rel="noopener noreferrer"
-        style=" color: #1b870f; font-size: 12px; ">
+    <p class="msg-ajuda-whatsapp">
+        Precisa de ajuda? <a href="#" class="link-whatsapp-ajuda">fale conosco no whatsapp</a>
+    </p>
 
+    <!-- botão fixo de WhatsApp -->
+    <a href="#" class="btn-whatsapp" target="_blank" rel="noopener noreferrer" title="Fale conosco no WhatsApp">
         <i class="ri-whatsapp-line"></i>
-        Precisa de ajuda? Fale conosco!
     </a>
     <!-- Overlay para modal -->
     <div id="overlay" class="modal-overlay"></div>
