@@ -101,6 +101,20 @@
         color: rgb(71, 106, 202);
     }
 
+    .btn-consulta {
+        background-color: #fff8d7e5;
+        border: 1px solid #f3a321;
+        padding: 8px 16px;
+        font-size: 13px;
+        color: rgb(202, 128, 71);
+    }
+
+    .btn-consulta:hover {
+        background-color: #efe093e5;
+        border: 1px solid #f3a321;
+        color: rgb(202, 128, 71);
+    }
+
     .top-actions {
         display: flex;
         justify-content: space-between;
@@ -159,6 +173,7 @@
         right: 0;
         bottom: 0;
         background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
         z-index: 1500;
         animation: fadeIn 0.3s ease;
     }
@@ -745,4 +760,163 @@
     .confirmation-modal-btn-sucesso:disabled:hover {
         transform: none;
         box-shadow: none;
+    }
+
+    /* ===================================================
+       ESTILOS PARA CARDS DE CONSULTA
+       =================================================== */
+
+    .consulta-info-periodo {
+        background-color: #f5f5f5;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        border-left: 4px solid #255996;
+    }
+
+    .consulta-info-periodo p {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #666;
+    }
+
+    .consulta-info-periodo p:first-child {
+        margin-top: 0;
+    }
+
+    .consulta-cards-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-height: 55vh;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .consulta-cards-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .consulta-cards-container::-webkit-scrollbar-track {
+        background: #ededed;
+        border-radius: 10px;
+    }
+
+    .consulta-cards-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .consulta-cards-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .consulta-card-item {
+        background-color: #fafafa;
+        border: 1px solid #e0e0e0;
+        border-left: 4px solid #999;
+        border-radius: 6px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .consulta-card-item:hover {
+        background-color: #f0f0f0;
+        border-color: #255996;
+        border-left-color: #255996;
+        box-shadow: 0 2px 6px #1c6fbd15;
+        transform: translateX(4px);
+    }
+
+    .consulta-card-info {
+        flex: 1;
+    }
+
+    .consulta-card-nome {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .consulta-card-detalhes {
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .consulta-card-detalhe {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .consulta-card-status {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .consulta-card-status.status-pendente {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-left: 4px solid #ff9800;
+    }
+
+    .consulta-card-status.status-agora {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+        border-left: 4px solid #d32f2f;
+    }
+
+    .consulta-card-status.status-concluido {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+        border-left: 4px solid #4caf50;
+    }
+
+    .consulta-card-item[data-status="pendente"] {
+        border-left-color: #ff9800;
+    }
+
+    .consulta-card-item[data-status="agora"] {
+        border-left-color: #d32f2f;
+    }
+
+    .consulta-card-item[data-status="concluido"] {
+        border-left-color: #4caf50;
+    }
+
+    /* Responsivo para mobile */
+    @media (max-width: 600px) {
+        .consulta-cards-container {
+            max-height: 50vh;
+        }
+
+        .consulta-card-detalhes {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .consulta-card-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .consulta-card-status {
+            align-self: flex-end;
+        }
     }

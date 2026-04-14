@@ -70,6 +70,40 @@ function calcularStatusAgendamento(horario, servico) {
     }
 }
 
+// ===================================================
+// FUNÇÃO PARA CALCULAR STATUS DO AGENDAMENTO CONSULTADO (com data)
+// ===================================================
+
+/**
+ * Calcula o status de um agendamento consultado considerando data e hora
+ * @param {string} data - Data do agendamento (formato YYYY-MM-DD)
+ * @param {string} horario - Horário do agendamento (formato HH:MM)
+ * @param {string} servico - Nome do serviço ou lista de serviços separados por vírgula
+ * @returns {string} - Status: 'pendente', 'agora' ou 'concluído'
+ */
+function calcularStatusConsultado(data, horario, servico) {
+    try {
+        // Obter a data de hoje
+        const hoje = new Date();
+        const dataHoje = hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+        // Comparar datas
+        if (data < dataHoje) {
+            // Data é anterior a hoje - agendamento concluído
+            return 'concluído';
+        } else if (data > dataHoje) {
+            // Data é futura - agendamento pendente
+            return 'pendente';
+        } else {
+            // Data é hoje - usar cálculo baseado em hora
+            return calcularStatusAgendamento(horario, servico);
+        }
+    } catch (erro) {
+        console.error('Erro ao calcular status consultado:', erro);
+        return 'pendente';
+    }
+}
+
 
 
 // ===================================================
@@ -823,6 +857,280 @@ function mostrarErroAgendamentos(mensagem) {
         </div>
     `;
 }
+
+// ===================================================
+// FUNÇÕES DE CONSULTA DE AGENDAMENTOS POR PERÍODO
+// ===================================================
+
+/**
+ * Abre o modal de consulta por data range
+ */
+function abrirConsulta() {
+    const consultaOverlay = document.getElementById('consultaOverlay');
+    if (consultaOverlay) {
+        // Limpar campos e erro anterior
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('dataFim').value = '';
+        const erroConsulta = document.getElementById('erroConsulta');
+        if (erroConsulta) erroConsulta.style.display = 'none';
+
+        consultaOverlay.classList.add('ativo');
+    }
+}
+
+/**
+ * Fecha o modal de consulta
+ */
+function fecharModalConsulta() {
+    const consultaOverlay = document.getElementById('consultaOverlay');
+    if (consultaOverlay) {
+        consultaOverlay.classList.remove('ativo');
+    }
+    const erroConsulta = document.getElementById('erroConsulta');
+    if (erroConsulta) erroConsulta.style.display = 'none';
+}
+
+/**
+ * Valida e executa a consulta de agendamentos por período
+ */
+async function executarConsultaAgendamentos() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    const erroConsulta = document.getElementById('erroConsulta');
+
+    // Validar campos
+    if (!dataInicio || !dataFim) {
+        erroConsulta.textContent = 'Por favor, preencha ambas as datas.';
+        erroConsulta.style.display = 'block';
+        return;
+    }
+
+    // Convertendo o formato de data: YYYY-MM-DD é mantido para a RPC
+    const [anoI, mesI, diaI] = dataInicio.split('-');
+    const [anoF, mesF, diaF] = dataFim.split('-');
+    const dateInicio = new Date(anoI, mesI - 1, diaI);
+    const dateFim = new Date(anoF, mesF - 1, diaF);
+
+    // Validar se data fim é posterior ou igual à data início
+    if (dateFim < dateInicio) {
+        erroConsulta.textContent = 'A data de término deve ser posterior à data de início.';
+        erroConsulta.style.display = 'block';
+        return;
+    }
+
+    // Validar sessão
+    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+    const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+    if (!usuarioLogado || !senhaUsuario) {
+        erroConsulta.textContent = 'Sessão expirada. Faça login novamente.';
+        erroConsulta.style.display = 'block';
+        return;
+    }
+
+    try {
+        // Mostrar carregamento
+        erroConsulta.textContent = '';
+        erroConsulta.style.display = 'none';
+
+        const botaoBuscar = document.querySelector('[onclick="executarConsultaAgendamentos()"]');
+        if (botaoBuscar) {
+            botaoBuscar.disabled = true;
+            botaoBuscar.innerHTML = '<i class="ri-loader-4-line"></i> Buscando...';
+        }
+
+        // Chamar RPC para obter agendamentos
+        const { data, error } = await _supabase.rpc('obter_agendamentos_por_periodo_consulta', {
+            p_nome_admin: usuarioLogado,
+            p_senha_admin: senhaUsuario,
+            p_data_inicio: dataInicio,
+            p_data_fim: dataFim
+        });
+
+        // Restaurar botão
+        if (botaoBuscar) {
+            botaoBuscar.disabled = false;
+            botaoBuscar.innerHTML = '<i class="ri-search-line"></i> Buscar';
+        }
+
+        // Verificar erros
+        if (error) {
+            console.error('Erro ao buscar agendamentos:', error);
+            erroConsulta.textContent = 'Erro ao buscar agendamentos: ' + error.message;
+            erroConsulta.style.display = 'block';
+            return;
+        }
+
+        // Processar resultados
+        if (data && data.length > 0) {
+            exibirResultadoConsulta(data, dataInicio, dataFim);
+            fecharModalConsulta();
+        } else {
+            erroConsulta.textContent = 'Nenhum agendamento encontrado neste período.';
+            erroConsulta.style.display = 'block';
+        }
+
+    } catch (erro) {
+        console.error('Erro ao executar consulta:', erro);
+        erroConsulta.textContent = 'Erro inesperado: ' + erro.message;
+        erroConsulta.style.display = 'block';
+    }
+}
+
+/**
+ * Exibe os resultados da consulta como cards em um modal
+ */
+function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
+    const conteudoPeriodo = document.getElementById('resultadoConsultaPeriodo');
+    const conteudoResultado = document.getElementById('resultadoConsultaConteudo');
+
+    // Formatar datas para exibição
+    const dataInicioFormatada = new Date(dataInicio).toLocaleDateString('pt-BR');
+    const dataFimFormatada = new Date(dataFim).toLocaleDateString('pt-BR');
+
+    // Inserir informações de período e total (FIXO no topo)
+    if (conteudoPeriodo) {
+        conteudoPeriodo.innerHTML = `
+            <div class="consulta-info-periodo">
+                <p><strong>Período:</strong> ${dataInicioFormatada} a ${dataFimFormatada}</p>
+                <p><strong>Total de agendamentos:</strong> ${agendamentos.length}</p>
+            </div>
+        `;
+    }
+
+    // Criar container de cards
+    let htmlCards = `<div class="consulta-cards-container">`;
+
+    // Criar cards para cada agendamento
+    agendamentos.forEach((agendamento, index) => {
+        const status = calcularStatusConsultado(agendamento.data, agendamento.horario, agendamento.servico);
+
+        // Normalizar status para "concluido" (sem acento) para compatibilidade com CSS
+        const statusNormalizado = status === 'concluído' ? 'concluido' : status;
+
+        // Formatar data para DD/MM/YYYY
+        const [ano, mes, dia] = agendamento.data.split('-');
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+
+        htmlCards += `
+            <div class="consulta-card-item" data-status="${statusNormalizado}" data-index="${index}" onclick="abrirDetalhesConsultado(${index})">
+                <div class="consulta-card-info">
+                    <div class="consulta-card-nome">
+                        <i class="ri-user-line"></i> ${agendamento.nome}
+                    </div>
+                    <div class="consulta-card-detalhes">
+                        <div class="consulta-card-detalhe">
+                            <i class="ri-time-line"></i> ${agendamento.horario || 'Sem horário'}
+                        </div>
+                        <div class="consulta-card-detalhe">
+                            <i class="ri-bubble-chart-line"></i> ${agendamento.servico || 'Não especificado'}
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #999; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                        <i class="ri-calendar-line"></i> ${dataFormatada}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    htmlCards += `</div>`;
+
+    // Inserir cards no conteúdo (ROLÁVEL)
+    if (conteudoResultado) {
+        conteudoResultado.innerHTML = htmlCards;
+    }
+
+    // Mostrar modal de resultado
+    const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
+    if (resultadoConsultaOverlay) {
+        resultadoConsultaOverlay.classList.add('ativo');
+    }
+
+    // Armazenar dados para impressão e para abrir detalhes
+    window.ultimoResultadoConsulta = {
+        agendamentos: agendamentos,
+        dataInicio: dataInicio,
+        dataFim: dataFim
+    };
+}
+
+/**
+ * Fecha o modal de resultado
+ */
+function fecharResultadoConsulta() {
+    const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
+    if (resultadoConsultaOverlay) {
+        resultadoConsultaOverlay.classList.remove('ativo');
+    }
+}
+
+/**
+ * Abre o modal de detalhes de um agendamento consultado
+ */
+function abrirDetalhesConsultado(index) {
+    if (!window.ultimoResultadoConsulta || !window.ultimoResultadoConsulta.agendamentos[index]) {
+        return;
+    }
+
+    const agendamento = window.ultimoResultadoConsulta.agendamentos[index];
+    const status = calcularStatusConsultado(agendamento.data, agendamento.horario, agendamento.servico);
+
+    // Atualizar elementos do modal
+    const consultPacienteNome = document.getElementById('consultPacienteNome');
+    const consultPacienteData = document.getElementById('consultPacienteData');
+    const consultPacienteHorario = document.getElementById('consultPacienteHorario');
+    const consultPacienteServico = document.getElementById('consultPacienteServico');
+    const consultPacienteTelefone = document.getElementById('consultPacienteTelefone');
+    const consultPacienteStatus = document.getElementById('consultPacienteStatus');
+
+    if (consultPacienteNome) consultPacienteNome.textContent = agendamento.nome || 'Sem nome';
+    if (consultPacienteData) {
+        const dataFormatada = new Date(agendamento.data).toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        consultPacienteData.textContent = dataFormatada || 'Sem data';
+    }
+    if (consultPacienteHorario) consultPacienteHorario.textContent = agendamento.horario || 'Sem horário';
+    if (consultPacienteServico) consultPacienteServico.textContent = agendamento.servico || 'Não informado';
+    if (consultPacienteTelefone) consultPacienteTelefone.textContent = agendamento.telefone || 'Sem telefone';
+
+    // Atualizar status
+    if (consultPacienteStatus) {
+        const statusTexto = {
+            'pendente': 'Pendente',
+            'agora': 'Agora',
+            'concluído': 'Concluído'
+        };
+        // Normalizar status para "concluido" (sem acento) para compatibilidade com CSS
+        const statusNormalizado = status === 'concluído' ? 'concluido' : status;
+        const statusClasse = `status-${statusNormalizado}`;
+
+        consultPacienteStatus.textContent = statusTexto[status] || 'Desconhecido';
+        consultPacienteStatus.className = `consulta-card-status ${statusClasse}`;
+    }
+
+    // Abrir modal
+    const detalhesOverlay = document.getElementById('detalhesAgendamentoConsultadoOverlay');
+    if (detalhesOverlay) {
+        detalhesOverlay.classList.add('ativo');
+    }
+}
+
+/**
+ * Fecha o modal de detalhes do agendamento consultado
+ */
+function fecharDetalhesConsultado() {
+    const detalhesOverlay = document.getElementById('detalhesAgendamentoConsultadoOverlay');
+    if (detalhesOverlay) {
+        detalhesOverlay.classList.remove('ativo');
+    }
+}
+
+
 
 
 
