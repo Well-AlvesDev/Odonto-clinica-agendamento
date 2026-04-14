@@ -31,7 +31,7 @@
 
     h1 {
         color: #4a4a4a;
-        font-size: 20px;
+        font-size: 15px;
         font-weight: 400;
     }
 
@@ -206,6 +206,10 @@
         color: #2f71d3;
     }
 
+    #confirmationLogoutOverlay .confirmation-modal-icon {
+        color: #d32f2f;
+    }
+
     .confirmation-modal-title {
         font-size: 18px;
         font-weight: 400;
@@ -375,7 +379,7 @@
         background-color: #f9f9f9;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        padding: 15px;
+        padding: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -399,6 +403,7 @@
         color: #333;
         font-size: 14px;
         margin-bottom: 5px;
+        text-transform: uppercase;
     }
 
     .agendamento-detalhes {
@@ -465,9 +470,9 @@
         background-color: #f9f9f9;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        padding: 15px;
+        padding: 8px;
         transition: all 0.3s ease;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
         animation: slideIn 0.3s ease;
     }
 
@@ -480,40 +485,41 @@
     .agendamento-info {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
     }
 
     .agendamento-header {
         display: flex;
         justify-content: space-between;
         align-items: start;
-        gap: 15px;
+        gap: 8px;
     }
 
     .agendamento-header h3 {
-        font-size: 15px;
+        font-size: 12px;
         font-weight: 600;
         color: #333;
         margin: 0;
+        text-transform: uppercase;
     }
 
     .agendamento-hora {
         background-color: #e8e8e8;
-        padding: 4px 8px;
+        padding: 3px 6px;
         border-radius: 4px;
-        font-size: 12px;
+        font-size: 10px;
         color: #666;
         white-space: nowrap;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
     }
 
     .agendamento-detalhes {
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        font-size: 13px;
+        gap: 3px;
+        font-size: 11px;
         color: #666;
     }
 
@@ -521,7 +527,7 @@
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
     }
 
     .agendamento-servico {
@@ -735,6 +741,11 @@
         margin-right: 8px;
     }
 
+    #modalPacienteNome,
+    #consultPacienteNome {
+        text-transform: uppercase;
+    }
+
     /* Estilos para Modal de Sucesso */
     .confirmation-modal-btn-sucesso {
         background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%) !important;
@@ -768,15 +779,15 @@
 
     .consulta-info-periodo {
         background-color: #f5f5f5;
-        padding: 12px;
+        padding: 8px;
         border-radius: 6px;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         border-left: 4px solid #255996;
     }
 
     .consulta-info-periodo p {
-        margin: 5px 0;
-        font-size: 13px;
+        margin: 3px 0;
+        font-size: 11px;
         color: #666;
     }
 
@@ -816,7 +827,7 @@
         border: 1px solid #e0e0e0;
         border-left: 4px solid #999;
         border-radius: 6px;
-        padding: 12px;
+        padding: 6px;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
@@ -839,30 +850,31 @@
     .consulta-card-nome {
         font-weight: 600;
         color: #333;
-        font-size: 14px;
-        margin-bottom: 5px;
+        font-size: 11px;
+        margin-bottom: 3px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 3px;
+        text-transform: uppercase;
     }
 
     .consulta-card-detalhes {
         display: flex;
-        gap: 15px;
-        font-size: 12px;
+        gap: 8px;
+        font-size: 10px;
         color: #666;
     }
 
     .consulta-card-detalhe {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 2px;
     }
 
     .consulta-card-status {
-        padding: 4px 10px;
+        padding: 2px 6px;
         border-radius: 4px;
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 600;
         white-space: nowrap;
     }
@@ -901,7 +913,7 @@
     }
 
     /* Responsivo para mobile */
-    @media (max-width: 600px) {
+    @media (max-width: 400px) {
         .consulta-cards-container {
             max-height: 50vh;
         }
