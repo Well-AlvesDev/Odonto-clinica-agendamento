@@ -1,11 +1,7 @@
 // ===================================================
-// CONFIGURAÇÃO - REUTILIZAR DO ARQUIVO PRINCIPAL
+// CONFIGURAÇÃO - REUTILIZAR DO ARQUIVO PRINCIPAL (supabase.js)
 // ===================================================
-
-const supabaseUrl = 'https://kqmfhrnoevcckbjafuxq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbWZocm5vZXZjY2tiamFmdXhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MTI5MDUsImV4cCI6MjA4NjQ4ODkwNX0.7HP95_6KrJ954oW0MWXnewqmYCewACuCE2rOzNnY9fw';
-
-const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// supabaseUrl, supabaseKey e _supabase são definidos em supabase.js
 
 // ===================================================
 // VARIÁVEL GLOBAL PARA CONTROLAR AUTO-REFRESH
@@ -287,10 +283,12 @@ async function carregarDuracesSessao() {
 
         // Salvar em sessionStorage para acesso rápido no cálculo de status
         sessionStorage.setItem('servicosDuracoes', JSON.stringify(duracoesNormalizadas));
-        console.log('✓ Durações dos serviços carregadas e armazenadas na sessão');
+
+        return true;
     } catch (erro) {
-        console.error('Erro ao carregar durações dos serviços:', erro);
         // Não é crítico - usar defaults (duração 0) se falhar
+        sessionStorage.setItem('servicosDuracoes', JSON.stringify({}));
+        return false;
     }
 }
 
@@ -315,8 +313,6 @@ async function carregarAgendamentosHoje(autoRefresh = false) {
         const senhaUsuario = sessionStorage.getItem('senhaUsuario');
 
         if (!usuarioLogado || !senhaUsuario) {
-            console.warn('Nenhum usuário logado. Redirecionando para login...');
-            // Parar auto-refresh se estiver ativo
             pararAutoRefreshAgendamentos();
             setTimeout(() => {
                 window.location.href = './login.html';
@@ -338,9 +334,8 @@ async function carregarAgendamentosHoje(autoRefresh = false) {
 
         // Verificar erros
         if (error) {
-            console.error('Erro ao carregar agendamentos:', error);
             if (!autoRefresh) {
-                mostrarErroAgendamentos('Erro ao carregar agendamentos. Tente recarregar a página.');
+                mostrarErroAgendamentos(`Erro ao carregar agendamentos: ${error.message}`);
             }
             return;
         }
@@ -353,9 +348,8 @@ async function carregarAgendamentosHoje(autoRefresh = false) {
         }
 
     } catch (erro) {
-        console.error('Erro inesperado ao carregar agendamentos:', erro);
         if (!autoRefresh) {
-            mostrarErroAgendamentos('Erro inesperado. Tente recarregar a página.');
+            mostrarErroAgendamentos(`Erro inesperado: ${erro.message}`);
         }
     }
 }
