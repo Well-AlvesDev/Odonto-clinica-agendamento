@@ -264,15 +264,23 @@ function atualizarNomeUsuario() {
 function fazerLogout() {
     // Mostrar modal de confirmação
     const confirmationLogoutOverlay = document.getElementById('confirmationLogoutOverlay');
+    const container = document.querySelector('.container');
     if (confirmationLogoutOverlay) {
         confirmationLogoutOverlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
     }
 }
 
 function fecharModalConfirmacao() {
     const confirmationLogoutOverlay = document.getElementById('confirmationLogoutOverlay');
+    const container = document.querySelector('.container');
     if (confirmationLogoutOverlay) {
         confirmationLogoutOverlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
     }
 }
 

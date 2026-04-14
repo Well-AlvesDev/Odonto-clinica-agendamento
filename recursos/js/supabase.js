@@ -122,6 +122,23 @@ function normalizarServicoNome(nome) {
         });
 }
 
+// Formata data para o formato DD/MM/YYYY
+// Aceita formatos: YYYY-MM-DD ou DD/MM/YYYY
+function formatarData(data) {
+    if (!data) return '';
+
+    if (data.includes('-')) {
+        // Formato YYYY-MM-DD -> DD/MM/YYYY
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`;
+    } else if (data.includes('/')) {
+        // Já está em DD/MM/YYYY
+        return data;
+    }
+
+    return data;
+}
+
 // Carrega as durações e preços dos serviços do Supabase com cache
 // Retorna um objeto: { "canal": { duracao: 60, preco: 100 }, "limpeza": { duracao: 30, preco: 50 }, ... }
 async function carregarDuracoesServicos() {
@@ -442,7 +459,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
                     <div class="card-header">
                         <div class="card-usuario">
                             <i class="ri-user-line"></i>
-                            <span class="card-nome">${item.nome}</span>
+                            <span class="card-nome">${item.nome.toUpperCase()}</span>
                         </div>
                         <div class="card-status">
                             <span class="badge-agendado">Agendado</span>
@@ -462,7 +479,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
                         <div class="card-item">
                            <i class="ri-money-dollar-circle-line"></i>
                             <span class="card-label">Preço</span>
-                            <span class="card-value">R$ ${precoTotal.toFixed(2).replace('.', ',')}</span>
+                            <span class="card-value">${precoTotal === 0 ? 'GRÁTIS' : 'R$ ' + precoTotal.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -470,7 +487,7 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             <i class="ri-calendar-line"></i>
                             <div>
                                 <span class="card-label">Data</span>
-                                <span class="card-value">${item.data}</span>
+                                <span class="card-value">${formatarData(item.data)}</span>
                             </div>
                         </div>
                         <div class="card-item-footer">
