@@ -12,6 +12,13 @@ const INTERVALO_AUTO_REFRESH_MS = 15000; // 15 segundos
 let agendamentoSelecionadoDetalhes = null;
 
 // ===================================================
+// VARIÁVEIS PARA PAGINAÇÃO DA CONSULTA
+// ===================================================
+
+let paginaConsultaAtual = 1;
+const ITENS_POR_PAGINA_CONSULTA = 10; // 10 cards por página
+
+// ===================================================
 // FUNÇÃO PARA CALCULAR STATUS DO AGENDAMENTO
 // ===================================================
 
@@ -986,7 +993,7 @@ async function executarConsultaAgendamentos() {
 }
 
 /**
- * Exibe os resultados da consulta como cards em um modal
+ * Exibe os resultados da consulta como cards em um modal com paginação
  */
 function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
     const conteudoPeriodo = document.getElementById('resultadoConsultaPeriodo');
@@ -1006,11 +1013,51 @@ function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
         `;
     }
 
-    // Criar container de cards
+    // Armazenar dados globalmente para acesso na paginação
+    window.ultimoResultadoConsulta = {
+        agendamentos: agendamentos,
+        dataInicio: dataInicio,
+        dataFim: dataFim
+    };
+
+    // Resetar a paginação para a página 1
+    paginaConsultaAtual = 1;
+
+    // Exibir a primeira página
+    exibirPaginaConsulta();
+
+    // Mostrar modal de resultado
+    const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
+    if (resultadoConsultaOverlay) {
+        resultadoConsultaOverlay.classList.add('ativo');
+    }
+}
+
+/**
+ * Exibe uma página específica de resultados da consulta
+ */
+function exibirPaginaConsulta() {
+    if (!window.ultimoResultadoConsulta) {
+        return;
+    }
+
+    const agendamentos = window.ultimoResultadoConsulta.agendamentos;
+    const conteudoResultado = document.getElementById('resultadoConsultaConteudo');
+
+    // Calcular índices de início e fim
+    const indiceInicio = (paginaConsultaAtual - 1) * ITENS_POR_PAGINA_CONSULTA;
+    const indiceFim = indiceInicio + ITENS_POR_PAGINA_CONSULTA;
+    const agendamentosPagina = agendamentos.slice(indiceInicio, indiceFim);
+
+    // Calcular total de páginas
+    const totalPaginas = Math.ceil(agendamentos.length / ITENS_POR_PAGINA_CONSULTA);
+
+    // Criar container de cards para esta página
     let htmlCards = `<div class="consulta-cards-container">`;
 
-    // Criar cards para cada agendamento
-    agendamentos.forEach((agendamento, index) => {
+    // Criar cards para cada agendamento da página
+    agendamentosPagina.forEach((agendamento, indexPagina) => {
+        const indexReal = indiceInicio + indexPagina; // Índice real no array original
         const status = calcularStatusConsultado(agendamento.data, agendamento.horario, agendamento.servico);
 
         // Normalizar status para "concluido" (sem acento) para compatibilidade com CSS
@@ -1021,7 +1068,7 @@ function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
         const dataFormatada = `${dia}/${mes}/${ano}`;
 
         htmlCards += `
-            <div class="consulta-card-item" data-status="${statusNormalizado}" data-index="${index}" onclick="abrirDetalhesConsultado(${index})">
+            <div class="consulta-card-item" data-status="${statusNormalizado}" data-index="${indexReal}" onclick="abrirDetalhesConsultado(${indexReal})">
                 <div class="consulta-card-info">
                     <div class="consulta-card-nome">
                         <i class="ri-user-line"></i> ${agendamento.nome}
@@ -1049,18 +1096,77 @@ function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
         conteudoResultado.innerHTML = htmlCards;
     }
 
-    // Mostrar modal de resultado
-    const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
-    if (resultadoConsultaOverlay) {
-        resultadoConsultaOverlay.classList.add('ativo');
+    // Atualizar controles de paginação
+    atualizarControlesPaginacaoConsulta(totalPaginas);
+}
+
+/**
+ * Atualiza os botões e indicador de paginação
+ */
+function atualizarControlesPaginacaoConsulta(totalPaginas) {
+    const paginacaoContainer = document.getElementById('paginacaoConsultaContainer');
+    const btnAnterior = document.getElementById('btnAnteriorConsulta');
+    const btnProximo = document.getElementById('btnProximoConsulta');
+    const indicador = document.getElementById('indicadorPaginaConsulta');
+
+    // Mostrar/ocultar paginação
+    if (paginacaoContainer) {
+        paginacaoContainer.style.display = totalPaginas > 1 ? 'flex' : 'none';
     }
 
-    // Armazenar dados para impressão e para abrir detalhes
-    window.ultimoResultadoConsulta = {
-        agendamentos: agendamentos,
-        dataInicio: dataInicio,
-        dataFim: dataFim
-    };
+    // Atualizar indicador
+    if (indicador) {
+        indicador.textContent = `${paginaConsultaAtual} de ${totalPaginas}`;
+    }
+
+    // Desabilitar botão Anterior
+    if (btnAnterior) {
+        btnAnterior.disabled = paginaConsultaAtual === 1;
+        btnAnterior.style.opacity = paginaConsultaAtual === 1 ? '0.5' : '1';
+        btnAnterior.style.cursor = paginaConsultaAtual === 1 ? 'not-allowed' : 'pointer';
+    }
+
+    // Desabilitar botão Próximo
+    if (btnProximo) {
+        btnProximo.disabled = paginaConsultaAtual === totalPaginas;
+        btnProximo.style.opacity = paginaConsultaAtual === totalPaginas ? '0.5' : '1';
+        btnProximo.style.cursor = paginaConsultaAtual === totalPaginas ? 'not-allowed' : 'pointer';
+    }
+}
+
+/**
+ * Navega para a página anterior
+ */
+function irPaginaAnteriorConsulta() {
+    if (paginaConsultaAtual > 1) {
+        paginaConsultaAtual--;
+        exibirPaginaConsulta();
+        // Scroll para o topo do conteúdo
+        const conteudo = document.getElementById('resultadoConsultaConteudo');
+        if (conteudo) {
+            conteudo.scrollTop = 0;
+        }
+    }
+}
+
+/**
+ * Navega para a próxima página
+ */
+function irProximaPaginaConsulta() {
+    if (!window.ultimoResultadoConsulta) {
+        return;
+    }
+
+    const totalPaginas = Math.ceil(window.ultimoResultadoConsulta.agendamentos.length / ITENS_POR_PAGINA_CONSULTA);
+    if (paginaConsultaAtual < totalPaginas) {
+        paginaConsultaAtual++;
+        exibirPaginaConsulta();
+        // Scroll para o topo do conteúdo
+        const conteudo = document.getElementById('resultadoConsultaConteudo');
+        if (conteudo) {
+            conteudo.scrollTop = 0;
+        }
+    }
 }
 
 /**
@@ -1105,21 +1211,6 @@ function abrirDetalhesConsultado(index) {
     if (consultPacienteHorario) consultPacienteHorario.textContent = agendamento.horario || 'Sem horário';
     if (consultPacienteServico) consultPacienteServico.textContent = agendamento.servico || 'Não informado';
     if (consultPacienteTelefone) consultPacienteTelefone.textContent = agendamento.telefone || 'Sem telefone';
-
-    // Atualizar status
-    if (consultPacienteStatus) {
-        const statusTexto = {
-            'pendente': 'Pendente',
-            'agora': 'Agora',
-            'concluído': 'Concluído'
-        };
-        // Normalizar status para "concluido" (sem acento) para compatibilidade com CSS
-        const statusNormalizado = status === 'concluído' ? 'concluido' : status;
-        const statusClasse = `status-${statusNormalizado}`;
-
-        consultPacienteStatus.textContent = statusTexto[status] || 'Desconhecido';
-        consultPacienteStatus.className = `consulta-card-status ${statusClasse}`;
-    }
 
     // Abrir modal
     const detalhesOverlay = document.getElementById('detalhesAgendamentoConsultadoOverlay');

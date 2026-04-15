@@ -89,7 +89,7 @@
     <!-- Modal de Resultados da Consulta -->
     <div id="resultadoConsultaOverlay" class="confirmation-modal-overlay" onclick="fecharResultadoConsulta()">
         <div class="confirmation-modal consulta-modal-scrollavel" onclick="event.stopPropagation()"
-            style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+            style="max-width: 600px; max-height: 100vh; display: flex; flex-direction: column;">
             <div class="confirmation-modal-header">
                 <i class="ri-file-list-line confirmation-modal-icon"></i>
                 <div class="confirmation-modal-title">Resultado da Consulta</div>
@@ -101,6 +101,19 @@
             <div id="resultadoConsultaConteudo" class="confirmation-modal-message"
                 style="flex: 1; overflow-y: auto; padding-right: 5px;">
                 <!-- Resultados (cards) serão carregados aqui -->
+            </div>
+            <div id="paginacaoConsultaContainer" class="paginacao-consulta-container"
+                style="flex-shrink: 0; border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 8px; text-align: center; display: none;">
+                <button id="btnAnteriorConsulta" class="btn-paginacao-consulta" onclick="irPaginaAnteriorConsulta()">
+                    <i class="ri-arrow-left-s-line"></i> Ant.
+                </button>
+                <span id="indicadorPaginaConsulta" class="indicador-pagina-consulta"
+                    style="margin: 0 8px; font-weight: 600;">
+                    1 de 1
+                </span>
+                <button id="btnProximoConsulta" class="btn-paginacao-consulta" onclick="irProximaPaginaConsulta()">
+                    <i class="ri-arrow-right-s-line"></i> Próx.
+                </button>
             </div>
             <div class="confirmation-modal-actions"
                 style="flex-shrink: 0; border-top: 1px solid #e0e0e0; padding-top: 15px; margin-top: 15px;">
@@ -126,8 +139,6 @@
                 <p><strong>Horário:</strong> <span id="consultPacienteHorario"></span></p>
                 <p><strong>Serviço:</strong> <span id="consultPacienteServico"></span></p>
                 <p><strong>Telefone:</strong> <span id="consultPacienteTelefone"></span></p>
-                <p><strong>Status:</strong> <span id="consultPacienteStatus"
-                        style="font-weight: 600; padding: 2px 6px; border-radius: 4px;"></span></p>
             </div>
             <div class="confirmation-modal-actions">
                 <button class="confirmation-modal-btn confirmation-modal-btn-cancelar"
