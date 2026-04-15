@@ -954,7 +954,14 @@ function abrirModalNovoHorario() {
 
     renderizarBadgesServicos('servicosNovoContainer', servicosSelecionadosNovo);
 
-    document.getElementById('modalOverlayNovoHorario').classList.add('ativo');
+    const overlay = document.getElementById('modalOverlayNovoHorario');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
 
     // Fazer scroll para o topo do modal
     const modalContainer = document.getElementById('modalOverlayNovoHorario').querySelector('.modal-container');
@@ -966,7 +973,14 @@ function abrirModalNovoHorario() {
 }
 
 function fecharFormulario() {
-    document.getElementById('modalOverlayNovoHorario').classList.remove('ativo');
+    const overlay = document.getElementById('modalOverlayNovoHorario');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     document.getElementById('formNovoHorario').reset();
     servicosSelecionadosNovo = [];
     document.getElementById('inputServico').value = '';
@@ -1577,7 +1591,14 @@ function abrirModalNovoServico() {
         e.preventDefault();
         salvarServico();
     };
-    document.getElementById('modalOverlayServico').classList.add('ativo');
+    const overlay = document.getElementById('modalOverlayServico');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
     congelarScroll();
 }
 
@@ -1605,7 +1626,14 @@ function formatarDuracao(minutos) {
 
 async function abrirModalDetalhesServico(nomeServico) {
     // Abrir modal imediatamente com loader visível
-    document.getElementById('modalOverlayDetalhesServico').classList.add('ativo');
+    const overlay = document.getElementById('modalOverlayDetalhesServico');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
     document.getElementById('loaderDetalhesServico').style.display = 'flex';
     document.getElementById('detalhesServico').style.display = 'none';
     document.getElementById('inputEditarServicoValor').value = '';
@@ -1690,6 +1718,11 @@ function iniciarEdicaoServico(campo) {
     btnSalvar.textContent = 'Salvar';
     document.getElementById('inputAdminNome').value = '';
     document.getElementById('inputAdminSenha').value = '';
+
+    const container = document.querySelector('.container');
+    if (container) {
+        container.classList.add('blur');
+    }
 }
 
 function cancelarEdicaoServico() {
@@ -1701,7 +1734,13 @@ function cancelarEdicaoServico() {
 
 function fecharModalEdicaoServico() {
     const overlay = document.getElementById('modalOverlayEdicaoServico');
-    if (overlay) overlay.classList.remove('ativo');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     cancelarEdicaoServico();
     descongelarScroll();
 }
@@ -1808,7 +1847,14 @@ async function salvarEdicaoServico() {
 }
 
 function fecharModalDetalhesServico() {
-    document.getElementById('modalOverlayDetalhesServico').classList.remove('ativo');
+    const overlay = document.getElementById('modalOverlayDetalhesServico');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     document.getElementById('loaderDetalhesServico').style.display = 'none';
     document.getElementById('detalhesServico').style.display = 'block';
     cancelarEdicaoServico();
@@ -1816,7 +1862,14 @@ function fecharModalDetalhesServico() {
 }
 
 function fecharModalServico() {
-    document.getElementById('modalOverlayServico').classList.remove('ativo');
+    const overlay = document.getElementById('modalOverlayServico');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     servicoEmEdicao = null;
     descongelarScroll();
 }
@@ -2155,12 +2208,26 @@ async function removerServico(nomeServico, event) {
     document.getElementById('mensagemConfirmacaoRemocaoServico').innerHTML =
         `Tem certeza que deseja remover o serviço <strong>"${nomeServico}"</strong>?<br><br>Esta ação é irreversível.`;
 
-    document.getElementById('confirmationRemocaoServicoOverlay').classList.add('ativo');
+    const overlay = document.getElementById('confirmationRemocaoServicoOverlay');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
     congelarScroll();
 }
 
 function fecharModalConfirmacaoRemocaoServico() {
-    document.getElementById('confirmationRemocaoServicoOverlay').classList.remove('ativo');
+    const overlay = document.getElementById('confirmationRemocaoServicoOverlay');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     servicoParaRemover = null;
     descongelarScroll();
 }
@@ -2275,13 +2342,25 @@ async function editarServico(nomeServico, event) {
 // ===================================================
 function fazerLogout() {
     const overlay = document.getElementById('confirmationLogoutOverlay');
-    overlay.classList.add('ativo');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
     congelarScroll();
 }
 
 function fecharModalConfirmacao() {
     const overlay = document.getElementById('confirmationLogoutOverlay');
-    overlay.classList.remove('ativo');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     descongelarScroll();
 }
 
@@ -2309,12 +2388,26 @@ function abrirModalExclusao(data) {
     document.getElementById('mensagemExclusao').innerHTML =
         `Tem certeza que deseja excluir a data <strong>${dataFormatada}</strong>?<br><br>Esta ação é irreversível e removerá a data registrada no sistema, não ficando mais disponível para agendamento.`;
 
-    document.getElementById('confirmationExclusaoOverlay').classList.add('ativo');
+    const overlay = document.getElementById('confirmationExclusaoOverlay');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.add('ativo');
+        if (container) {
+            container.classList.add('blur');
+        }
+    }
     congelarScroll();
 }
 
 function fecharModalExclusao() {
-    document.getElementById('confirmationExclusaoOverlay').classList.remove('ativo');
+    const overlay = document.getElementById('confirmationExclusaoOverlay');
+    const container = document.querySelector('.container');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        if (container) {
+            container.classList.remove('blur');
+        }
+    }
     idHorarioEmExclusao = null;
 
     // Resetar botão
