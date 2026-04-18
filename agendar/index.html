@@ -1178,6 +1178,240 @@
             text-decoration: underline;
         }
 
+        /* Modal de Confirmação de Cancelamento */
+        .modal-cancelamento {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-cancelamento:not(.hidden) {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-cancelamento.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .modal-cancelamento-conteudo {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        .modal-cancelamento-conteudo h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-cancelamento-conteudo h2 i {
+            font-size: 24px;
+            color: #e74c3c;
+        }
+
+        .modal-cancelamento-conteudo>p:nth-of-type(1) {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .cancelamento-dados {
+            margin: 24px 0;
+            padding: 16px;
+            background: #fff5f5;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .cancelamento-campo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .cancelamento-campo:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .cancelamento-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cancelamento-valor {
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .cancelamento-aviso {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            color: #d68910;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .cancelamento-botoes {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-cancelamento-nao,
+        .btn-cancelamento-sim {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-cancelamento-nao {
+            background: white;
+            color: #333;
+            border: 1px solid #d37c7cd7;
+        }
+
+        .btn-cancelamento-nao:hover {
+            background: #f9f9f9;
+            border-color: #c56a6ad0;
+        }
+
+        .btn-cancelamento-sim {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-cancelamento-sim:hover {
+            background: #c0392b;
+        }
+
+        .btn-cancelamento-sim:disabled {
+            background: #c0c0c0;
+            cursor: not-allowed;
+        }
+
+        /* Modal de Sucesso de Cancelamento */
+        .modal-sucesso {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-sucesso:not(.hidden) {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-sucesso.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .modal-sucesso-conteudo {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideUp 0.3s ease;
+            text-align: center;
+        }
+
+        .modal-sucesso-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #27ae60;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+        }
+
+        .modal-sucesso-titulo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .modal-sucesso-mensagem {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .btn-modal-sucesso {
+            padding: 12px 32px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-modal-sucesso:hover {
+            background: #229954;
+        }
+
         /* Responsivo para telas pequenas */
         @media (max-width: 640px) {
             .btn-whatsapp {
@@ -1307,6 +1541,59 @@
                 <button type="button" class="btn-editar" id="btnEditar">Editar dados</button>
                 <button type="button" class="btn-confirmar" id="btnConfirmarRevisao">Confirmar agendamento</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Cancelamento -->
+    <div id="modalCancelamento" class="modal-cancelamento hidden">
+        <div class="modal-cancelamento-conteudo">
+            <h2><i class="ri-alert-line"></i> Cancelar agendamento?</h2>
+            <p>Você tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.</p>
+
+            <div class="cancelamento-dados">
+                <div class="cancelamento-campo">
+                    <span class="cancelamento-label">Nome:</span>
+                    <span class="cancelamento-valor" id="cancelamentoNome">—</span>
+                </div>
+                <div class="cancelamento-campo">
+                    <span class="cancelamento-label">Telefone:</span>
+                    <span class="cancelamento-valor" id="cancelamentoTelefone">—</span>
+                </div>
+                <div class="cancelamento-campo">
+                    <span class="cancelamento-label">Serviço:</span>
+                    <span class="cancelamento-valor" id="cancelamentoServico">—</span>
+                </div>
+                <div class="cancelamento-campo">
+                    <span class="cancelamento-label">Data:</span>
+                    <span class="cancelamento-valor" id="cancelamentoData">—</span>
+                </div>
+                <div class="cancelamento-campo">
+                    <span class="cancelamento-label">Horário:</span>
+                    <span class="cancelamento-valor" id="cancelamentoHorario">—</span>
+                </div>
+            </div>
+
+            <div class="cancelamento-aviso">
+                <i class="ri-information-2-line"></i> Uma vez cancelado, você poderá agendar um novo horário a qualquer
+                momento.
+            </div>
+
+            <div class="cancelamento-botoes">
+                <button type="button" class="btn-cancelamento-nao" id="btnCancelamentoNao">Manter agendamento</button>
+                <button type="button" class="btn-cancelamento-sim" id="btnCancelamentoSim">Confirmar
+                    cancelamento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso de Cancelamento -->
+    <div id="modalSucesso" class="modal-sucesso hidden">
+        <div class="modal-sucesso-conteudo">
+            <div class="modal-sucesso-icon">✓</div>
+            <h2 class="modal-sucesso-titulo">Agendamento Cancelado!</h2>
+            <p class="modal-sucesso-mensagem">Seu agendamento foi cancelado com sucesso. Você pode agendar um novo
+                horário a qualquer momento.</p>
+            <button type="button" class="btn-modal-sucesso" id="btnFecharSucesso">OK</button>
         </div>
     </div>
 
@@ -1518,6 +1805,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../recursos/js/supabase.js"></script>
+    <script src="../recursos/js/modalCancelamento.js"></script>
 
     <script>
         // DROPDOWN CUSTOMIZADO UNIVERSAL - [REMOVIDO E SUBSTITUÍDO POR BADGES]

@@ -505,14 +505,14 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             <div class="aviso-texto">
                                 <p class="aviso-titulo">Este agendamento começa em menos de 2 horas</p>
                                 <p class="aviso-descricao">Para cancelamentos de última hora, entre em contato diretamente com o estabelecimento:</p>
-                                <a href="https://wa.me/5511999990000?text=Gostaria%20de%20cancelar%20meu%20agendamento" target="_blank" rel="noopener noreferrer" class="aviso-link-whatsapp">
+                                <a href="https://wa.me/5511999990000?text=Olá,%20Gostaria%20de%20cancelar%20meu%20agendamento!" target="_blank" rel="noopener noreferrer" class="aviso-link-whatsapp">
                                     <i class="ri-whatsapp-line"></i> (11) 99999-0000
                                 </a>
                             </div>
                         </div>
                     </div>
                     ` : ''}
-                    <button type="button" class="btn-cancelar-agendamento" data-id="${item.id}" data-data="${item.data}" data-horario="${item.horario}" title="${!podeCancelar ? 'Cancelamento não disponível - horário muito próximo' : 'Cancelar este agendamento'}" ${!podeCancelar ? 'disabled' : ''}>
+                    <button type="button" class="btn-cancelar-agendamento" data-id="${item.id}" data-data="${item.data}" data-horario="${item.horario}" data-servico="${item.servico}" data-nome="${item.nome}" data-telefone="${item.telefone}" title="${!podeCancelar ? 'Cancelamento não disponível - horário muito próximo' : 'Cancelar este agendamento'}" ${!podeCancelar ? 'disabled' : ''}>
                         <i class="ri-close-line"></i> Cancelar
                     </button>
                 </div>
@@ -539,45 +539,8 @@ async function carregarMeusAgendamentos(conteudoLista) {
 
             botao.addEventListener('click', async (e) => {
                 e.preventDefault();
-
-                // Pede confirmação antes de cancelar
-                const confirmacao = confirm('Tem certeza que deseja cancelar este agendamento?');
-                if (!confirmacao) return;
-
-                try {
-                    botao.disabled = true;
-                    botao.textContent = 'Cancelando...';
-
-                    await cancelarAgendamento(idAgendamento);
-
-                    // Remove o card da tela
-                    const card = botao.closest('.card-agendamento');
-                    if (card) {
-                        card.style.opacity = '0';
-                        card.style.transition = 'opacity 0.3s ease';
-                        setTimeout(() => {
-                            card.remove();
-                        }, 300);
-                    }
-
-                    // Recarrega a lista de agendamentos após um tempo
-                    setTimeout(() => {
-                        carregarMeusAgendamentos(conteudoLista);
-                    }, 500);
-
-                } catch (err) {
-                    console.error('Erro ao cancelar agendamento:', err);
-
-                    // Trata erro específico de antecedência da RPC
-                    if (err.message && err.message.includes('2 horas')) {
-                        alert('❌ Cancelamento não permitido.\n\n' + err.message);
-                    } else {
-                        alert('❌ Erro ao cancelar o agendamento. Tente novamente.');
-                    }
-
-                    botao.disabled = false;
-                    botao.textContent = 'Cancelar';
-                }
+                // Abre o modal de confirmação com os dados do agendamento
+                abrirModalCancelamento(idAgendamento, dataCadastro, horarioCadastro, botao, conteudoLista);
             });
         });
 
@@ -1230,6 +1193,109 @@ function removerIdLocalmente(idParaRemover) {
     let listaIds = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     listaIds = listaIds.filter(id => id !== idParaRemover);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(listaIds));
+}
+
+// Funcoes para o modal de confirmacao de cancelamento
+
+// Abre o modal de cancelamento com os dados do agendamento
+function abrirModalCancelamento(idAgendamento, data, horario, botaoCancelar, conteudoLista) {
+    const modal = document.getElementById('modalCancelamento');
+    if (!modal) return;
+
+    // Formata a data para exibicao (DD/MM/YYYY)
+    let dataFormatada = data;
+    if (data.includes('-')) {
+        const [ano, mes, dia] = data.split('-');
+        dataFormatada = dia + '/' + mes + '/' + ano;
+    }
+
+    // Obtem o servico do card
+    const card = botaoCancelar.closest('.card-agendamento');
+    let servico = '—';
+    if (card) {
+        const servicoElements = card.querySelectorAll('.card-value');
+        if (servicoElements.length > 0) {
+            servico = servicoElements[0].textContent.trim();
+        }
+    }
+
+    // Preenche os dados do modal
+    document.getElementById('cancelamentoServico').textContent = servico;
+    document.getElementById('cancelamentoData').textContent = dataFormatada;
+    document.getElementById('cancelamentoHorario').textContent = horario;
+
+    // Define os handlers dos botoes
+    const btnNao = document.getElementById('btnCancelamentoNao');
+    const btnSim = document.getElementById('btnCancelamentoSim');
+
+    // Limpa os listeners anteriores
+    const btnNaoNew = btnNao.cloneNode(true);
+    const btnSimNew = btnSim.cloneNode(true);
+    btnNao.parentNode.replaceChild(btnNaoNew, btnNao);
+    btnSim.parentNode.replaceChild(btnSimNew, btnSim);
+
+    // Adiciona novos listeners
+    document.getElementById('btnCancelamentoNao').addEventListener('click', () => {
+        fecharModalCancelamento();
+    });
+
+    document.getElementById('btnCancelamentoSim').addEventListener('click', async () => {
+        await confirmarCancelamento(idAgendamento, botaoCancelar, conteudoLista);
+    });
+
+    // Mostra o modal
+    modal.classList.remove('hidden');
+}
+
+// Fecha o modal de cancelamento
+function fecharModalCancelamento() {
+    const modal = document.getElementById('modalCancelamento');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Confirma o cancelamento
+async function confirmarCancelamento(idAgendamento, botaoCancelar, conteudoLista) {
+    const btnSim = document.getElementById('btnCancelamentoSim');
+
+    try {
+        btnSim.disabled = true;
+        btnSim.textContent = 'Cancelando...';
+
+        await cancelarAgendamento(idAgendamento);
+
+        // Fecha o modal
+        fecharModalCancelamento();
+
+        // Remove o card da tela
+        const card = botaoCancelar.closest('.card-agendamento');
+        if (card) {
+            card.style.opacity = '0';
+            card.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                card.remove();
+            }, 300);
+        }
+
+        // Recarrega a lista de agendamentos apos um tempo
+        setTimeout(() => {
+            carregarMeusAgendamentos(conteudoLista);
+        }, 500);
+
+    } catch (err) {
+        console.error('Erro ao cancelar agendamento:', err);
+
+        // Trata erro especifico de antecedencia da RPC
+        let mensagemErro = 'Erro ao cancelar o agendamento. Tente novamente.';
+        if (err.message && err.message.includes('2 horas')) {
+            mensagemErro = 'Cancelamento nao permitido. ' + err.message;
+        }
+
+        alert(mensagemErro);
+        btnSim.disabled = false;
+        btnSim.textContent = 'Confirmar cancelamento';
+    }
 }
 
 // Cancela um agendamento usando RPC (com security definer)

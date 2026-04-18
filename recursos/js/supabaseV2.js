@@ -648,7 +648,15 @@ function abrirModalDetalhesAgendamento(agendamento) {
     if (btnCancelar) {
         btnCancelar.disabled = false;
         // Alterar texto do botão baseado no status do agendamento
-        const status = calcularStatusAgendamento(agendamento.horario, agendamento.servico);
+        // Se tem data (agendamento consultado), usar calcularStatusConsultado
+        // Senão (agendamento de hoje), usar calcularStatusAgendamento
+        let status;
+        if (agendamento.data) {
+            status = calcularStatusConsultado(agendamento.data, agendamento.horario, agendamento.servico);
+        } else {
+            status = calcularStatusAgendamento(agendamento.horario, agendamento.servico);
+        }
+
         if (status === 'concluído') {
             btnCancelar.innerHTML = '<i class="ri-delete-bin-line"></i> Apagar Registro de Agendamento';
         } else {
@@ -999,15 +1007,18 @@ function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
     const conteudoPeriodo = document.getElementById('resultadoConsultaPeriodo');
     const conteudoResultado = document.getElementById('resultadoConsultaConteudo');
 
-    // Formatar datas para exibição
-    const dataInicioFormatada = new Date(dataInicio).toLocaleDateString('pt-BR');
-    const dataFimFormatada = new Date(dataFim).toLocaleDateString('pt-BR');
+    // Formatar datas para exibição (fazer parse correto para evitar problemas de timezone)
+    const [anoI, mesI, diaI] = dataInicio.split('-');
+    const dataInicioFormatada = new Date(parseInt(anoI), parseInt(mesI) - 1, parseInt(diaI)).toLocaleDateString('pt-BR');
+
+    const [anoF, mesF, diaF] = dataFim.split('-');
+    const dataFimFormatada = new Date(parseInt(anoF), parseInt(mesF) - 1, parseInt(diaF)).toLocaleDateString('pt-BR');
 
     // Inserir informações de período e total (FIXO no topo)
     if (conteudoPeriodo) {
         conteudoPeriodo.innerHTML = `
             <div class="consulta-info-periodo">
-                <p><strong>Período:</strong> ${dataInicioFormatada} a ${dataFimFormatada}</p>
+                <p><strong>Período:</strong> ${dataInicioFormatada} até ${dataFimFormatada}</p>
                 <p><strong>Total de agendamentos:</strong> ${agendamentos.length}</p>
             </div>
         `;
@@ -1188,45 +1199,18 @@ function abrirDetalhesConsultado(index) {
     }
 
     const agendamento = window.ultimoResultadoConsulta.agendamentos[index];
-    const status = calcularStatusConsultado(agendamento.data, agendamento.horario, agendamento.servico);
 
-    // Atualizar elementos do modal
-    const consultPacienteNome = document.getElementById('consultPacienteNome');
-    const consultPacienteData = document.getElementById('consultPacienteData');
-    const consultPacienteHorario = document.getElementById('consultPacienteHorario');
-    const consultPacienteServico = document.getElementById('consultPacienteServico');
-    const consultPacienteTelefone = document.getElementById('consultPacienteTelefone');
-    const consultPacienteStatus = document.getElementById('consultPacienteStatus');
-
-    if (consultPacienteNome) consultPacienteNome.textContent = agendamento.nome || 'Sem nome';
-    if (consultPacienteData) {
-        const dataFormatada = new Date(agendamento.data).toLocaleDateString('pt-BR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        consultPacienteData.textContent = dataFormatada || 'Sem data';
-    }
-    if (consultPacienteHorario) consultPacienteHorario.textContent = agendamento.horario || 'Sem horário';
-    if (consultPacienteServico) consultPacienteServico.textContent = agendamento.servico || 'Não informado';
-    if (consultPacienteTelefone) consultPacienteTelefone.textContent = agendamento.telefone || 'Sem telefone';
-
-    // Abrir modal
-    const detalhesOverlay = document.getElementById('detalhesAgendamentoConsultadoOverlay');
-    if (detalhesOverlay) {
-        detalhesOverlay.classList.add('ativo');
-    }
+    // Usar o mesmo modal dos agendados para hoje
+    abrirModalDetalhesAgendamento(agendamento);
 }
 
 /**
  * Fecha o modal de detalhes do agendamento consultado
+ * @deprecated Usar fecharModalDetalhesAgendamento em vez disso
  */
 function fecharDetalhesConsultado() {
-    const detalhesOverlay = document.getElementById('detalhesAgendamentoConsultadoOverlay');
-    if (detalhesOverlay) {
-        detalhesOverlay.classList.remove('ativo');
-    }
+    // Redirecionar para a função correta
+    fecharModalDetalhesAgendamento();
 }
 
 

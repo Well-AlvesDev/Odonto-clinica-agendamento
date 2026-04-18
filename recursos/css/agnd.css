@@ -496,7 +496,7 @@
     }
 
     .agendamento-header h3 {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         color: #333;
         margin: 0;
@@ -519,7 +519,7 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
-        font-size: 11px;
+        font-size: 13px;
         color: #666;
     }
 
