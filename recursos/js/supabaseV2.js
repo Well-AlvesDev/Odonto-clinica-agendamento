@@ -17,6 +17,7 @@ let agendamentoSelecionadoDetalhes = null;
 
 let paginaConsultaAtual = 1;
 const ITENS_POR_PAGINA_CONSULTA = 10; // 10 cards por página
+let estamoNoModalConsulta = false; // Rastrear se estamos no modal de consulta
 
 // ===================================================
 // FUNÇÃO PARA CALCULAR STATUS DO AGENDAMENTO
@@ -764,7 +765,14 @@ function fecharModalSucesso() {
     const overlay = document.getElementById('modalSucessoOverlay');
     if (overlay) overlay.classList.remove('ativo');
     fecharModalDetalhesAgendamento();
-    carregarAgendamentosHoje();
+
+    // Se estamos no modal de consulta, recarregar os resultados
+    if (estamoNoModalConsulta && window.ultimoResultadoConsulta) {
+        recarregarResultadosConsulta();
+    } else {
+        // Caso contrário, carregar agendamentos de hoje normalmente
+        carregarAgendamentosHoje();
+    }
 }
 
 async function executarCancelarAgendamento() {
@@ -1001,6 +1009,118 @@ async function executarConsultaAgendamentos() {
 }
 
 /**
+ * Recarrega os resultados da consulta com os mesmos parâmetros anteriores
+ */
+async function recarregarResultadosConsulta() {
+    if (!window.ultimoResultadoConsulta) {
+        return;
+    }
+
+    const { dataInicio, dataFim } = window.ultimoResultadoConsulta;
+    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+    const senhaUsuario = sessionStorage.getItem('senhaUsuario');
+
+    if (!usuarioLogado || !senhaUsuario) {
+        mostrarErroGenerico('Sessão expirada. Faça login novamente.');
+        return;
+    }
+
+    try {
+        // Mostrar loader no modal de resultado
+        const conteudoResultado = document.getElementById('resultadoConsultaConteudo');
+        if (conteudoResultado) {
+            conteudoResultado.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 15px;">
+                    <i class="ri-loader-4-line" style="font-size: 32px; animation: spin 1s linear infinite; color: #2196F3;"></i>
+                    <p style="color: #666; font-weight: 500;">Atualizando agendamentos...</p>
+                </div>
+            `;
+        }
+
+        // Chamar RPC para obter agendamentos atualizados
+        const { data, error } = await _supabase.rpc('obter_agendamentos_por_periodo_consulta', {
+            p_nome_admin: usuarioLogado,
+            p_senha_admin: senhaUsuario,
+            p_data_inicio: dataInicio,
+            p_data_fim: dataFim
+        });
+
+        if (error) {
+            console.error('Erro ao recarregar agendamentos:', error);
+            mostrarErroGenerico('Erro ao recarregar agendamentos: ' + error.message);
+            return;
+        }
+
+        // Processar resultados
+        if (data && data.length > 0) {
+            // Atualizar os dados globais
+            window.ultimoResultadoConsulta.agendamentos = data;
+
+            // Resetar paginação para a primeira página
+            paginaConsultaAtual = 1;
+
+            // Reexibir os resultados
+            exibirPaginaConsulta();
+
+            // Atualizar total de agendamentos no período
+            const [anoI, mesI, diaI] = dataInicio.split('-');
+            const dataInicioFormatada = new Date(parseInt(anoI), parseInt(mesI) - 1, parseInt(diaI)).toLocaleDateString('pt-BR');
+
+            const [anoF, mesF, diaF] = dataFim.split('-');
+            const dataFimFormatada = new Date(parseInt(anoF), parseInt(mesF) - 1, parseInt(diaF)).toLocaleDateString('pt-BR');
+
+            const conteudoPeriodo = document.getElementById('resultadoConsultaPeriodo');
+            if (conteudoPeriodo) {
+                conteudoPeriodo.innerHTML = `
+                    <div class="consulta-info-periodo">
+                        <p><strong>Período:</strong> ${dataInicioFormatada} até ${dataFimFormatada}</p>
+                        <p><strong>Total de agendamentos:</strong> ${data.length}</p>
+                    </div>
+                `;
+            }
+        } else {
+            // Mostrar mensagem de vazio
+            const conteudoResultado = document.getElementById('resultadoConsultaConteudo');
+            if (conteudoResultado) {
+                conteudoResultado.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 10px;">
+                        <i class="ri-calendar-blank-line" style="font-size: 32px; color: #ccc;"></i>
+                        <p style="color: #999; font-weight: 500;">Nenhum agendamento encontrado neste período</p>
+                    </div>
+                `;
+            }
+
+            // Atualizar total para zero
+            window.ultimoResultadoConsulta.agendamentos = [];
+            const conteudoPeriodo = document.getElementById('resultadoConsultaPeriodo');
+            if (conteudoPeriodo) {
+                const [anoI, mesI, diaI] = dataInicio.split('-');
+                const dataInicioFormatada = new Date(parseInt(anoI), parseInt(mesI) - 1, parseInt(diaI)).toLocaleDateString('pt-BR');
+
+                const [anoF, mesF, diaF] = dataFim.split('-');
+                const dataFimFormatada = new Date(parseInt(anoF), parseInt(mesF) - 1, parseInt(diaF)).toLocaleDateString('pt-BR');
+
+                conteudoPeriodo.innerHTML = `
+                    <div class="consulta-info-periodo">
+                        <p><strong>Período:</strong> ${dataInicioFormatada} até ${dataFimFormatada}</p>
+                        <p><strong>Total de agendamentos:</strong> 0</p>
+                    </div>
+                `;
+            }
+
+            // Ocultar paginação
+            const paginacaoContainer = document.getElementById('paginacaoConsultaContainer');
+            if (paginacaoContainer) {
+                paginacaoContainer.style.display = 'none';
+            }
+        }
+    } catch (erro) {
+        console.error('Erro ao recarregar resultados:', erro);
+        mostrarErroGenerico('Erro inesperado ao recarregar agendamentos: ' + erro.message);
+    }
+}
+
+/**
  * Exibe os resultados da consulta como cards em um modal com paginação
  */
 function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
@@ -1041,6 +1161,7 @@ function exibirResultadoConsulta(agendamentos, dataInicio, dataFim) {
     const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
     if (resultadoConsultaOverlay) {
         resultadoConsultaOverlay.classList.add('ativo');
+        estamoNoModalConsulta = true; // Marcar que estamos no modal de consulta
     }
 }
 
@@ -1187,6 +1308,7 @@ function fecharResultadoConsulta() {
     const resultadoConsultaOverlay = document.getElementById('resultadoConsultaOverlay');
     if (resultadoConsultaOverlay) {
         resultadoConsultaOverlay.classList.remove('ativo');
+        estamoNoModalConsulta = false; // Desmarcar que estamos no modal de consulta
     }
 }
 
