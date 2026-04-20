@@ -16,25 +16,24 @@
      margin-bottom: 40px;
  }
 
- /* Estilos da Navegação */
- nav {
-     background: #ffffff;
-     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-     /* full-bleed: garantir que a nav sempre toque as bordas da viewport */
-     width: 100vw;
-     margin-left: calc(50% - 50vw);
-     margin-right: calc(50% - 50vw);
-     padding: 12px 0;
-     /* apenas espaçamento vertical */
-     position: fixed;
-     top: 0;
-     left: 0;
-     right: 0;
-     z-index: 1000;
-     /* Garantir que a nav fique acima do overlay */
-     box-sizing: border-box;
- }
-
+      /* Estilos da Navegação */
+        nav {
+            background: #fffffff8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* full-bleed: garantir que a nav sempre toque as bordas da viewport */
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            padding: 12px 0;
+            /* apenas espaçamento vertical */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            /* Garantir que a nav fique acima do overlay */
+            box-sizing: border-box;
+        }
  .nav-container {
      max-width: 1200px;
      margin: 0 auto;

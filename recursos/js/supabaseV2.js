@@ -967,7 +967,7 @@ async function executarConsultaAgendamentos() {
         const botaoBuscar = document.querySelector('[onclick="executarConsultaAgendamentos()"]');
         if (botaoBuscar) {
             botaoBuscar.disabled = true;
-            botaoBuscar.innerHTML = '<i class="ri-loader-4-line"></i> Buscando...';
+            botaoBuscar.innerHTML = '<i class="ri-loader-4-line loader-animado"></i> Buscando...';
         }
 
         // Chamar RPC para obter agendamentos
