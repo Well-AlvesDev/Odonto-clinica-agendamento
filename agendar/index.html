@@ -7,7 +7,7 @@
     <title>Cadastro de Contato</title>
     <link rel="stylesheet" href="../recursos/css/formulario.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
-      <link rel="icon" type="image/x-icon" href="../recursos/imgs/img1.jpg">
+    <link rel="icon" type="image/x-icon" href="../recursos/imgs/img1.jpg">
 
     <!-- Todo css do formuario está no arquivo "formulario.css"-->
     <style>
@@ -1210,11 +1210,15 @@
         .modal-cancelamento-conteudo {
             background: white;
             border-radius: 12px;
-            padding: 28px;
+            padding: 28px 28px 0 28px;
             max-width: 450px;
             width: 90%;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             animation: modalSlideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-cancelamento-conteudo h2 {
@@ -1289,6 +1293,12 @@
             display: flex;
             gap: 12px;
             margin-top: 24px;
+            flex-shrink: 0;
+            padding: 12px 28px 28px 28px;
+            border-top: 1px solid #e8e8e8;
+            background: white;
+            position: sticky;
+            bottom: 0;
         }
 
         .btn-cancelamento-nao,
@@ -1328,6 +1338,124 @@
         .btn-cancelamento-sim:disabled {
             background: #c0c0c0;
             cursor: not-allowed;
+        }
+
+        /* Media Queries para Modal de Cancelamento - Telas Pequenas */
+        @media (max-width: 640px) {
+            .modal-cancelamento-conteudo {
+                padding: 20px 20px 0 20px;
+                max-width: 95%;
+            }
+
+            .modal-cancelamento-conteudo h2 {
+                font-size: 18px;
+                margin-bottom: 12px;
+                gap: 8px;
+            }
+
+            .modal-cancelamento-conteudo h2 i {
+                font-size: 20px;
+            }
+
+            .modal-cancelamento-conteudo>p:nth-of-type(1) {
+                font-size: 14px;
+                margin-bottom: 16px;
+                line-height: 1.4;
+            }
+
+            .cancelamento-dados {
+                margin: 16px 0;
+                padding: 12px;
+                border-radius: 6px;
+            }
+
+            .cancelamento-campo {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 0;
+                gap: 4px;
+            }
+
+            .cancelamento-campo:last-child {
+                padding-bottom: 0;
+            }
+
+            .cancelamento-label {
+                font-size: 11px;
+                margin-bottom: 2px;
+            }
+
+            .cancelamento-valor {
+                font-size: 13px;
+                text-align: left;
+                word-break: break-word;
+            }
+
+            .cancelamento-aviso {
+                padding: 10px;
+                font-size: 11px;
+                margin-bottom: 16px;
+                display: flex;
+                gap: 8px;
+            }
+
+            .cancelamento-aviso i {
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            .cancelamento-botoes {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 16px;
+                padding: 10px 20px 20px 20px;
+            }
+
+            .btn-cancelamento-nao,
+            .btn-cancelamento-sim {
+                flex: 1;
+                padding: 11px 16px;
+                font-size: 13px;
+                border-radius: 6px;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-cancelamento-conteudo {
+                padding: 16px 16px 0 16px;
+                max-width: 98%;
+            }
+
+            .modal-cancelamento-conteudo h2 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .modal-cancelamento-conteudo h2 i {
+                font-size: 18px;
+            }
+
+            .cancelamento-dados {
+                margin: 12px 0;
+                padding: 10px;
+            }
+
+            .cancelamento-campo {
+                padding: 8px 0;
+            }
+
+            .cancelamento-botoes {
+                padding: 10px 16px 16px 16px;
+            }
+
+            .btn-cancelamento-nao,
+            .btn-cancelamento-sim {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
         }
 
         /* Modal de Sucesso de Cancelamento */
@@ -1495,11 +1623,11 @@
     <button type="button" id="verAgendamentos"><i class="ri-eye-line"></i> Ver meus agendamentos</button>
 
     <p class="msg-ajuda-whatsapp">
-        Precisa de ajuda? <a href="#" class="link-whatsapp-ajuda">fale conosco no whatsapp</a>
+        Precisa de ajuda? <a href="https://wa.me/5581991807903" class="link-whatsapp-ajuda">fale conosco no whatsapp</a>
     </p>
 
     <!-- botão fixo de WhatsApp -->
-    <a href="#" class="btn-whatsapp" target="_blank" rel="noopener noreferrer" title="Fale conosco no WhatsApp">
+    <a href="https://wa.me/5581991807903" class="btn-whatsapp" target="_blank" rel="noopener noreferrer" title="Fale conosco no WhatsApp">
         <i class="ri-whatsapp-line"></i>
     </a>
     <!-- Overlay para modal -->

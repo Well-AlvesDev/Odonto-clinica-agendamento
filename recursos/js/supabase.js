@@ -505,8 +505,8 @@ async function carregarMeusAgendamentos(conteudoLista) {
                             <div class="aviso-texto">
                                 <p class="aviso-titulo">Este agendamento começa em menos de 2 horas</p>
                                 <p class="aviso-descricao">Para cancelamentos de última hora, entre em contato diretamente com o estabelecimento:</p>
-                                <a href="https://wa.me/5511999990000?text=Olá,%20Gostaria%20de%20cancelar%20meu%20agendamento!" target="_blank" rel="noopener noreferrer" class="aviso-link-whatsapp">
-                                    <i class="ri-whatsapp-line"></i> (11) 99999-0000
+                                <a href="https://wa.me/5581991807903?text=Olá,%20Gostaria%20de%20cancelar%20meu%20agendamento!" target="_blank" rel="noopener noreferrer" class="aviso-link-whatsapp">
+                                    <i class="ri-whatsapp-line"></i> (81) 99180-7903
                                 </a>
                             </div>
                         </div>
