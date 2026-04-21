@@ -594,7 +594,7 @@ function exibirAgendamentos(agendamentos) {
         cardAgendamento.innerHTML = `
             <div class="agendamento-info">
                 <div class="agendamento-header">
-                 <h3>  <i class="ri-user-line"></i>  ${agendamento.nome}</h3>
+                 <h3>  <img src="../recursos/imgs/img1.jpg" alt="Ícone de engrenagem" style="width: 30px; vertical-align: middle; margin-left: -5px;">  ${agendamento.nome}</h3>
                     <div class="agendamento-header-right">
                         <span class="agendamento-hora"><i class="ri-time-line"></i> ${horarioFormatado}</span>
                         <span class="agendamento-status ${statusClasse}">${statusTexto[status]}</span>
@@ -1203,7 +1203,7 @@ function exibirPaginaConsulta() {
             <div class="consulta-card-item" data-status="${statusNormalizado}" data-index="${indexReal}" onclick="abrirDetalhesConsultado(${indexReal})">
                 <div class="consulta-card-info">
                     <div class="consulta-card-nome">
-                        <i class="ri-user-line"></i> ${agendamento.nome}
+                     <img src="../recursos/imgs/img1.jpg" alt="Ícone de engrenagem" style="width: 30px; vertical-align: middle; margin-left: -5px;"> ${agendamento.nome}
                     </div>
                     <div class="consulta-card-detalhes">
                         <div class="consulta-card-detalhe">

@@ -320,16 +320,16 @@
     }
 
     .agendamentos-header {
-        background: linear-gradient(135deg, #255996 0%, #1e4573 100%);
+        background: white;
         padding: 20px;
         display: flex;
         align-items: center;
         gap: 12px;
-        border-bottom: 1px solid #1e4573;
+        border-bottom: 1px solid #1e467354;
     }
 
     .agendamentos-header h2 {
-        color: white;
+        color: rgb(23, 23, 23);
         font-size: 18px;
         font-weight: 600;
         margin: 0;
@@ -409,7 +409,7 @@
     .agendamento-detalhes {
         display: flex;
         gap: 15px;
-        font-size: 13px;
+        font-size: 14px;
         color: #666;
     }
 
@@ -504,11 +504,12 @@
     }
 
     .agendamento-hora {
-        background-color: #e8e8e8;
+        background-color: #ffffff58;
         padding: 3px 6px;
-        border-radius: 4px;
-        font-size: 10px;
-        color: #666;
+        border-radius: 30px;
+        border: 1px solid #497dc0;
+        font-size: 15px;
+        color: #383838;
         white-space: nowrap;
         display: flex;
         align-items: center;
@@ -519,7 +520,7 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
-        font-size: 13px;
+        font-size: 14px;
         color: #666;
     }
 
