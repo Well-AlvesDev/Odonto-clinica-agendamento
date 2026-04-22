@@ -1,6 +1,6 @@
 # 🦷 Sistema de Agendamento para Clínica Odontológica
 
-Um sistema web moderno e responsivo para gerenciamento de agendamentos odontológicos, desenvolvido com HTML5, CSS3, JavaScript vanilla e Supabase.
+Um sistema web moderno e responsivo para agendamento e gerenciamento de agendamentos odontológicos, desenvolvido com HTML5, CSS3, JavaScript vanilla e Supabase.
 
 ## 📋 Descrição
 
